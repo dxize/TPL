@@ -2,6 +2,7 @@
     <PropertyGroup>
         <NuGetAudit>false</NuGetAudit>
         <WarningsAsErrors>true</WarningsAsErrors>
+        <_SkipUpgradeNetAnalyzersNuGetWarning>true</_SkipUpgradeNetAnalyzersNuGetWarning>
     </PropertyGroup>
 
     <ItemGroup>

@@ -358,6 +358,8 @@ dotnet_diagnostic.SA1101.severity = none
 dotnet_diagnostic.SA1407.severity = none
 dotnet_diagnostic.SA1009.severity = none
 dotnet_diagnostic.SA1111.severity = none
+dotnet_diagnostic.SA1309.severity = none
+dotnet_diagnostic.SA1629.severity = none
 
 # Отключаем излишние правила StyleCop для документирующих комментариев
 dotnet_diagnostic.SA1623.severity = none
