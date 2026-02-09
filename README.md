@@ -1,6 +1,6 @@
 # Шаблон проекта на C# для студентов
 
-Шаблон предназначен для .NET 8 (C# 12): https://dotnet.microsoft.com/en-us/download/dotnet/8.0
+Шаблон предназначен для .NET 10 (C# 14): https://dotnet.microsoft.com/en-us/download/dotnet/10.0
 
 ## Клонирование проекта
 
