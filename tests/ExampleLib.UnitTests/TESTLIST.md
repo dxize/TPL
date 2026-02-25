@@ -91,12 +91,12 @@ func bool isPrime(int n)
 
 func int nextPrime(int n)
 {
-    int candidate = n + 1;
-    while (!isPrime(candidate))
+    int next = n + 1;
+    while (!isPrime(next))
     {
-        candidate = candidate + 1;
+        next = next + 1;
     }
-    return candidate;
+    return next;
 }
 
 proc printResult(int n, bool prime, int next)
