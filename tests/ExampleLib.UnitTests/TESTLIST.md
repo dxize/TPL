@@ -1,4 +1,4 @@
-## 1 Итерация
+## Эпик 1
 ### Arithmetic
 ```
 func int main()
@@ -58,7 +58,7 @@ func int main()
     return 0;
 }
 ```
-## 2 Итерация
+## Эпик 2
 ### Prime
 ```
 func bool isPrime(int n)
