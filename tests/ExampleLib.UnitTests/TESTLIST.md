@@ -44,11 +44,11 @@ func int main()
     string message = "You entered: " + s + punct + "\n";
     print(message);
 
-    int len = len(s);
-    print("Length: ", len, "\n");
+    int length = len(s);
+    print("length: ", length, "\n");
 
     string first = substr(s, 1, 1);
-    string last = substr(s, len, 1);
+    string last = substr(s, length, 1);
     print("First character: ", first, "\n");
     print("Last character: ", last, "\n");
 
