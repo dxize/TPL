@@ -7,12 +7,18 @@ public class Token(
     TokenValue? value = null
 )
 {
+    /// <summary>
+    /// Тип токена.
+    /// </summary>
     public TokenType Type { get; } = type;
 
+    /// <summary>
+    /// Значение токена, если оно есть.
+    /// </summary>
     public TokenValue? Value { get; } = value;
 
     /// <summary>
-    ///  Сравнивает токены по типу и значению.
+    /// Сравнивает токены по типу и значению.
     /// </summary>
     public override bool Equals(object? obj)
     {
@@ -25,7 +31,7 @@ public class Token(
     }
 
     /// <summary>
-    ///  Возвращает хеш от свойств токена.
+    /// Возвращает хеш токена.
     /// </summary>
     public override int GetHashCode()
     {
@@ -33,12 +39,13 @@ public class Token(
     }
 
     /// <summary>
-    /// Форматирует токен в стиле "Type (Value)".
+    /// Форматирует токен в виде "Type (Value)".
     /// </summary>
     public override string ToString()
     {
         StringBuilder sb = new();
-        sb.Append(Type.ToString());
+        sb.Append(Type);
+
         if (Value != null)
         {
             sb.Append($" ({Value})");

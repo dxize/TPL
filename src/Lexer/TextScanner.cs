@@ -1,32 +1,38 @@
 namespace Lexer;
 
 /// <summary>
-///  Сканирует текст SQL-запроса, предоставляя три операции: Peek(N), Advance() и IsEnd().
+/// Сканирует исходный текст посимвольно.
 /// </summary>
-public class TextScanner(string sql)
+public class TextScanner(string source)
 {
-    private readonly string _sql = sql;
+    private readonly string _source = source ?? string.Empty;
     private int _position;
 
     /// <summary>
-    ///  Читает на N символов вперёд текущей позиции (по умолчанию N=0).
+    /// Читает символ на N позиций вперёд.
     /// </summary>
     public char Peek(int n = 0)
     {
         int position = _position + n;
-        return position >= _sql.Length ? '\0' : _sql[position];
+        return position >= _source.Length ? '\0' : _source[position];
     }
 
     /// <summary>
-    ///  Сдвигает текущую позицию на один символ.
+    /// Сдвигает текущую позицию на один символ.
     /// </summary>
     public void Advance()
     {
-        _position++;
+        if (_position < _source.Length)
+        {
+            _position++;
+        }
     }
 
+    /// <summary>
+    /// Проверяет конец текста.
+    /// </summary>
     public bool IsEnd()
     {
-        return _position >= _sql.Length;
+        return _position >= _source.Length;
     }
 }

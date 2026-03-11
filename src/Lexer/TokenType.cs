@@ -2,13 +2,6 @@ namespace Lexer;
 
 public enum TokenType
 {
-    // Ключевые слова
-
-    /// <summary>
-    /// Ключевое слово var
-    /// </summary>
-    Var,
-
     /// <summary>
     /// Ключевое слово const
     /// </summary>
@@ -70,6 +63,26 @@ public enum TokenType
     Continue,
 
     /// <summary>
+    /// Ключевое слово int
+    /// </summary>
+    Int,
+
+    /// <summary>
+    /// Ключевое слово num
+    /// </summary>
+    Num,
+
+    /// <summary>
+    /// Ключевое слово string
+    /// </summary>
+    String,
+
+    /// <summary>
+    /// Ключевое слово bool
+    /// </summary>
+    Bool,
+
+    /// <summary>
     /// Ключевое слово true
     /// </summary>
     True,
@@ -92,7 +105,7 @@ public enum TokenType
     // Идентификаторы и литералы
 
     /// <summary>
-    /// Идентификатор (имя переменной или функции)
+    /// Идентификатор
     /// </summary>
     Identifier,
 
@@ -102,9 +115,9 @@ public enum TokenType
     IntegerLiteral,
 
     /// <summary>
-    /// Вещественный литерал
+    /// Числовой литерал
     /// </summary>
-    FloatLiteral,
+    NumLiteral,
 
     /// <summary>
     /// Строковый литерал
@@ -144,7 +157,7 @@ public enum TokenType
     Less,
 
     /// <summary>
-    /// Оператор больше (>) 
+    /// Оператор больше (>)
     /// </summary>
     Greater,
 
@@ -164,7 +177,7 @@ public enum TokenType
     IntegerDivide,
 
     /// <summary>
-    /// Оператор взятия остатка (%)
+    /// Оператор остатка (%)
     /// </summary>
     Modulo,
 
@@ -211,27 +224,22 @@ public enum TokenType
     Comma,
 
     /// <summary>
-    /// Двоеточие (:)
-    /// </summary>
-    Colon,
-
-    /// <summary>
-    /// Открывающая круглая скобка (()
+    /// Открывающая круглая скобка
     /// </summary>
     OpenParenthesis,
 
     /// <summary>
-    /// Закрывающая круглая скобка ())
+    /// Закрывающая круглая скобка
     /// </summary>
     CloseParenthesis,
 
     /// <summary>
-    /// Открывающая фигурная скобка ({)
+    /// Открывающая фигурная скобка
     /// </summary>
     OpenBrace,
 
     /// <summary>
-    /// Закрывающая фигурная скобка (})
+    /// Закрывающая фигурная скобка
     /// </summary>
     CloseBrace,
 
@@ -245,5 +253,5 @@ public enum TokenType
     /// <summary>
     /// Ошибка лексического анализа
     /// </summary>
-    Error,
+    Error
 }

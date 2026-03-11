@@ -1,9 +1,16 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}"
+	ProjectSection(SolutionItems) = preProject
+		src\Lexer\Lexer.cs = src\Lexer\Lexer.cs
+		src\Lexer\TextScanner.cs = src\Lexer\TextScanner.cs
+		src\Lexer\Token.cs = src\Lexer\Token.cs
+		src\Lexer\TokenType.cs = src\Lexer\TokenType.cs
+		src\Lexer\TokenValue.cs = src\Lexer\TokenValue.cs
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleLib", "src\ExampleLib\ExampleLib.csproj", "{D3DB6112-0E76-495B-BE71-5186112A4296}"
 EndProject
@@ -11,13 +18,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{CE774A12
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleLib.UnitTests", "tests\ExampleLib.UnitTests\ExampleLib.UnitTests.csproj", "{9E45EACA-B811-400F-978F-7419AC8658D5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{754FC069-D67B-A9D7-50A1-8D1CA196D8F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D3DB6112-0E76-495B-BE71-5186112A4296}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -29,8 +35,14 @@ Global
 		{9E45EACA-B811-400F-978F-7419AC8658D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E45EACA-B811-400F-978F-7419AC8658D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D3DB6112-0E76-495B-BE71-5186112A4296} = {B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}
 		{9E45EACA-B811-400F-978F-7419AC8658D5} = {CE774A12-53F2-4F94-ADFA-96E36863AED4}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {65E7C135-BC3E-4C14-B07C-EE4E6DE8D8D1}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,117 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\gimps\\study\\TPL\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\Lexer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|solutionrelative:src\\Lexer\\Lexer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TokenValue.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|solutionrelative:src\\Lexer\\TokenValue.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TokenType.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|solutionrelative:src\\Lexer\\TokenType.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\Token.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|solutionrelative:src\\Lexer\\Token.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TextScanner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|src{B4C68BC1-722B-4069-9E4D-7E7FB04FA20A}|solutionrelative:src\\Lexer\\TextScanner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{f2bd8fb8-fc94-3dae-a733-fd993c73cc87}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "TextScanner.cs",
+              "DocumentMoniker": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TextScanner.cs",
+              "RelativeDocumentMoniker": "src\\Lexer\\TextScanner.cs",
+              "ToolTip": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TextScanner.cs",
+              "RelativeToolTip": "src\\Lexer\\TextScanner.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-11T17:16:17.905Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Token.cs",
+              "DocumentMoniker": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\Token.cs",
+              "RelativeDocumentMoniker": "src\\Lexer\\Token.cs",
+              "ToolTip": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\Token.cs",
+              "RelativeToolTip": "src\\Lexer\\Token.cs",
+              "ViewState": "AgIAACQAAAAAAAAAAAAAADcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-11T17:14:54.159Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "TokenValue.cs",
+              "DocumentMoniker": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TokenValue.cs",
+              "RelativeDocumentMoniker": "src\\Lexer\\TokenValue.cs",
+              "ToolTip": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TokenValue.cs",
+              "RelativeToolTip": "src\\Lexer\\TokenValue.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-11T16:53:06.106Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "TokenType.cs",
+              "DocumentMoniker": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TokenType.cs",
+              "RelativeDocumentMoniker": "src\\Lexer\\TokenType.cs",
+              "ToolTip": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TokenType.cs",
+              "RelativeToolTip": "src\\Lexer\\TokenType.cs",
+              "ViewState": "AgIAAPYAAAAAAAAAAAAAAAMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-11T16:46:29.429Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Lexer.cs",
+              "DocumentMoniker": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\Lexer.cs",
+              "RelativeDocumentMoniker": "src\\Lexer\\Lexer.cs",
+              "ToolTip": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\Lexer.cs",
+              "RelativeToolTip": "src\\Lexer\\Lexer.cs",
+              "ViewState": "AgIAAOoBAAAAAAAAAAAAAAMCAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-11T16:45:29.247Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
