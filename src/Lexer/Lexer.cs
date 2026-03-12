@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -212,11 +212,11 @@ public class Lexer
     /// </summary>
     public List<Token> ParseAllTokens()
     {
-        var tokens = new List<Token>();
+        List<Token> tokens = new();
 
         while (true)
         {
-            var token = ParseToken();
+            Token token = ParseToken();
             tokens.Add(token);
 
             if (token.Type == TokenType.EndOfFile)
@@ -233,7 +233,7 @@ public class Lexer
     /// </summary>
     private Token ParseIdentifierOrKeyword()
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
 
         while (IsLatinLetterOrDigit(_scanner.Peek()))
         {
@@ -261,7 +261,7 @@ public class Lexer
     /// </summary>
     private Token ParseNumericLiteral()
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
 
         while (char.IsAsciiDigit(_scanner.Peek()))
         {
@@ -335,7 +335,7 @@ public class Lexer
     {
         _scanner.Advance(); // "
 
-        var contents = new StringBuilder();
+        StringBuilder contents = new();
 
         while (!_scanner.IsEnd())
         {
