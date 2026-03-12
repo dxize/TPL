@@ -16,7 +16,7 @@ public class ReturnException : Exception
     {
     }
 
-    public ReturnException(double value) => ReturnValue = value;
+    public ReturnException(object value) => ReturnValue = value;
 
-    public double ReturnValue { get; }
+    public object ReturnValue { get; }
 }

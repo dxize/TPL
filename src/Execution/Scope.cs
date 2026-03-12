@@ -1,46 +1,48 @@
-﻿namespace Execution;
+﻿using Ast;
+
+namespace Execution;
 
 public class Scope
 {
-    private readonly Dictionary<string, double> _variables = [];
+    private readonly Dictionary<string, (object value, DataType type)> _variables = [];
 
-    /// <summary>
-    /// Читает переменную из этой области видимости.
-    /// Возвращает false, если переменная не объявлена в этой области видимости.
-    /// </summary>
-    public bool TryGetVariable(string name, out double value)
+    public bool TryGetVariable(string name, out object value)
     {
-        if (_variables.TryGetValue(name, out double v))
+        if (_variables.TryGetValue(name, out var entry))
         {
-            value = v;
+            value = entry.value;
             return true;
         }
 
-        value = 0.0;
+        value = null!;
         return false;
     }
 
-    /// <summary>
-    /// Присваивает переменную в этой области видимости.
-    /// Возвращает false, если переменная не объявлена в этой области видимости.
-    /// </summary>
-    public bool TryAssignVariable(string name, double value)
+    public bool TryGetVariableType(string name, out DataType type)
     {
-        if (_variables.ContainsKey(name))
+        if (_variables.TryGetValue(name, out var entry))
         {
-            _variables[name] = value;
+            type = entry.type;
+            return true;
+        }
+
+        type = default;
+        return false;
+    }
+
+    public bool TryAssignVariable(string name, object value)
+    {
+        if (_variables.TryGetValue(name, out var entry))
+        {
+            _variables[name] = (value, entry.type);
             return true;
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Объявляет переменную в этой области видимости.
-    /// Возвращает false, если переменная уже объявлена в этой области видимости.
-    /// </summary>
-    public bool TryDefineVariable(string name, double value)
+    public bool TryDefineVariable(string name, object value, DataType type)
     {
-        return _variables.TryAdd(name, value);
+        return _variables.TryAdd(name, (value, type));
     }
 }

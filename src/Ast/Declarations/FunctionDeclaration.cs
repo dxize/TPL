@@ -2,16 +2,19 @@
 
 public sealed class FunctionDeclaration : Declaration
 {
-    public FunctionDeclaration(string name, List<string> parameters, List<AstNode> body)
+    public FunctionDeclaration(DataType? returnType, string name, List<Parameter> parameters, List<AstNode> body)
     {
+        ReturnType = returnType;
         Name = name;
         Parameters = parameters;
         Body = body;
     }
 
+    public DataType? ReturnType { get; }
+
     public string Name { get; }
 
-    public List<string> Parameters { get; }
+    public List<Parameter> Parameters { get; }
 
     public List<AstNode> Body { get; }
 

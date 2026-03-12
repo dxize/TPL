@@ -4,9 +4,9 @@
     Сценарий: Вычисление факториала числа N
         Дано я запустил программу:
             """
-            func factorial(n) {
-                var result = 1;
-                var i = 2;
+            func int factorial(int n) {
+                int result = 1;
+                int i = 2;
                 
                 while (i <= n) {
                     result = result * i;
@@ -16,9 +16,9 @@
                 return result;
             }
 
-            var number;
+            int number;
             input(number);
-            var fact = factorial(number);
+            int fact = factorial(number);
             print(fact);
             """
         И я установил входные данные:

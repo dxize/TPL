@@ -1,3 +1,5 @@
+using Ast;
+
 namespace Execution;
 
 /// <summary>
@@ -7,14 +9,12 @@ namespace Execution;
 public interface IEnvironment
 {
     /// <summary>
-    /// Читает число из входного потока.
+    /// Читает значение указанного типа из входного потока.
     /// </summary>
-    /// <returns>Прочитанное число</returns>
-    double ReadInput();
+    object ReadInput(DataType type);
 
     /// <summary>
     /// Добавляет результат в выходной поток.
     /// </summary>
-    /// <param name="result">Значение для вывода</param>
-    void AddResult(double result);
+    void AddResult(object result);
 }

@@ -11,7 +11,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x;
+            int x;
             """;
 
         Parser parser = new(context, code, env);
@@ -27,7 +27,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 10;
+            int x = 10;
             """;
 
         Parser parser = new(context, code, env);
@@ -43,7 +43,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 10;
+            int x = 10;
             print(x);
             """;
 
@@ -51,7 +51,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(10.0, env.Results[0]);
+        Assert.Equal(10, env.Results[0]);
     }
 
     // Объявление с выражением: `var x = 2 + 3;`
@@ -61,7 +61,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 2 + 3;
+            int x = 2 + 3;
             print(x);
             """;
 
@@ -69,7 +69,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(5.0, env.Results[0]);
+        Assert.Equal(5, env.Results[0]);
     }
 
     // Объявление с использованием переменной: `var a = 10; var b = 20; var sum = a + b;`
@@ -79,9 +79,9 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var a = 10;
-            var b = 20;
-            var sum = a + b;
+            int a = 10;
+            int b = 20;
+            int sum = a + b;
             print(sum);
             """;
 
@@ -89,7 +89,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(30.0, env.Results[0]);
+        Assert.Equal(30, env.Results[0]);
     }
 
     // Объявление константы: `const PI = 3.14;`
@@ -99,7 +99,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            const PI = 3.14;
+            const num PI = 3.14;
             print(PI);
             """;
 
@@ -117,8 +117,8 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            const PI = 3.14;
-            var r = 2;
+            const num PI = 3.14;
+            int r = 2;
             print(PI * r * r);
             """;
 
@@ -126,7 +126,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(12.56, env.Results[0], 2);
+        Assert.Equal(12.56, (double)env.Results[0], 2);
     }
 
     // Присваивание числового литерала: `var x; x = 20; print(x);`
@@ -136,7 +136,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x;
+            int x;
             x = 20;
             print(x);
             """;
@@ -145,7 +145,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(20.0, env.Results[0]);
+        Assert.Equal(20, env.Results[0]);
     }
 
     // Присваивание выражения: `var x; var y = 5; x = y * 2; print(x);`
@@ -155,8 +155,8 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x;
-            var y = 5;
+            int x;
+            int y = 5;
             x = y * 2;
             print(x);
             """;
@@ -165,7 +165,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(10.0, env.Results[0]);
+        Assert.Equal(10, env.Results[0]);
     }
 
     // Присваивание с использованием встроенных функций: `var x; x = abs(-10); print(x);`
@@ -175,7 +175,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x;
+            int x;
             x = abs(-10);
             print(x);
             """;
@@ -184,17 +184,17 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(10.0, env.Results[0]);
+        Assert.Equal(10, env.Results[0]);
     }
 
     // Ввод в объявленную переменную: `var x; input(x);`
     [Fact]
     public void Input_ToVariable()
     {
-        FakeEnvironment env = new(42.0);
+        FakeEnvironment env = new(42);
         Context context = new();
         string code = """
-            var x;
+            int x;
             input(x);
             """;
 
@@ -208,10 +208,10 @@ public class ParseTopLevelStatementsTest
     [Fact]
     public void Input_ThenPrint()
     {
-        FakeEnvironment env = new(42.0);
+        FakeEnvironment env = new(42);
         Context context = new();
         string code = """
-            var x;
+            int x;
             input(x);
             print(x);
             """;
@@ -220,7 +220,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(42.0, env.Results[0]);
+        Assert.Equal(42, env.Results[0]);
     }
 
     // Вывод числа: `print(10);`
@@ -237,7 +237,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(10.0, env.Results[0]);
+        Assert.Equal(10, env.Results[0]);
     }
 
     // Вывод переменной: `var x = 5; print(x);`
@@ -247,7 +247,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 5;
+            int x = 5;
             print(x);
             """;
 
@@ -255,7 +255,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(5.0, env.Results[0]);
+        Assert.Equal(5, env.Results[0]);
     }
 
     // Вывод выражения: `var x = 10; print(x + 5);`
@@ -265,7 +265,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 10;
+            int x = 10;
             print(x + 5);
             """;
 
@@ -273,7 +273,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(15.0, env.Results[0]);
+        Assert.Equal(15, env.Results[0]);
     }
 
     // Вывод нескольких аргументов: `print(1, 2 + 3);`
@@ -289,7 +289,7 @@ public class ParseTopLevelStatementsTest
         Parser parser = new(context, code, env);
         parser.ParseProgram();
 
-        Assert.Equal(new[] { 1.0, 5.0 }, env.Results);
+        Assert.Equal(new object[] { 1, 5 }, env.Results);
     }
 
     // Вывод без аргументов: `print();`
@@ -324,9 +324,9 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(3, env.Results.Count);
-        Assert.Equal(3.0, env.Results[0]);
-        Assert.Equal(5.0, env.Results[1]);
-        Assert.Equal(5.0, env.Results[2]);
+        Assert.Equal(3, env.Results[0]);
+        Assert.Equal(5, env.Results[1]);
+        Assert.Equal(5, env.Results[2]);
     }
 
     // Несколько переменных и операций: `var a = 10; var b = 20; var sum = a + b; print(sum);`
@@ -336,9 +336,9 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var a = 10;
-            var b = 20;
-            var sum = a + b;
+            int a = 10;
+            int b = 20;
+            int sum = a + b;
             print(sum);
             """;
 
@@ -346,7 +346,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(30.0, env.Results[0]);
+        Assert.Equal(30, env.Results[0]);
     }
 
     // Комплексная программа: `const PI = 3.14; var r = 2; print(PI * r * r);`
@@ -356,8 +356,8 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            const PI = 3.14;
-            var r = 2;
+            const num PI = 3.14;
+            int r = 2;
             print(PI * r * r);
             """;
 
@@ -365,17 +365,17 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(12.56, env.Results[0], 2);
+        Assert.Equal(12.56, (double)env.Results[0], 2);
     }
 
     // Программа с вводом-выводом: `var x; input(x); print(x);`
     [Fact]
     public void Program_WithInputOutput()
     {
-        FakeEnvironment env = new(42.0);
+        FakeEnvironment env = new(42);
         Context context = new();
         string code = """
-            var x;
+            int x;
             input(x);
             print(x);
             """;
@@ -384,7 +384,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(42.0, env.Results[0]);
+        Assert.Equal(42, env.Results[0]);
     }
 
     // Арифметические операции в инструкциях: `var x = 15; var y = 3; var a = x * y; var b = x / y; print(a); print(b);`
@@ -394,10 +394,10 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 15;
-            var y = 3;
-            var a = x * y;
-            var b = x / y;
+            int x = 15;
+            int y = 3;
+            int a = x * y;
+            num b = x / y;
             print(a);
             print(b);
             """;
@@ -406,7 +406,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(2, env.Results.Count);
-        Assert.Equal(45.0, env.Results[0]);
+        Assert.Equal(45, env.Results[0]);
         Assert.Equal(5.0, env.Results[1]);
     }
 
@@ -417,7 +417,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var result = (10 + 5) * 2;
+            int result = (10 + 5) * 2;
             print(result);
             """;
 
@@ -425,7 +425,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(30.0, env.Results[0]);
+        Assert.Equal(30, env.Results[0]);
     }
 
     // Возведение в степень в инструкции: `var base = 2; var poow = 8; var power = base ^ poow; print(power);`
@@ -435,9 +435,9 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var base = 2;
-            var poow = 8;
-            var power = base ^ poow;
+            int base = 2;
+            int poow = 8;
+            num power = base ^ poow;
             print(power);
             """;
 
@@ -455,8 +455,8 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var a = 10;
-            var b = 5;
+            int a = 10;
+            int b = 5;
             print(a > b);
             print(a < b);
             print(a == b);
@@ -466,9 +466,9 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(3, env.Results.Count);
-        Assert.Equal(1.0, env.Results[0]);
-        Assert.Equal(0.0, env.Results[1]);
-        Assert.Equal(0.0, env.Results[2]);
+        Assert.Equal(true, env.Results[0]);
+        Assert.Equal(false, env.Results[1]);
+        Assert.Equal(false, env.Results[2]);
     }
 
     // Логические операции: `var x = 1; var y = 0; print(x && y); print(x || y);`
@@ -478,8 +478,8 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 1;
-            var y = 0;
+            int x = 1;
+            int y = 0;
             print(x && y);
             print(x || y);
             """;
@@ -488,8 +488,8 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(2, env.Results.Count);
-        Assert.Equal(0.0, env.Results[0]); // false
-        Assert.Equal(1.0, env.Results[1]); // true
+        Assert.Equal(false, env.Results[0]);
+        Assert.Equal(true, env.Results[1]);
     }
 
     // Целочисленное деление и остаток: `var a = 17; var b = 5; var c = a // b; var d = a % b; print(c); print(d);`
@@ -499,10 +499,10 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var a = 17;
-            var b = 5;
-            var c = a // b;
-            var d = a % b;
+            int a = 17;
+            int b = 5;
+            int c = a // b;
+            int d = a % b;
             print(c);
             print(d);
             """;
@@ -511,8 +511,8 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(2, env.Results.Count);
-        Assert.Equal(3.0, env.Results[0]);
-        Assert.Equal(2.0, env.Results[1]);
+        Assert.Equal(3, env.Results[0]);
+        Assert.Equal(2, env.Results[1]);
     }
 
     // Обработка ошибок
@@ -524,7 +524,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 1;
+            int x = 1;
             print(x / 0);
             """;
 
@@ -539,7 +539,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 5;
+            int x = 5;
             print(x // 0);
             """;
 
@@ -554,7 +554,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 5;
+            int x = 5;
             print(x % 0);
             """;
 
@@ -583,7 +583,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 10;
+            int x = 10;
             if (x > 5) {
                 print(1);
             }
@@ -593,7 +593,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(1.0, env.Results[0]);
+        Assert.Equal(1, env.Results[0]);
     }
 
     // if-else
@@ -603,7 +603,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 3;
+            int x = 3;
             if (x > 5) {
                 print(1);
             } else {
@@ -615,7 +615,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(0.0, env.Results[0]);
+        Assert.Equal(0, env.Results[0]);
     }
 
     // вложенные if
@@ -625,8 +625,8 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 10;
-            var y = 5;
+            int x = 10;
+            int y = 5;
             if (x > 5) {
                 if (y > 10) {
                     print(1);
@@ -640,7 +640,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(2.0, env.Results[0]);
+        Assert.Equal(2, env.Results[0]);
     }
 
     // Цикл while
@@ -650,7 +650,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var i = 0;
+            int i = 0;
             while (i < 3) {
                 i = i + 1;
                 print(i);
@@ -661,7 +661,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(3, env.Results.Count);
-        Assert.Equal(new[] { 1.0, 2.0, 3.0 }, env.Results);
+        Assert.Equal(new object[] { 1, 2, 3 }, env.Results);
     }
 
     // Цикл for to
@@ -671,7 +671,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var i;
+            int i;
             for (i = 1 to 3) {
                 print(i);
             }
@@ -681,7 +681,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(3, env.Results.Count);
-        Assert.Equal(new[] { 1.0, 2.0, 3.0 }, env.Results);
+        Assert.Equal(new object[] { 1, 2, 3 }, env.Results);
     }
 
     // Цикл for downto
@@ -691,7 +691,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var i;
+            int i;
             for (i = 3 downto 1) {
                 print(i);
             }
@@ -701,7 +701,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(3, env.Results.Count);
-        Assert.Equal(new[] { 3.0, 2.0, 1.0 }, env.Results);
+        Assert.Equal(new object[] { 3, 2, 1 }, env.Results);
     }
 
     // Цикл с break
@@ -711,7 +711,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var i = 0;
+            int i = 0;
             while (1) {
                 i = i + 1;
                 if (i == 3) { break; }
@@ -723,7 +723,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(2, env.Results.Count);
-        Assert.Equal(new[] { 1.0, 2.0 }, env.Results);
+        Assert.Equal(new object[] { 1, 2 }, env.Results);
     }
 
     // Цикл с continue
@@ -733,7 +733,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var i = 0;
+            int i = 0;
             while (i < 3) {
                 i = i + 1;
                 if (i == 2) { continue; }
@@ -745,7 +745,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(2, env.Results.Count);
-        Assert.Equal(new[] { 1.0, 3.0 }, env.Results);
+        Assert.Equal(new object[] { 1, 3 }, env.Results);
     }
 
     // Цикл for с break
@@ -755,7 +755,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var i;
+            int i;
             for (i = 1 to 5) {
                 if (i == 3) { break; }
                 print(i);
@@ -766,7 +766,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(2, env.Results.Count);
-        Assert.Equal(new[] { 1.0, 2.0 }, env.Results);
+        Assert.Equal(new object[] { 1, 2 }, env.Results);
     }
 
     // Цикл for с continue
@@ -776,7 +776,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var i;
+            int i;
             for (i = 1 to 3) {
                 if (i == 2) { continue; }
                 print(i);
@@ -787,7 +787,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Equal(2, env.Results.Count);
-        Assert.Equal(new[] { 1.0, 3.0 }, env.Results);
+        Assert.Equal(new object[] { 1, 3 }, env.Results);
     }
 
     // Объявление и вызов функции
@@ -797,10 +797,10 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            func add(a, b) {
+            func int add(int a, int b) {
                 return a + b;
             }
-            var res = add(10, 20);
+            int res = add(10, 20);
             print(res);
             """;
 
@@ -808,7 +808,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(30.0, env.Results[0]);
+        Assert.Equal(30, env.Results[0]);
     }
 
     // Объявление и вызов процедуры
@@ -818,7 +818,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            proc log(val) {
+            proc log(int val) {
                 print(val);
             }
             log(42);
@@ -828,7 +828,7 @@ public class ParseTopLevelStatementsTest
         parser.ParseProgram();
 
         Assert.Single(env.Results);
-        Assert.Equal(42.0, env.Results[0]);
+        Assert.Equal(42, env.Results[0]);
     }
 
     // повторное объявление переменной
@@ -838,8 +838,8 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            var x = 1;
-            var x = 2;
+            int x = 1;
+            int x = 2;
             """;
 
         Parser parser = new(context, code, env);
@@ -867,7 +867,7 @@ public class ParseTopLevelStatementsTest
         FakeEnvironment env = new();
         Context context = new();
         string code = """
-            const PI = 3.14;
+            const num PI = 3.14;
             PI = 3.15;
             """;
 

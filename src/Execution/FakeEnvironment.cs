@@ -1,3 +1,5 @@
+using Ast;
+
 namespace Execution;
 
 /// <summary>
@@ -6,14 +8,14 @@ namespace Execution;
 /// </summary>
 public class FakeEnvironment : IEnvironment
 {
-    private readonly List<double> _results = [];
-    private readonly Queue<double> _inputQueue = new();
+    private readonly List<object> _results = [];
+    private readonly Queue<object> _inputQueue = new();
 
     /// <summary>
     /// Создает фейковое окружение с предопределенными входными данными.
     /// </summary>
     /// <param name="inputs">Входные данные для симуляции</param>
-    public FakeEnvironment(params double[] inputs)
+    public FakeEnvironment(params object[] inputs)
     {
         foreach (var input in inputs)
         {
@@ -24,25 +26,35 @@ public class FakeEnvironment : IEnvironment
     /// <summary>
     /// Получает список всех добавленных результатов.
     /// </summary>
-    public IReadOnlyList<double> Results => _results;
+    public IReadOnlyList<object> Results => _results;
 
     /// <summary>
     /// Читает следующее значение из очереди входных данных.
     /// </summary>
-    public double ReadInput()
+    public object ReadInput(DataType type)
     {
         if (_inputQueue.Count == 0)
         {
             throw new InvalidOperationException("No input available in test environment");
         }
 
-        return _inputQueue.Dequeue();
+        object input = _inputQueue.Dequeue();
+        
+        // Basic conversion to ensure type safety in tests if needed
+        return type switch
+        {
+            DataType.Int => Convert.ToInt32(input),
+            DataType.Num => Convert.ToDouble(input),
+            DataType.String => input.ToString()!,
+            DataType.Bool => Convert.ToBoolean(input),
+            _ => input
+        };
     }
 
     /// <summary>
     /// Добавляет результат в список результатов.
     /// </summary>
-    public void AddResult(double result)
+    public void AddResult(object result)
     {
         _results.Add(result);
     }

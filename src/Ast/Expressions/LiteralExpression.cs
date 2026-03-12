@@ -2,16 +2,17 @@
 
 public sealed class LiteralExpression : Expression
 {
-    public LiteralExpression(double value)
+    public LiteralExpression(DataType type, object value)
     {
+        Type = type;
         Value = value;
     }
 
-    public double Value { get; }
+    public DataType Type { get; }
 
-    public override void Accept(
-        IAstVisitor visitor
-    )
+    public object Value { get; }
+
+    public override void Accept(IAstVisitor visitor)
     {
         visitor.Visit(this);
     }

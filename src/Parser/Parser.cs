@@ -38,7 +38,7 @@ public class Parser
     public Row EvaluateExpression()
     {
         Expression expression = ParseExpression();
-        double result = _evaluator.Evaluate(expression);
+        object result = _evaluator.Evaluate(expression);
         return new Row(result);
     }
 
@@ -64,9 +64,11 @@ public class Parser
     /// </summary>
     private AstNode ParseFunctionDeclaration()
     {
+        DataType? returnType = null;
         if (_tokens.Peek().Type == TokenType.Func)
         {
             Match(TokenType.Func);
+            returnType = ParseDataType();
         }
         else
         {
@@ -74,34 +76,41 @@ public class Parser
         }
         
         string functionName = ParseIdentifier();
-        List<string> parameters = ParseParameterList();
+        List<Parameter> parameters = ParseParameterList();
         List<AstNode> body = ParseFunctionBlock();
 
-        return new FunctionDeclaration(functionName, parameters, body);
+        return new FunctionDeclaration(returnType, functionName, parameters, body);
     }
 
     /// <summary>
     /// Разбирает список параметров.
     /// Правила: parameter_list = identifier, { ",", identifier } ;
     /// </summary>
-    private List<string> ParseParameterList()
+    private List<Parameter> ParseParameterList()
     {
         Match(TokenType.OpenParenthesis);
-        List<string> parameters = [];
+        List<Parameter> parameters = [];
 
         if (_tokens.Peek().Type != TokenType.CloseParenthesis)
         {
-            parameters.Add(ParseIdentifier());
+            parameters.Add(ParseParameter());
 
             while (_tokens.Peek().Type == TokenType.Comma)
             {
                 _tokens.Advance();
-                parameters.Add(ParseIdentifier());
+                parameters.Add(ParseParameter());
             }
         }
 
         Match(TokenType.CloseParenthesis);
         return parameters;
+    }
+
+    private Parameter ParseParameter()
+    {
+        DataType type = ParseDataType();
+        string name = ParseIdentifier();
+        return new Parameter(type, name);
     }
 
     /// <summary>
@@ -139,7 +148,7 @@ public class Parser
             return statement;
         }
 
-        if (token.Type == TokenType.Var)
+        if (IsTypeToken(token.Type))
         {
             AstNode statement = ParseVariableDeclaration();
             Match(TokenType.Semicolon);
@@ -208,7 +217,7 @@ public class Parser
     /// </summary>
     private AstNode ParseVariableDeclaration()
     {
-        Match(TokenType.Var);
+        DataType type = ParseDataType();
         string name = ParseIdentifier();
         Expression? value = null;
 
@@ -218,7 +227,7 @@ public class Parser
             value = ParseExpression();
         }
 
-        return new VariableDeclaration(name, value);
+        return new VariableDeclaration(type, name, value);
     }
 
     /// <summary>
@@ -228,11 +237,12 @@ public class Parser
     private AstNode ParseConstantDeclaration()
     {
         Match(TokenType.Const);
+        DataType type = ParseDataType();
         string name = ParseIdentifier();
         Match(TokenType.Assign);
         Expression value = ParseExpression();
 
-        return new ConstantDeclaration(name, value);
+        return new ConstantDeclaration(type, name, value);
     }
 
     /// <summary>
@@ -433,7 +443,7 @@ public class Parser
         BinaryOperation comparisonOp = isDownto ? BinaryOperation.GreaterThanOrEqual : BinaryOperation.LessThanOrEqual;
         Expression endCondition = new BinaryOperationExpression(iteratorVar, comparisonOp, endValue);
 
-        Expression oneLiteral = new LiteralExpression(1.0);
+        Expression oneLiteral = new LiteralExpression(DataType.Int, 1);
         BinaryOperation stepOp = isDownto ? BinaryOperation.Minus : BinaryOperation.Plus;
         Expression stepExpression = new BinaryOperationExpression(iteratorVar, stepOp, oneLiteral);
         Expression stepValue = new AssignmentExpression(iteratorName, stepExpression);
@@ -708,10 +718,24 @@ public class Parser
         switch (token.Type)
         {
             case TokenType.IntegerLiteral:
-            case TokenType.FloatLiteral:
                 _tokens.Advance();
-                double value = Convert.ToDouble(token.Value!.ToDecimal());
-                return new LiteralExpression(value);
+                return new LiteralExpression(DataType.Int, token.Value!.ToInt());
+
+            case TokenType.NumLiteral:
+                _tokens.Advance();
+                return new LiteralExpression(DataType.Num, token.Value!.ToDouble());
+
+            case TokenType.StringLiteral:
+                _tokens.Advance();
+                return new LiteralExpression(DataType.String, token.Value!.ToString()!);
+
+            case TokenType.True:
+                _tokens.Advance();
+                return new LiteralExpression(DataType.Bool, true);
+
+            case TokenType.False:
+                _tokens.Advance();
+                return new LiteralExpression(DataType.Bool, false);
 
             case TokenType.Identifier:
                 return ParseFunctionCallOrIdentifier();
@@ -781,6 +805,27 @@ public class Parser
     {
         return type == TokenType.Multiply || type == TokenType.Divide ||
                type == TokenType.IntegerDivide || type == TokenType.Modulo;
+    }
+
+    private DataType ParseDataType()
+    {
+        Token token = _tokens.Peek();
+        DataType type = token.Type switch
+        {
+            TokenType.Int => DataType.Int,
+            TokenType.Num => DataType.Num,
+            TokenType.String => DataType.String,
+            TokenType.Bool => DataType.Bool,
+            _ => throw new UnexpectedLexemeException("data type", token)
+        };
+        _tokens.Advance();
+        return type;
+    }
+
+    private bool IsTypeToken(TokenType type)
+    {
+        return type == TokenType.Int || type == TokenType.Num ||
+               type == TokenType.String || type == TokenType.Bool;
     }
 
     private void Match(TokenType expected)

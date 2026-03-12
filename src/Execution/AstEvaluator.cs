@@ -8,13 +8,9 @@ namespace Execution;
 
 public class AstEvaluator(Context context, IEnvironment environment) : IAstVisitor
 {
-    private readonly Stack<double> _values = [];
+    private readonly Stack<object> _values = [];
 
-    private readonly double _trueToDouble = 1.0;
-
-    private readonly double _falseToDouble = 0.0;
-
-    public double Evaluate(AstNode node)
+    public object Evaluate(AstNode node)
     {
         if (_values.Count > 0)
         {
@@ -48,92 +44,137 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
 
     public void Visit(BinaryOperationExpression e)
     {
+        if (e.Operation == BinaryOperation.LogicalAnd)
+        {
+            e.Left.Accept(this);
+            if (!ToBool(_values.Pop()))
+            {
+                _values.Push(false);
+                return;
+            }
+            e.Right.Accept(this);
+            _values.Push(ToBool(_values.Pop()));
+            return;
+        }
+
+        if (e.Operation == BinaryOperation.LogicalOr)
+        {
+            e.Left.Accept(this);
+            if (ToBool(_values.Pop()))
+            {
+                _values.Push(true);
+                return;
+            }
+            e.Right.Accept(this);
+            _values.Push(ToBool(_values.Pop()));
+            return;
+        }
+
         e.Left.Accept(this);
         e.Right.Accept(this);
-        double right = _values.Pop();
-        double left = _values.Pop();
+        object right = _values.Pop();
+        object left = _values.Pop();
 
         switch (e.Operation)
         {
             case BinaryOperation.Plus:
-                _values.Push(left + right);
+                if (left is string || right is string)
+                    _values.Push(left.ToString() + right.ToString());
+                else if (left is double || right is double)
+                    _values.Push(Convert.ToDouble(left) + Convert.ToDouble(right));
+                else
+                    _values.Push(Convert.ToInt32(left) + Convert.ToInt32(right));
                 break;
             case BinaryOperation.Minus:
-                _values.Push(left - right);
+                if (left is double || right is double)
+                    _values.Push(Convert.ToDouble(left) - Convert.ToDouble(right));
+                else
+                    _values.Push(Convert.ToInt32(left) - Convert.ToInt32(right));
                 break;
             case BinaryOperation.Multiply:
-                _values.Push(left * right);
+                if (left is double || right is double)
+                    _values.Push(Convert.ToDouble(left) * Convert.ToDouble(right));
+                else
+                    _values.Push(Convert.ToInt32(left) * Convert.ToInt32(right));
                 break;
             case BinaryOperation.Divide:
-                if (Numbers.AreEqual(right, 0.0))
-                {
-                    throw new DivideByZeroException();
-                }
-                _values.Push(left / right);
+                double dRight = Convert.ToDouble(right);
+                if (dRight == 0.0) throw new DivideByZeroException();
+                _values.Push(Convert.ToDouble(left) / dRight);
                 break;
             case BinaryOperation.IntegerDivide:
-                if (Numbers.AreEqual(right, 0.0))
-                {
-                    throw new DivideByZeroException();
-                }
-                _values.Push(Math.Floor(left / right));
+                int iRight = Convert.ToInt32(right);
+                if (iRight == 0) throw new DivideByZeroException();
+                _values.Push(Convert.ToInt32(left) / iRight);
                 break;
             case BinaryOperation.Modulo:
-                if (Numbers.AreEqual(right, 0.0))
-                {
-                    throw new DivideByZeroException();
-                }
-                _values.Push(left % right);
+                int modRight = Convert.ToInt32(right);
+                if (modRight == 0) throw new DivideByZeroException();
+                _values.Push(Convert.ToInt32(left) % modRight);
                 break;
             case BinaryOperation.Power:
-                _values.Push(Math.Pow(left, right));
+                _values.Push(Math.Pow(Convert.ToDouble(left), Convert.ToDouble(right)));
                 break;
             case BinaryOperation.LessThan:
-                _values.Push(left < right ? _trueToDouble : _falseToDouble);
+                _values.Push(Compare(left, right) < 0);
                 break;
             case BinaryOperation.GreaterThan:
-                _values.Push(left > right ? _trueToDouble : _falseToDouble);
+                _values.Push(Compare(left, right) > 0);
                 break;
             case BinaryOperation.LessThanOrEqual:
-                _values.Push(left <= right ? _trueToDouble : _falseToDouble);
+                _values.Push(Compare(left, right) <= 0);
                 break;
             case BinaryOperation.GreaterThanOrEqual:
-                _values.Push(left >= right ? _trueToDouble : _falseToDouble);
+                _values.Push(Compare(left, right) >= 0);
                 break;
             case BinaryOperation.Equal:
-                _values.Push(Numbers.AreEqual(left, right) ? _trueToDouble : _falseToDouble);
+                _values.Push(Compare(left, right) == 0);
                 break;
             case BinaryOperation.NotEqual:
-                _values.Push(Numbers.AreNotEqual(left, right) ? _trueToDouble : _falseToDouble);
-                break;
-            case BinaryOperation.LogicalAnd:
-                _values.Push((Numbers.AreEqual(left, _trueToDouble) && Numbers.AreEqual(right, _trueToDouble)) ? _trueToDouble : _falseToDouble);
-                break;
-            case BinaryOperation.LogicalOr:
-                _values.Push((Numbers.AreEqual(left, _trueToDouble) || Numbers.AreEqual(right, _trueToDouble)) ? _trueToDouble : _falseToDouble);
+                _values.Push(Compare(left, right) != 0);
                 break;
             default:
                 throw new NotImplementedException($"Unknown binary operation {e.Operation}");
         }
     }
 
+    private int Compare(object left, object right)
+    {
+        if (left is string lStr && right is string rStr) return string.CompareOrdinal(lStr, rStr);
+        if (left is bool lBool && right is bool rBool) return lBool.CompareTo(rBool);
+        if (left is double || right is double) return Convert.ToDouble(left).CompareTo(Convert.ToDouble(right));
+        return Convert.ToInt32(left).CompareTo(Convert.ToInt32(right));
+    }
+
     public void Visit(UnaryOperationExpression e)
     {
         e.Operand.Accept(this);
+        object value = _values.Pop();
+
         switch (e.Operation)
         {
             case UnaryOperation.Plus:
+                _values.Push(value);
                 break;
             case UnaryOperation.Minus:
-                _values.Push(-_values.Pop());
+                if (value is double d) _values.Push(-d);
+                else _values.Push(-Convert.ToInt32(value));
                 break;
             case UnaryOperation.LogicalNot:
-                double value = _values.Pop();
-                _values.Push(value == 0.0 ? 1.0 : 0.0);
+                _values.Push(!ToBool(value));
                 break;
             default:
                 throw new NotImplementedException($"Unknown unary operation {e.Operation}");
         }
+    }
+
+    private bool ToBool(object value)
+    {
+        if (value is bool b) return b;
+        if (value is int i) return i != 0;
+        if (value is double d) return d != 0.0;
+        if (value is string s) return !string.IsNullOrEmpty(s);
+        return false;
     }
 
     public void Visit(LiteralExpression e)
@@ -148,20 +189,23 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
 
     public void Visit(FunctionCall call)
     {
-        List<double> argValues = new();
+        List<object> argValues = new();
         foreach (Expression arg in call.Arguments)
         {
             arg.Accept(this);
             argValues.Add(_values.Pop());
         }
 
-        if (IsBuiltInFunction(call.FunctionName))
+        string lowerName = call.FunctionName.ToLower();
+        if (IsBuiltInFunction(lowerName))
         {
-            double result = call.FunctionName.ToLower() switch
+            object result = lowerName switch
             {
-                "abs" => Math.Abs(argValues[0]),
-                "max" => argValues.Max(),
-                "min" => argValues.Min(),
+                "abs" => valAbs(argValues[0]),
+                "max" => valMax(argValues),
+                "min" => valMin(argValues),
+                "len" => (int)argValues[0].ToString()!.Length,
+                "substr" => valSubstr(argValues),
                 _ => throw new Exception($"Unknown built-in function: {call.FunctionName}"),
             };
             _values.Push(result);
@@ -170,46 +214,30 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
         {
             FunctionDeclaration function = context.GetFunction(call.FunctionName);
 
-            foreach (double argValue in argValues)
-            {
-                _values.Push(argValue);
-            }
-
             context.PushScope(new Scope());
             try
             {
-                foreach (string parameterName in Enumerable.Reverse(function.Parameters))
+                for (int i = 0; i < function.Parameters.Count; i++)
                 {
-                    double value = _values.Pop();
-                    context.DefineVariable(parameterName, value);
+                    context.DefineVariable(function.Parameters[i].Name, argValues[i], function.Parameters[i].Type);
                 }
 
-                double returnValue;
+                object returnValue = 0;
 
                 try
                 {
                     foreach (AstNode statement in function.Body)
                     {
                         statement.Accept(this);
-
-                        if (_values.Count > 0 && !(statement is ReturnExpression))
-                        {
-                            _values.Pop();
-                        }
+                        if (_values.Count > 0 && !(statement is ReturnExpression)) _values.Pop();
                     }
-
-                    returnValue = 0.0;
                 }
                 catch (ReturnException ret)
                 {
                     returnValue = ret.ReturnValue;
                 }
 
-                while (_values.Count > 0)
-                {
-                    _values.Pop();
-                }
-
+                while (_values.Count > 0) _values.Pop();
                 _values.Push(returnValue);
             }
             finally
@@ -217,6 +245,34 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
                 context.PopScope();
             }
         }
+    }
+
+    private object valAbs(object val) 
+    {
+        if (val is double d) return Math.Abs(d);
+        return Math.Abs(Convert.ToInt32(val));
+    }
+    
+    private object valMax(List<object> vals) 
+    {
+        if (vals.Any(v => v is double)) return vals.Max(v => Convert.ToDouble(v));
+        return vals.Max(v => Convert.ToInt32(v));
+    }
+    
+    private object valMin(List<object> vals) 
+    {
+        if (vals.Any(v => v is double)) return vals.Min(v => Convert.ToDouble(v));
+        return vals.Min(v => Convert.ToInt32(v));
+    }
+
+
+    private object valSubstr(List<object> args)
+    {
+        string s = args[0].ToString()!;
+        int start = Convert.ToInt32(args[1]);
+        int length = Convert.ToInt32(args[2]);
+        if (start < 0 || length < 0 || start > s.Length || start + length > s.Length) throw new ArgumentOutOfRangeException("substr indices out of range");
+        return s.Substring(start, length);
     }
 
     public void Visit(VariableScopeExpression e)
@@ -229,7 +285,6 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
                 variable.Accept(this);
                 _values.Pop();
             }
-
             e.Expression.Accept(this);
         }
         finally
@@ -241,9 +296,9 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
     public void Visit(AssignmentExpression e)
     {
         e.Value.Accept(this);
-        double value = _values.Pop();
+        object value = _values.Pop();
         context.AssignVariable(e.Name, value);
-        _values.Push(0.0);
+        _values.Push(value);
     }
 
     public void Visit(PrintExpression s)
@@ -251,54 +306,42 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
         foreach (Expression arg in s.Arguments)
         {
             arg.Accept(this);
-            double value = _values.Pop();
-            environment.AddResult(value);
+            environment.AddResult(_values.Pop());
         }
-        _values.Push(0.0);
+        _values.Push(0);
     }
 
     public void Visit(InputExpression s)
     {
-        double value = environment.ReadInput();
+        DataType type = context.GetVariableType(s.VariableName);
+        object value = environment.ReadInput(type);
         context.AssignVariable(s.VariableName, value);
-        _values.Push(0.0);
+        _values.Push(0);
     }
 
     public void Visit(IfExpression s)
     {
         s.Condition.Accept(this);
-        double conditionValue = _values.Pop();
-        bool isTrueCondition = Numbers.AreEqual(_trueToDouble, conditionValue);
-
-        if (isTrueCondition)
+        if (ToBool(_values.Pop()))
         {
             foreach (AstNode statement in s.ThenBranch)
             {
                 statement.Accept(this);
-                if (_values.Count > 0 && !(statement is ReturnExpression))
-                {
-                    _values.Pop();
-                }
+                if (_values.Count > 0 && !(statement is ReturnExpression)) _values.Pop();
             }
         }
-        _values.Push(0.0);
+        _values.Push(0);
     }
 
     public void Visit(IfElseExpression s)
     {
         s.Condition.Accept(this);
-        double conditionValue = _values.Pop();
-        bool isTrueCondition = Numbers.AreEqual(_trueToDouble, conditionValue);
-
-        if (isTrueCondition)
+        if (ToBool(_values.Pop()))
         {
             foreach (AstNode statement in s.ThenBranch)
             {
                 statement.Accept(this);
-                if (_values.Count > 0 && !(statement is ReturnExpression))
-                {
-                    _values.Pop();
-                }
+                if (_values.Count > 0 && !(statement is ReturnExpression)) _values.Pop();
             }
         }
         else
@@ -306,60 +349,33 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
             foreach (AstNode statement in s.ElseBranch)
             {
                 statement.Accept(this);
-                if (_values.Count > 0 && !(statement is ReturnExpression))
-                {
-                    _values.Pop();
-                }
+                if (_values.Count > 0 && !(statement is ReturnExpression)) _values.Pop();
             }
         }
-        _values.Push(0.0);
+        _values.Push(0);
     }
 
     public void Visit(WhileExpression s)
     {
-        context.PushScope(new Scope());
         bool isNotBreaked = true;
-        try
+        while (isNotBreaked)
         {
-            while (isNotBreaked)
+            s.Condition.Accept(this);
+            if (!ToBool(_values.Pop())) break;
+
+            foreach (AstNode statement in s.Body)
             {
-                s.Condition.Accept(this);
-                double conditionValue = _values.Pop();
-
-                if (Numbers.AreEqual(0.0, conditionValue))
+                try
                 {
-                    break;
+                    statement.Accept(this);
+                    if (_values.Count > 0 && !(statement is ReturnExpression)) _values.Pop();
                 }
-
-                foreach (AstNode statement in s.Body)
-                {
-                    try
-                    {
-                        statement.Accept(this);
-
-                        if (_values.Count > 0 && !(statement is ReturnExpression))
-                        {
-                            _values.Pop();
-                        }
-                    }
-                    catch (ContinueException)
-                    {
-                        break;
-                    }
-                    catch (BreakException)
-                    {
-                        isNotBreaked = false;
-                        break;
-                    }
-                }
+                catch (ContinueException) { goto next_iteration; }
+                catch (BreakException) { isNotBreaked = false; break; }
             }
-
-            _values.Push(0.0);
+            next_iteration:;
         }
-        finally
-        {
-            context.PopScope();
-        }
+        _values.Push(0);
     }
 
     public void Visit(ForLoopExpression e)
@@ -368,53 +384,32 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
         try
         {
             e.StartValue.Accept(this);
-            double iteratorValue = _values.Pop();
-            context.DefineVariable(e.IteratorName, iteratorValue);
+            context.DefineVariable(e.IteratorName, _values.Pop(), DataType.Int);
 
             bool isNotBreaked = true;
             while (isNotBreaked)
             {
                 e.EndCondition.Accept(this);
-                double conditionResult = _values.Pop();
-
-                if (Numbers.AreEqual(0.0, conditionResult))
-                {
-                    break;
-                }
+                if (!ToBool(_values.Pop())) break;
 
                 foreach (AstNode statement in e.Body)
                 {
                     try
                     {
                         statement.Accept(this);
-                        if (_values.Count > 0 && !(statement is ReturnExpression))
-                        {
-                            _values.Pop();
-                        }
+                        if (_values.Count > 0 && !(statement is ReturnExpression)) _values.Pop();
                     }
-                    catch (ContinueException)
-                    {
-                        break;
-                    }
-                    catch (BreakException)
-                    {
-                        isNotBreaked = false;
-                        break;
-                    }
+                    catch (ContinueException) { goto next_for; }
+                    catch (BreakException) { isNotBreaked = false; break; }
                 }
-
+                next_for:
                 if (e.StepValue != null)
                 {
                     e.StepValue.Accept(this);
-                }
-
-                if (_values.Count > 0)
-                {
-                    _values.Pop();
+                    if (_values.Count > 0) _values.Pop();
                 }
             }
-
-            _values.Push(0.0);
+            _values.Push(0);
         }
         finally
         {
@@ -422,19 +417,12 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
         }
     }
 
-    public void Visit(BreakExpression s)
-    {
-        throw new BreakException();
-    }
-
-    public void Visit(ContinueExpression s)
-    {
-        throw new ContinueException();
-    }
+    public void Visit(BreakExpression s) => throw new BreakException();
+    public void Visit(ContinueExpression s) => throw new ContinueException();
 
     public void Visit(ReturnExpression s)
     {
-        double returnValue = 0.0;
+        object returnValue = 0;
         if (s.Value != null)
         {
             s.Value.Accept(this);
@@ -445,34 +433,37 @@ public class AstEvaluator(Context context, IEnvironment environment) : IAstVisit
 
     public void Visit(VariableDeclaration d)
     {
-        double value = 0;
+        object value = d.Type switch {
+            DataType.Int => 0,
+            DataType.Num => 0.0,
+            DataType.String => "",
+            DataType.Bool => false,
+            _ => 0
+        };
+
         if (d.Value != null)
         {
             d.Value.Accept(this);
             value = _values.Pop();
         }
 
-        context.DefineVariable(d.Name, value);
-        _values.Push(0.0);
+        context.DefineVariable(d.Name, value, d.Type);
+        _values.Push(0); // Declarations return 0 or similar
     }
 
     public void Visit(ConstantDeclaration d)
     {
         d.Value.Accept(this);
-        double value = _values.Pop();
-        context.DefineConstant(d.Name, value);
-        _values.Push(0.0);
+        object value = _values.Pop();
+        context.DefineConstant(d.Name, value, d.Type);
+        _values.Push(0);
     }
 
     public void Visit(FunctionDeclaration d)
     {
         context.DefineFunction(d);
-        _values.Push(0.0);
+        _values.Push(0);
     }
 
-    private bool IsBuiltInFunction(string functionName)
-    {
-        string lowerName = functionName.ToLower();
-        return lowerName == "abs" || lowerName == "max" || lowerName == "min";
-    }
+    private bool IsBuiltInFunction(string name) => name == "abs" || name == "max" || name == "min" || name == "len" || name == "substr";
 }

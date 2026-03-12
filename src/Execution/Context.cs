@@ -1,4 +1,5 @@
-﻿using Ast.Declarations;
+﻿using Ast;
+using Ast.Declarations;
 
 namespace Execution;
 
@@ -8,7 +9,7 @@ namespace Execution;
 public class Context
 {
     private readonly Stack<Scope> _scopes = [];
-    private readonly Dictionary<string, double> _constants = [];
+    private readonly Dictionary<string, (object value, DataType type)> _constants = [];
     private readonly Dictionary<string, FunctionDeclaration> _functions = [];
 
     public Context()
@@ -34,19 +35,37 @@ public class Context
     /// <summary>
     /// Возвращает значение переменной или константы.
     /// </summary>
-    public double GetValue(string name)
+    public object GetValue(string name)
     {
         foreach (Scope s in _scopes)
         {
-            if (s.TryGetVariable(name, out double variable))
+            if (s.TryGetVariable(name, out object variable))
             {
                 return variable;
             }
         }
 
-        if (_constants.TryGetValue(name, out double constant))
+        if (_constants.TryGetValue(name, out var entry))
         {
-            return constant;
+            return entry.value;
+        }
+
+        throw new ArgumentException($"Variable '{name}' is not defined");
+    }
+
+    public DataType GetVariableType(string name)
+    {
+        foreach (Scope s in _scopes)
+        {
+            if (s.TryGetVariableType(name, out DataType type))
+            {
+                return type;
+            }
+        }
+
+        if (_constants.TryGetValue(name, out var entry))
+        {
+            return entry.type;
         }
 
         throw new ArgumentException($"Variable '{name}' is not defined");
@@ -54,7 +73,7 @@ public class Context
     /// <summary>
     /// Присваивает (изменяет) значение переменной.
     /// </summary>
-    public void AssignVariable(string name, double value)
+    public void AssignVariable(string name, object value)
     {
         foreach (Scope s in _scopes)
         {
@@ -67,23 +86,17 @@ public class Context
         throw new ArgumentException($"Variable '{name}' is not defined");
     }
 
-    /// <summary>
-    /// Определяет переменную в текущей области видимости.
-    /// </summary>
-    public void DefineVariable(string name, double value)
+    public void DefineVariable(string name, object value, DataType type)
     {
-        if (!_scopes.Peek().TryDefineVariable(name, value))
+        if (!_scopes.Peek().TryDefineVariable(name, value, type))
         {
             throw new ArgumentException($"Variable '{name}' is already defined in this scope");
         }
     }
 
-    /// <summary>
-    /// Определяет константу в глобальной области видимости.
-    /// </summary>
-    public void DefineConstant(string name, double value)
+    public void DefineConstant(string name, object value, DataType type)
     {
-        if (!_constants.TryAdd(name, value))
+        if (!_constants.TryAdd(name, (value, type)))
         {
             throw new ArgumentException($"Constant '{name}' is already defined");
         }

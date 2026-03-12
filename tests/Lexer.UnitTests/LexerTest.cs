@@ -53,8 +53,8 @@ public class LexerTest
                 [
                     new Token(TokenType.IntegerLiteral, new TokenValue(0)),
                     new Token(TokenType.IntegerLiteral, new TokenValue(123)),
-                    new Token(TokenType.NumLiteral, new TokenValue(1.23m)),
-                    new Token(TokenType.NumLiteral, new TokenValue(0.5m)),
+                    new Token(TokenType.NumLiteral, new TokenValue(1.23)),
+                    new Token(TokenType.NumLiteral, new TokenValue(0.5)),
                     new Token(TokenType.EndOfFile)
                 ]
             },
@@ -141,7 +141,7 @@ public class LexerTest
                     new Token(TokenType.Error, new TokenValue(":")),
                     new Token(TokenType.Identifier, new TokenValue("float")),
                     new Token(TokenType.Assign),
-                    new Token(TokenType.NumLiteral, new TokenValue(3.14m)),
+                    new Token(TokenType.NumLiteral, new TokenValue(3.14)),
                     new Token(TokenType.Semicolon), new Token(TokenType.EndOfFile)
                 ]
             },
@@ -211,7 +211,7 @@ public class LexerTest
                     new Token(TokenType.Identifier, new TokenValue("b")), new Token(TokenType.Power), new Token(TokenType.IntegerLiteral, new TokenValue(2)),
                     new Token(TokenType.Minus), new Token(TokenType.IntegerLiteral, new TokenValue(4)), new Token(TokenType.Multiply),
                     new Token(TokenType.Identifier, new TokenValue("a")), new Token(TokenType.Multiply), new Token(TokenType.Identifier, new TokenValue("c")),
-                    new Token(TokenType.CloseParenthesis), new Token(TokenType.Power), new Token(TokenType.NumLiteral, new TokenValue(0.5m)),
+                    new Token(TokenType.CloseParenthesis), new Token(TokenType.Power), new Token(TokenType.NumLiteral, new TokenValue(0.5)),
                     new Token(TokenType.CloseParenthesis), new Token(TokenType.Divide),
                     new Token(TokenType.OpenParenthesis), new Token(TokenType.IntegerLiteral, new TokenValue(2)), new Token(TokenType.Multiply), new Token(TokenType.Identifier, new TokenValue("a")), new Token(TokenType.CloseParenthesis),
                     new Token(TokenType.Semicolon),

@@ -4,8 +4,8 @@
     Сценарий: Квадратный корень из 25
         Дано я запустил программу:
             """
-            func sqrt(number) {
-                const epsilon = 0.00001;
+            func num sqrt(num number) {
+                const num epsilon = 0.00001;
                 
                 if (number == 0 || number < 0)
                 {
@@ -13,8 +13,8 @@
                 } 
                 else 
                 {
-                    var guess = number / 2;
-                    var previousGuess = number + 1;
+                    num guess = number / 2;
+                    num previousGuess = number + 1;
 
                     while (abs(guess - previousGuess) > epsilon) {
                         previousGuess = guess;
@@ -25,9 +25,9 @@
                 }
             }
 
-            var value;
+            num value;
             input(value);
-            var root = sqrt(value);
+            num root = sqrt(value);
             print(root);
             """
         И я установил входные данные:

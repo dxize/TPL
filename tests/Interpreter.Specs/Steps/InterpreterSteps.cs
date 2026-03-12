@@ -32,7 +32,17 @@ public class InterpreterSteps
             throw new InvalidOperationException("Сначала нужно запустить программу");
         }
 
-        List<double> inputs = table.Rows.Select(r => double.Parse(r["Число"], CultureInfo.InvariantCulture)).ToList();
+        List<object> inputs = [];
+        foreach (var row in table.Rows)
+        {
+            string val = row["Число"];
+            if (int.TryParse(val, out int i))
+                inputs.Add(i);
+            else if (double.TryParse(val, CultureInfo.InvariantCulture, out double d))
+                inputs.Add(d);
+            else
+                inputs.Add(val);
+        }
 
         _environment = new FakeEnvironment(inputs.ToArray());
     }
@@ -57,22 +67,38 @@ public class InterpreterSteps
             throw new InvalidOperationException("Программа не была выполнена");
         }
 
-        List<double> expected = table.Rows.Select(r => double.Parse(r["Результат"], CultureInfo.InvariantCulture)).ToList();
-        IReadOnlyList<double> actual = _environment.Results;
+        var expectedStrings = table.Rows.Select(r => r["Результат"]).ToList();
+        var actual = _environment.Results;
 
-        for (int i = 0, iMax = Math.Min(expected.Count, actual.Count); i < iMax; ++i)
+        Assert.Equal(expectedStrings.Count, actual.Count);
+
+        for (int i = 0; i < actual.Count; i++)
         {
-            if (Math.Abs(expected[i] - actual[i]) >= Tolerance)
+            object actVal = actual[i];
+            string expStr = expectedStrings[i];
+
+            if (actVal is double d)
             {
-                Assert.Fail($"Expected does not match actual at index {i}: {expected[i]} != {actual[i]}");
+                double expVal = double.Parse(expStr, CultureInfo.InvariantCulture);
+                if (Math.Abs(expVal - d) >= Tolerance)
+                {
+                    Assert.Fail($"Expected does not match actual at index {i}: {expVal} != {d}");
+                }
             }
-        }
-
-        if (expected.Count != actual.Count)
-        {
-            Assert.Fail(
-                $"Actual results count does not match expected. Expected: {expected.Count}, Actual: {actual.Count}."
-            );
+            else if (actVal is int iVal)
+            {
+                int expVal = int.Parse(expStr, CultureInfo.InvariantCulture);
+                Assert.Equal(expVal, iVal);
+            }
+            else if (actVal is bool b)
+            {
+                bool expVal = bool.Parse(expStr);
+                Assert.Equal(expVal, b);
+            }
+            else
+            {
+                Assert.Equal(expStr, actVal.ToString());
+            }
         }
     }
 }

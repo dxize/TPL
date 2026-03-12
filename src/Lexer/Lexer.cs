@@ -312,7 +312,7 @@ public class Lexer
 
         if (hasFraction)
         {
-            if (decimal.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal numValue))
+            if (double.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double numValue))
             {
                 return new Token(TokenType.NumLiteral, new TokenValue(numValue));
             }

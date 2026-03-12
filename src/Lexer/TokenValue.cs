@@ -26,7 +26,7 @@ public class TokenValue
     /// <summary>
     /// Создаёт числовое значение токена.
     /// </summary>
-    public TokenValue(decimal value)
+    public TokenValue(double value)
     {
         _value = value;
     }
@@ -48,7 +48,7 @@ public class TokenValue
         {
             string s => s,
             int i => i.ToString(CultureInfo.InvariantCulture),
-            decimal d => d.ToString(CultureInfo.InvariantCulture),
+            double d => d.ToString(CultureInfo.InvariantCulture),
             bool b => b ? "true" : "false",
             _ => throw new NotImplementedException(),
         };
@@ -68,16 +68,16 @@ public class TokenValue
     }
 
     /// <summary>
-    /// Возвращает значение как decimal.
+    /// Возвращает значение как double.
     /// </summary>
-    public decimal ToDecimal()
+    public double ToDouble()
     {
         return _value switch
         {
             int i => i,
-            decimal d => d,
-            string s => decimal.Parse(s, CultureInfo.InvariantCulture),
-            _ => throw new InvalidOperationException("Значение токена не является decimal.")
+            double d => d,
+            string s => double.Parse(s, CultureInfo.InvariantCulture),
+            _ => throw new InvalidOperationException("Значение токена не является double.")
         };
     }
 

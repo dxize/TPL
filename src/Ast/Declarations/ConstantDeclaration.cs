@@ -4,11 +4,14 @@ namespace Ast.Declarations;
 
 public sealed class ConstantDeclaration : Declaration
 {
-    public ConstantDeclaration(string name, Expression value)
+    public ConstantDeclaration(DataType type, string name, Expression value)
     {
+        Type = type;
         Name = name;
         Value = value;
     }
+
+    public DataType Type { get; }
 
     public string Name { get; }
 

@@ -4,15 +4,15 @@
     Сценарий: Сумма квадратов от 1 до 5
         Дано я запустил программу:
             """
-            func sumSquares(n) {
+            func int sumSquares(int n) {
                 if (n < 1) 
                 {
                     return 0;
                 } 
                 else 
                 {
-                    var sum = 0;
-                    var i;
+                    int sum = 0;
+                    int i;
                     
                     for (i = 1 to n) {
                         sum = sum + i * i;
@@ -22,7 +22,7 @@
                 }
             }
 
-            var n;
+            int n;
             input(n);
             print(sumSquares(n));
             """
