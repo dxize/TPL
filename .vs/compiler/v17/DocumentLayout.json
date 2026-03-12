@@ -50,8 +50,7 @@
               "RelativeToolTip": "src\\Lexer\\TextScanner.cs",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAACUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-11T17:16:17.905Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-11T17:16:17.905Z"
             },
             {
               "$type": "Document",
@@ -63,8 +62,7 @@
               "RelativeToolTip": "src\\Lexer\\Token.cs",
               "ViewState": "AgIAACQAAAAAAAAAAAAAADcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-11T17:14:54.159Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-11T17:14:54.159Z"
             },
             {
               "$type": "Document",
@@ -74,7 +72,7 @@
               "RelativeDocumentMoniker": "src\\Lexer\\TokenValue.cs",
               "ToolTip": "C:\\Users\\gimps\\study\\TPL\\src\\Lexer\\TokenValue.cs",
               "RelativeToolTip": "src\\Lexer\\TokenValue.cs",
-              "ViewState": "AgIAAFoAAAAAAAAAAAAAAHQAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-11T16:53:06.106Z",
               "EditorCaption": ""
@@ -89,8 +87,7 @@
               "RelativeToolTip": "src\\Lexer\\TokenType.cs",
               "ViewState": "AgIAAPYAAAAAAAAAAAAAAAMAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-11T16:46:29.429Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-11T16:46:29.429Z"
             },
             {
               "$type": "Document",
@@ -102,12 +99,7 @@
               "RelativeToolTip": "src\\Lexer\\Lexer.cs",
               "ViewState": "AgIAAOoBAAAAAAAAAAAAAAMCAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-11T16:45:29.247Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+              "WhenOpened": "2026-03-11T16:45:29.247Z"
             }
           ]
         }
