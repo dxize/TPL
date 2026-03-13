@@ -17,7 +17,7 @@ public class FakeEnvironment : IEnvironment
     /// <param name="inputs">Входные данные для симуляции</param>
     public FakeEnvironment(params object[] inputs)
     {
-        foreach (var input in inputs)
+        foreach (object input in inputs)
         {
             _inputQueue.Enqueue(input);
         }

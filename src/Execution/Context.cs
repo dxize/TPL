@@ -45,7 +45,7 @@ public class Context
             }
         }
 
-        if (_constants.TryGetValue(name, out var entry))
+        if (_constants.TryGetValue(name, out (object value, DataType type) entry))
         {
             return entry.value;
         }
@@ -63,7 +63,7 @@ public class Context
             }
         }
 
-        if (_constants.TryGetValue(name, out var entry))
+        if (_constants.TryGetValue(name, out (object value, DataType type) entry))
         {
             return entry.type;
         }

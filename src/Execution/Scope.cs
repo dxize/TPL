@@ -8,7 +8,7 @@ public class Scope
 
     public bool TryGetVariable(string name, out object value)
     {
-        if (_variables.TryGetValue(name, out var entry))
+        if (_variables.TryGetValue(name, out (object value, DataType type) entry))
         {
             value = entry.value;
             return true;
@@ -20,7 +20,7 @@ public class Scope
 
     public bool TryGetVariableType(string name, out DataType type)
     {
-        if (_variables.TryGetValue(name, out var entry))
+        if (_variables.TryGetValue(name, out (object value, DataType type) entry))
         {
             type = entry.type;
             return true;
@@ -32,7 +32,7 @@ public class Scope
 
     public bool TryAssignVariable(string name, object value)
     {
-        if (_variables.TryGetValue(name, out var entry))
+        if (_variables.TryGetValue(name, out (object value, DataType type) entry))
         {
             _variables[name] = (value, entry.type);
             return true;

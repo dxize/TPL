@@ -33,15 +33,21 @@ public class InterpreterSteps
         }
 
         List<object> inputs = [];
-        foreach (var row in table.Rows)
+        foreach (DataTableRow row in table.Rows)
         {
             string val = row["Число"];
             if (int.TryParse(val, out int i))
+            {
                 inputs.Add(i);
+            }
             else if (double.TryParse(val, CultureInfo.InvariantCulture, out double d))
+            {
                 inputs.Add(d);
+            }
             else
+            {
                 inputs.Add(val);
+            }
         }
 
         _environment = new FakeEnvironment(inputs.ToArray());
@@ -67,8 +73,8 @@ public class InterpreterSteps
             throw new InvalidOperationException("Программа не была выполнена");
         }
 
-        var expectedStrings = table.Rows.Select(r => r["Результат"]).ToList();
-        var actual = _environment.Results;
+        List<string> expectedStrings = table.Rows.Select(r => r["Результат"]).ToList();
+        IReadOnlyList<object> actual = _environment.Results;
 
         Assert.Equal(expectedStrings.Count, actual.Count);
 
