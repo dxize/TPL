@@ -1,121 +1,201 @@
-using Execution;
+using Ast;
+using Ast.Declarations;
+using Ast.Expressions;
 
 namespace Parser.UnitTests;
 
 public class ParserTests
 {
-	[Theory]
-	[MemberData(nameof(GetExpressionTestData))]
-	public void Can_parse_expressions(string code, object expected)
-	{
-		FakeEnvironment env = new();
-		Context context = new();
-		Parser parser = new(context, code, env);
-		Row res = parser.EvaluateExpression();
+    [Fact]
+    public void Can_parse_empty_main_with_return()
+    {
+        string code = """
+            func int main() {
+                return 0;
+            }
+            """;
 
-		Assert.Equal(expected, res[0]);
-	}
+        Parser parser = new(code);
+        ProgramNode program = parser.ParseProgram();
 
-	public static TheoryData<string, object> GetExpressionTestData()
-	{
-		return new TheoryData<string, object>
-		{
-			// Числовые литералы
-			{ "2025", 2025 },
-			{ "3.14", 3.14 },
-			{ "0", 0 },
-			{ "123.456", 123.456 },
+        Assert.NotNull(program);
+        Assert.Equal("main", program.MainFunction.Name);
+        Assert.Equal(DataType.Int, program.MainFunction.ReturnType);
+        Assert.Single(program.MainFunction.Body);
 
-			// Унарные операторы
-			{ "-5", -5 },
-			{ "+5", 5 },
-			{ "-3.14", -3.14 },
-			{ "+42", 42 },
+        ReturnExpression returnExpression = Assert.IsType<ReturnExpression>(program.MainFunction.Body[0]);
+        Assert.Equal(DataType.Int, returnExpression.Value.Type);
+        Assert.Equal(0, returnExpression.Value.Value);
+    }
 
-			// Логическое НЕ
-			{ "!1", false },
-			{ "!0", true },
+    [Fact]
+    public void Can_parse_print_with_single_int_literal()
+    {
+        string code = """
+            func int main() {
+                print(123);
+                return 0;
+            }
+            """;
 
-			// Арифметические операторы
-			{ "1 + 2", 3 },
-			{ "5 - 3", 2 },
-			{ "2 * 3", 6 },
-			{ "6 / 2", 3.0 },
-			{ "7 // 2", 3 },
-			{ "7 % 3", 1 },
-			{ "2 ^ 3", 8.0 },
-			{ "2 ^ 3 ^ 2", 512.0 },
-			{ "(-2) ^ 3", -8.0 },
-			{ "4 ^ 0.5", 2.0 }, 
+        Parser parser = new(code);
+        ProgramNode program = parser.ParseProgram();
 
-			// Операторы сравнения
-			{ "3 < 5", true },
-			{ "5 < 5", false },
-			{ "6 < 5", false },
-			{ "3 > 5", false },
-			{ "5 > 5", false },
-			{ "6 > 5", true },
-			{ "3 <= 5", true },
-			{ "5 <= 5", true },
-			{ "6 <= 5", false },
-			{ "3 >= 5", false },
-			{ "5 >= 5", true },
-			{ "6 >= 5", true },
+        Assert.Equal(2, program.MainFunction.Body.Count);
 
-			// Операторы равенства/неравенства
-			{ "5 == 5", true },
-			{ "5 == 3", false },
-			{ "5 != 3", true },
-			{ "5 != 5", false },
+        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
+        Assert.Single(printExpression.Arguments);
 
-			// Логические операторы
-			{ "1 && 1", true },
-			{ "1 && 0", false },
-			{ "0 && 1", false },
-			{ "0 && 0", false },
-			{ "1 || 1", true },
-			{ "1 || 0", true },
-			{ "0 || 1", true },
-			{ "0 || 0", false },
+        LiteralExpression literal = printExpression.Arguments[0];
+        Assert.Equal(DataType.Int, literal.Type);
+        Assert.Equal(123, literal.Value);
+    }
 
-			// Приоритет операторов
-			{ "2 + 3 * 4", 14 },
-			{ "10 - 3 - 2", 5 },
-			{ "12 / 3 / 2", 2.0 },
-			{ "-3 + 2", -1 },
-			{ "3 + 2 * 3", 9 },
-			{ "1 + 2 > 2", true },
-			{ "1 < 2 == 5 > 4", true },
-			{ "2 ^ 3 * 2", 16.0 },
-			{ "2 * 3 ^ 2", 18.0 },
+    [Fact]
+    public void Can_parse_print_with_single_num_literal()
+    {
+        string code = """
+            func int main() {
+                print(3.14);
+                return 0;
+            }
+            """;
 
-			// Скобки
-			{ "(1 + 2) * 3", 9 },
-			{ "2 * (3 + 4)", 14 },
-			{ "((1 + 2) * 3) + 4", 13 },
+        Parser parser = new(code);
+        ProgramNode program = parser.ParseProgram();
 
-			// Встроенные функции
-			{ "abs(-5)", 5 },
-			{ "abs(5)", 5 },
-			{ "abs(-3.14)", 3.14 },
-			{ "min(7, 3, 5)", 3 },
-			{ "min(1)", 1 },
-			{ "min(5, 2)", 2 },
-			{ "max(2, 8, 4)", 8 },
-			{ "max(1)", 1 },
-			{ "max(5, 2)", 5 },
+        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
+        Assert.Single(printExpression.Arguments);
 
-			// Комбинированные выражения
-			{ "abs(-5) + 3", 8 },
-			{ "min(10, 20) * 2", 20 },
-			{ "max(1, 2, 3) ^ 2", 9.0 },
-			{ "(1 + 2) * abs(-3)", 9 },
+        LiteralExpression literal = printExpression.Arguments[0];
+        Assert.Equal(DataType.Num, literal.Type);
+        Assert.Equal(3.14, literal.Value);
+    }
 
-            // String operations
-            { "\"hello\" + \" world\"", "hello world" },
-            { "len(\"abc\")", 3 },
-            { "substr(\"hello\", 1, 3)", "ell" },
-		};
-	}
+    [Fact]
+    public void Can_parse_print_with_single_string_literal()
+    {
+        string code = """
+            func int main() {
+                print("hello");
+                return 0;
+            }
+            """;
 
+        Parser parser = new(code);
+        ProgramNode program = parser.ParseProgram();
+
+        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
+        Assert.Single(printExpression.Arguments);
+
+        LiteralExpression literal = printExpression.Arguments[0];
+        Assert.Equal(DataType.String, literal.Type);
+        Assert.Equal("hello", literal.Value);
+    }
+
+    [Fact]
+    public void Can_parse_print_with_multiple_literals()
+    {
+        string code = """
+            func int main() {
+                print(1, 2.5, "abc");
+                return 0;
+            }
+            """;
+
+        Parser parser = new(code);
+        ProgramNode program = parser.ParseProgram();
+
+        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
+        Assert.Equal(3, printExpression.Arguments.Count);
+
+        Assert.Equal(DataType.Int, printExpression.Arguments[0].Type);
+        Assert.Equal(1, printExpression.Arguments[0].Value);
+
+        Assert.Equal(DataType.Num, printExpression.Arguments[1].Type);
+        Assert.Equal(2.5, printExpression.Arguments[1].Value);
+
+        Assert.Equal(DataType.String, printExpression.Arguments[2].Type);
+        Assert.Equal("abc", printExpression.Arguments[2].Value);
+    }
+
+    [Fact]
+    public void Can_parse_empty_print()
+    {
+        string code = """
+            func int main() {
+                print();
+                return 0;
+            }
+            """;
+
+        Parser parser = new(code);
+        ProgramNode program = parser.ParseProgram();
+
+        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
+        Assert.Empty(printExpression.Arguments);
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("1")]
+    [InlineData("2025")]
+    public void Can_parse_return_int_literal(string value)
+    {
+        string code = $$"""
+        func int main() {
+            return {{value}};
+        }
+        """;
+
+        Parser parser = new(code);
+        ProgramNode program = parser.ParseProgram();
+
+        ReturnExpression returnExpression = Assert.IsType<ReturnExpression>(program.MainFunction.Body[0]);
+        Assert.Equal(DataType.Int, returnExpression.Value.Type);
+        Assert.Equal(int.Parse(value), returnExpression.Value.Value);
+    }
+
+    [Fact]
+    public void Throws_when_main_is_missing()
+    {
+        string code = """
+            func int notmain() {
+                return 0;
+            }
+            """;
+
+        Parser parser = new(code);
+
+        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
+    }
+
+    [Fact]
+    public void Throws_when_return_is_not_int_literal()
+    {
+        string code = """
+            func int main() {
+                return "abc";
+            }
+            """;
+
+        Parser parser = new(code);
+
+        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
+    }
+
+    [Fact]
+    public void Throws_when_statement_is_not_supported_in_iteration_2()
+    {
+        string code = """
+            func int main() {
+                input(x);
+                return 0;
+            }
+            """;
+
+        Parser parser = new(code);
+
+        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
+    }
 }

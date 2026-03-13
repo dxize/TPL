@@ -2,192 +2,78 @@ using Ast;
 using Ast.Declarations;
 using Ast.Expressions;
 
-using Execution;
-
 using Lexer;
 
 namespace Parser;
 
-public class Parser
+public sealed class Parser
 {
     private readonly TokenStream _tokens;
-    private readonly AstEvaluator _evaluator;
 
-    public Parser(Context context, string code, IEnvironment environment)
+    public Parser(string code)
     {
         _tokens = new TokenStream(code);
-        _evaluator = new AstEvaluator(context, environment);
     }
 
     /// <summary>
-    /// Разбирает программу языка DEA.
-    /// Правила: program = top_level_statement, { top_level_statement }, end_of_file ;
+    /// Итерация №2:
+    /// program = main_function_declaration, end_of_file ;
     /// </summary>
-    public void ParseProgram()
+    public ProgramNode ParseProgram()
     {
-        while (_tokens.Peek().Type != TokenType.EndOfFile)
-        {
-            AstNode node = ParseTopLevelStatement();
-            _evaluator.Execute(node);
-        }
+        FunctionDeclaration mainFunction = ParseMainFunctionDeclaration();
+        Match(TokenType.EndOfFile);
+        return new ProgramNode(mainFunction);
     }
 
     /// <summary>
-    /// Выполняет разбор выражения и возвращает результат.
+    /// main_function_declaration =
+    ///     "func", "int", "main", "(", ")", block ;
     /// </summary>
-    public Row EvaluateExpression()
+    private FunctionDeclaration ParseMainFunctionDeclaration()
     {
-        Expression expression = ParseExpression();
-        object result = _evaluator.Evaluate(expression);
-        return new Row(result);
-    }
+        Match(TokenType.Func);
+        Match(TokenType.Int);
 
-    /// <summary>
-    /// Разбирает верхнеуровневую инструкцию.
-    /// Правила: top_level_statement = function_declaration | statement ;
-    /// </summary>
-    private AstNode ParseTopLevelStatement()
-    {
-        Token token = _tokens.Peek();
-
-        if (token.Type == TokenType.Func || token.Type == TokenType.Proc)
-        {
-            return ParseFunctionDeclaration();
-        }
-
-        return ParseStatement();
-    }
-
-    /// <summary>
-    /// Разбирает объявление функции.
-    /// Правила: function_declaration = "func", identifier, "(", [ parameter_list ], ")", "{", { function_statement_item }, "}" ;
-    /// </summary>
-    private AstNode ParseFunctionDeclaration()
-    {
-        DataType? returnType = null;
-        if (_tokens.Peek().Type == TokenType.Func)
-        {
-            Match(TokenType.Func);
-            returnType = ParseDataType();
-        }
-        else
-        {
-            Match(TokenType.Proc);
-        }
-        
-        string functionName = ParseIdentifier();
-        List<Parameter> parameters = ParseParameterList();
-        List<AstNode> body = ParseFunctionBlock();
-
-        return new FunctionDeclaration(returnType, functionName, parameters, body);
-    }
-
-    /// <summary>
-    /// Разбирает список параметров.
-    /// Правила: parameter_list = identifier, { ",", identifier } ;
-    /// </summary>
-    private List<Parameter> ParseParameterList()
-    {
-        Match(TokenType.OpenParenthesis);
-        List<Parameter> parameters = [];
-
-        if (_tokens.Peek().Type != TokenType.CloseParenthesis)
-        {
-            parameters.Add(ParseParameter());
-
-            while (_tokens.Peek().Type == TokenType.Comma)
-            {
-                _tokens.Advance();
-                parameters.Add(ParseParameter());
-            }
-        }
-
-        Match(TokenType.CloseParenthesis);
-        return parameters;
-    }
-
-    private Parameter ParseParameter()
-    {
-        DataType type = ParseDataType();
         string name = ParseIdentifier();
-        return new Parameter(type, name);
+        if (!string.Equals(name, "main", StringComparison.Ordinal))
+        {
+            throw new UnexpectedLexemeException("main", _tokens.Peek());
+        }
+
+        Match(TokenType.OpenParenthesis);
+        Match(TokenType.CloseParenthesis);
+
+        List<AstNode> body = ParseBlock();
+
+        return new FunctionDeclaration(DataType.Int, name, body);
     }
 
     /// <summary>
-    /// Разбирает блок функции.
-    /// Правила: блок инструкций внутри функций
+    /// block = "{", { statement }, "}" ;
     /// </summary>
-    private List<AstNode> ParseFunctionBlock()
+    private List<AstNode> ParseBlock()
     {
         Match(TokenType.OpenBrace);
-        List<AstNode> nodes = [];
 
-        while (_tokens.Peek().Type != TokenType.CloseBrace && _tokens.Peek().Type != TokenType.EndOfFile)
+        List<AstNode> statements = [];
+
+        while (_tokens.Peek().Type != TokenType.CloseBrace)
         {
-            AstNode node = ParseStatement();
-            nodes.Add(node);
+            statements.Add(ParseStatement());
         }
 
         Match(TokenType.CloseBrace);
-        return nodes;
+        return statements;
     }
 
     /// <summary>
-    /// Разбирает инструкцию верхнего уровня или внутри блока.
-    /// Правила: statement = simple_statement, ";" | compound_statement | return_statement ;
-    /// Универсальный метод, который обрабатывает все типы инструкций, включая return.
+    /// Для 2-й итерации:
+    /// statement = print_statement, ";" | return_statement, ";" ;
     /// </summary>
     private AstNode ParseStatement()
     {
         Token token = _tokens.Peek();
-
-        if (token.Type == TokenType.Const)
-        {
-            AstNode statement = ParseConstantDeclaration();
-            Match(TokenType.Semicolon);
-            return statement;
-        }
-
-        if (IsTypeToken(token.Type))
-        {
-            AstNode statement = ParseVariableDeclaration();
-            Match(TokenType.Semicolon);
-            return statement;
-        }
-
-        if (token.Type == TokenType.If)
-        {
-            return ParseIfStatement();
-        }
-
-        if (token.Type == TokenType.While)
-        {
-            return ParseWhileStatement();
-        }
-
-        if (token.Type == TokenType.For)
-        {
-            return ParseForStatement();
-        }
-
-        if (token.Type == TokenType.Break)
-        {
-            AstNode statement = ParseBreakStatement();
-            Match(TokenType.Semicolon);
-            return statement;
-        }
-
-        if (token.Type == TokenType.Continue)
-        {
-            AstNode statement = ParseContinueStatement();
-            Match(TokenType.Semicolon);
-            return statement;
-        }
-
-        if (token.Type == TokenType.Identifier)
-        {
-            return ParseAssignmentOrFunctionCall();
-        }
 
         if (token.Type == TokenType.Print)
         {
@@ -196,138 +82,35 @@ public class Parser
             return statement;
         }
 
-        if (token.Type == TokenType.Input)
+        if (token.Type == TokenType.Return)
         {
-            AstNode statement = ParseInputStatement();
+            AstNode statement = ParseReturnStatement();
             Match(TokenType.Semicolon);
             return statement;
         }
 
-        if (token.Type == TokenType.Return)
-        {
-            return ParseReturnStatement();
-        }
-
-        throw new UnexpectedLexemeException("statement", token);
+        throw new UnexpectedLexemeException("print or return", token);
     }
 
     /// <summary>
-    /// Разбирает объявление переменной.
-    /// Правила: variable_declaration = "var", identifier, [ "=", expression ] ;
-    /// </summary>
-    private AstNode ParseVariableDeclaration()
-    {
-        DataType type = ParseDataType();
-        string name = ParseIdentifier();
-        Expression? value = null;
-
-        if (_tokens.Peek().Type == TokenType.Assign)
-        {
-            _tokens.Advance();
-            value = ParseExpression();
-        }
-
-        return new VariableDeclaration(type, name, value);
-    }
-
-    /// <summary>
-    /// Разбирает объявление константы.
-    /// Правила: constant_declaration = "const", identifier, "=", expression ;
-    /// </summary>
-    private AstNode ParseConstantDeclaration()
-    {
-        Match(TokenType.Const);
-        DataType type = ParseDataType();
-        string name = ParseIdentifier();
-        Match(TokenType.Assign);
-        Expression value = ParseExpression();
-
-        return new ConstantDeclaration(type, name, value);
-    }
-
-    /// <summary>
-    /// Разбирает инструкцию ввода.
-    /// Правила: input_statement = "input", "(", identifier, ")" ;
-    /// </summary>
-    private AstNode ParseInputStatement()
-    {
-        Match(TokenType.Input);
-        Match(TokenType.OpenParenthesis);
-        string variableName = ParseIdentifier();
-        Match(TokenType.CloseParenthesis);
-
-        return new InputExpression(variableName);
-    }
-
-    /// <summary>
-    /// Разбирает присваивание или вызов функции.
-    /// </summary>
-    private AstNode ParseAssignmentOrFunctionCall()
-    {
-        string name = ParseIdentifier();
-
-        if (_tokens.Peek().Type == TokenType.Assign)
-        {
-            return ParseAssignment(name);
-        }
-
-        if (_tokens.Peek().Type == TokenType.OpenParenthesis)
-        {
-            _tokens.Advance();
-
-            List<Expression> arguments = [];
-
-            if (_tokens.Peek().Type != TokenType.CloseParenthesis)
-            {
-                arguments.Add(ParseExpression());
-
-                while (_tokens.Peek().Type == TokenType.Comma)
-                {
-                    _tokens.Advance();
-                    arguments.Add(ParseExpression());
-                }
-            }
-
-            Match(TokenType.CloseParenthesis);
-            Match(TokenType.Semicolon);
-
-            return new FunctionCall(name, arguments);
-        }
-
-        throw new UnexpectedLexemeException("assignment or function call", _tokens.Peek());
-    }
-
-    /// <summary>
-    /// Разбирает инструкцию присваивания.
-    /// Правила: assignment_statement = identifier, "=", expression ;
-    /// </summary>
-    private AstNode ParseAssignment(string variableName)
-    {
-        Match(TokenType.Assign);
-        Expression value = ParseExpression();
-        Match(TokenType.Semicolon);
-
-        return new AssignmentExpression(variableName, value);
-    }
-
-    /// <summary>
-    /// Разбирает инструкцию вывода.
-    /// Правила: print_statement = "print", "(", [ argument_list ], ")" ;
+    /// print_statement = "print", "(", [ literal_list ], ")" ;
+    /// literal_list = literal, { ",", literal } ;
     /// </summary>
     private AstNode ParsePrintStatement()
     {
         Match(TokenType.Print);
         Match(TokenType.OpenParenthesis);
-        
-        List<Expression> arguments = [];
+
+        List<LiteralExpression> arguments = [];
+
         if (_tokens.Peek().Type != TokenType.CloseParenthesis)
         {
-            arguments.Add(ParseExpression());
-            
+            arguments.Add(ParseLiteral());
+
             while (_tokens.Peek().Type == TokenType.Comma)
             {
                 _tokens.Advance();
-                arguments.Add(ParseExpression());
+                arguments.Add(ParseLiteral());
             }
         }
 
@@ -337,504 +120,90 @@ public class Parser
     }
 
     /// <summary>
-    /// Разбирает инструкцию if.
-    /// Использует подход matched/unmatched для решения проблемы висячего else.
-    /// </summary>
-    private AstNode ParseIfStatement()
-    {
-        Match(TokenType.If);
-        Match(TokenType.OpenParenthesis);
-        Expression condition = ParseExpression();
-        Match(TokenType.CloseParenthesis);
-
-        // Парсим блок напрямую, используя универсальный ParseStatement
-        Match(TokenType.OpenBrace);
-        List<AstNode> thenBranch = [];
-        while (_tokens.Peek().Type != TokenType.CloseBrace && _tokens.Peek().Type != TokenType.EndOfFile)
-        {
-            AstNode node = ParseStatement();
-            thenBranch.Add(node);
-        }
-        Match(TokenType.CloseBrace);
-
-        if (_tokens.Peek().Type == TokenType.Else)
-        {
-            Match(TokenType.Else);
-            Match(TokenType.OpenBrace);
-            List<AstNode> elseBranch = [];
-            while (_tokens.Peek().Type != TokenType.CloseBrace && _tokens.Peek().Type != TokenType.EndOfFile)
-            {
-                AstNode node = ParseStatement();
-                elseBranch.Add(node);
-            }
-            Match(TokenType.CloseBrace);
-            return new IfElseExpression(condition, thenBranch, elseBranch);
-        }
-
-        return new IfExpression(condition, thenBranch);
-    }
-
-    /// <summary>
-    /// Разбирает инструкцию while.
-    /// Правила: while_statement = "while", "(", expression, ")", loop_block ;
-    /// </summary>
-    private AstNode ParseWhileStatement()
-    {
-        Match(TokenType.While);
-        Match(TokenType.OpenParenthesis);
-        Expression condition = ParseExpression();
-        Match(TokenType.CloseParenthesis);
-
-        // Парсим блок напрямую, используя универсальный ParseStatement
-        Match(TokenType.OpenBrace);
-        List<AstNode> body = [];
-        while (_tokens.Peek().Type != TokenType.CloseBrace && _tokens.Peek().Type != TokenType.EndOfFile)
-        {
-            AstNode node = ParseStatement();
-            body.Add(node);
-        }
-        Match(TokenType.CloseBrace);
-
-        return new WhileExpression(condition, body);
-    }
-
-    /// <summary>
-    /// Разбирает инструкцию for.
-    /// Правила: for_statement = "for", "(", assignment_statement, ( "to" | "downto" ), expression, ")", loop_block ;
-    /// </summary>
-    private AstNode ParseForStatement()
-    {
-        Match(TokenType.For);
-        Match(TokenType.OpenParenthesis);
-
-        string iteratorName = ParseIdentifier();
-        Match(TokenType.Assign);
-        Expression startValue = ParseExpression();
-
-        bool isDownto = false;
-        if (_tokens.Peek().Type == TokenType.To)
-        {
-            _tokens.Advance();
-        }
-        else if (_tokens.Peek().Type == TokenType.Downto)
-        {
-            _tokens.Advance();
-            isDownto = true;
-        }
-        else
-        {
-            throw new UnexpectedLexemeException("to or downto", _tokens.Peek());
-        }
-
-        Expression endValue = ParseExpression();
-        Match(TokenType.CloseParenthesis);
-
-        // Парсим блок напрямую, используя универсальный ParseStatement
-        Match(TokenType.OpenBrace);
-        List<AstNode> body = [];
-        while (_tokens.Peek().Type != TokenType.CloseBrace && _tokens.Peek().Type != TokenType.EndOfFile)
-        {
-            AstNode node = ParseStatement();
-            body.Add(node);
-        }
-        Match(TokenType.CloseBrace);
-
-        Expression iteratorVar = new VariableExpression(iteratorName);
-        BinaryOperation comparisonOp = isDownto ? BinaryOperation.GreaterThanOrEqual : BinaryOperation.LessThanOrEqual;
-        Expression endCondition = new BinaryOperationExpression(iteratorVar, comparisonOp, endValue);
-
-        Expression oneLiteral = new LiteralExpression(DataType.Int, 1);
-        BinaryOperation stepOp = isDownto ? BinaryOperation.Minus : BinaryOperation.Plus;
-        Expression stepExpression = new BinaryOperationExpression(iteratorVar, stepOp, oneLiteral);
-        Expression stepValue = new AssignmentExpression(iteratorName, stepExpression);
-
-        return new ForLoopExpression(iteratorName, startValue, endCondition, stepValue, body);
-    }
-
-    /// <summary>
-    /// Разбирает блок инструкций.
-    /// Правила: block = "{", { statement }, "}" ;
-    /// Используется для парсинга блоков верхнего уровня (не внутри функций).
-    /// </summary>
-    private List<AstNode> ParseBlock()
-    {
-        Match(TokenType.OpenBrace);
-        List<AstNode> nodes = [];
-
-        while (_tokens.Peek().Type != TokenType.CloseBrace && _tokens.Peek().Type != TokenType.EndOfFile)
-        {
-            AstNode node = ParseStatement();
-            nodes.Add(node);
-        }
-
-        Match(TokenType.CloseBrace);
-        return nodes;
-    }
-
-
-    /// <summary>
-    /// Разбирает инструкцию break.
-    /// Правила: break_statement = "break" ;
-    /// </summary>
-    private AstNode ParseBreakStatement()
-    {
-        Match(TokenType.Break);
-        return new BreakExpression();
-    }
-
-    /// <summary>
-    /// Разбирает инструкцию continue.
-    /// Правила: continue_statement = "continue" ;
-    /// </summary>
-    private AstNode ParseContinueStatement()
-    {
-        Match(TokenType.Continue);
-        return new ContinueExpression();
-    }
-
-    /// <summary>
-    /// Разбирает инструкцию return.
-    /// Правила: return_statement = "return", [ expression ], ";" ;
+    /// Для 2-й итерации return из main ограничиваем int-литералом.
+    /// return_statement = "return", int_literal ;
     /// </summary>
     private AstNode ParseReturnStatement()
     {
         Match(TokenType.Return);
-        
-        Expression? value = null;
-        if (_tokens.Peek().Type != TokenType.Semicolon)
-        {
-            value = ParseExpression();
-        }
-
-        Match(TokenType.Semicolon);
-
+        LiteralExpression value = ParseIntLiteral();
         return new ReturnExpression(value);
     }
 
-    /// <summary>
-    /// Разбирает выражение.
-    /// Правила: expression = logical_or ;
-    /// </summary>
-    private Expression ParseExpression()
-    {
-        return ParseLogicalOr();
-    }
-
-    /// <summary>
-    /// Разбирает логическое ИЛИ выражение.
-    /// Правила: logical_or = logical_and, { "||", logical_and } ;
-    /// </summary>
-    private Expression ParseLogicalOr()
-    {
-        Expression left = ParseLogicalAnd();
-
-        while (_tokens.Peek().Type == TokenType.Or)
-        {
-            _tokens.Advance();
-            Expression right = ParseLogicalAnd();
-            left = new BinaryOperationExpression(left, BinaryOperation.LogicalOr, right);
-        }
-
-        return left;
-    }
-
-    /// <summary>
-    /// Разбирает логическое И выражение.
-    /// Правила: logical_and = equality, { "&&", equality } ;
-    /// </summary>
-    private Expression ParseLogicalAnd()
-    {
-        Expression left = ParseEquality();
-
-        while (_tokens.Peek().Type == TokenType.And)
-        {
-            _tokens.Advance();
-            Expression right = ParseEquality();
-            left = new BinaryOperationExpression(left, BinaryOperation.LogicalAnd, right);
-        }
-
-        return left;
-    }
-
-    /// <summary>
-    /// Разбирает выражение равенства/неравенства.
-    /// Правила: equality = comparison, { ( "==" | "!=" ), comparison } ;
-    /// </summary>
-    private Expression ParseEquality()
-    {
-        Expression left = ParseComparison();
-
-        while (_tokens.Peek().Type == TokenType.Equal || _tokens.Peek().Type == TokenType.NotEqual)
-        {
-            Token operatorToken = _tokens.Peek();
-            _tokens.Advance();
-
-            Expression right = ParseComparison();
-            BinaryOperation operation = operatorToken.Type == TokenType.Equal
-                ? BinaryOperation.Equal
-                : BinaryOperation.NotEqual;
-            left = new BinaryOperationExpression(left, operation, right);
-        }
-
-        return left;
-    }
-
-    /// <summary>
-    /// Разбирает выражение сравнения.
-    /// Правила: comparison = additive, { ( "<" | "<=" | ">" | ">=" ), additive } ;
-    /// </summary>
-    private Expression ParseComparison()
-    {
-        Expression left = ParseAdditive();
-
-        while (IsComparisonOperator(_tokens.Peek().Type))
-        {
-            Token operatorToken = _tokens.Peek();
-            _tokens.Advance();
-
-            Expression right = ParseAdditive();
-            BinaryOperation operation = operatorToken.Type switch
-            {
-                TokenType.Less => BinaryOperation.LessThan,
-                TokenType.Greater => BinaryOperation.GreaterThan,
-                TokenType.LessOrEqual => BinaryOperation.LessThanOrEqual,
-                TokenType.GreaterOrEqual => BinaryOperation.GreaterThanOrEqual,
-                _ => throw new Exception($"Unsupported comparison operator: {operatorToken.Type}"),
-            };
-            left = new BinaryOperationExpression(left, operation, right);
-        }
-
-        return left;
-    }
-
-    /// <summary>
-    /// Разбирает аддитивное выражение.
-    /// Правила: additive = multiplicative, { ( "+" | "-" ), multiplicative } ;
-    /// </summary>
-    private Expression ParseAdditive()
-    {
-        Expression left = ParseMultiplicative();
-
-        while (_tokens.Peek().Type == TokenType.Plus || _tokens.Peek().Type == TokenType.Minus)
-        {
-            Token operatorToken = _tokens.Peek();
-            _tokens.Advance();
-
-            Expression right = ParseMultiplicative();
-            BinaryOperation operation = operatorToken.Type == TokenType.Plus
-                ? BinaryOperation.Plus
-                : BinaryOperation.Minus;
-            left = new BinaryOperationExpression(left, operation, right);
-        }
-
-        return left;
-    }
-
-    /// <summary>
-    /// Разбирает мультипликативное выражение.
-    /// Правила: multiplicative = power, { ( "*" | "/" | "//" | "%" ), power } ;
-    /// </summary>
-    private Expression ParseMultiplicative()
-    {
-        Expression left = ParsePower();
-
-        while (IsMultiplicativeOperator(_tokens.Peek().Type))
-        {
-            Token operatorToken = _tokens.Peek();
-            _tokens.Advance();
-
-            Expression right = ParsePower();
-            BinaryOperation operation = operatorToken.Type switch
-            {
-                TokenType.Multiply => BinaryOperation.Multiply,
-                TokenType.Divide => BinaryOperation.Divide,
-                TokenType.IntegerDivide => BinaryOperation.IntegerDivide,
-                TokenType.Modulo => BinaryOperation.Modulo,
-                _ => throw new Exception($"Unsupported multiplicative operator: {operatorToken.Type}"),
-            };
-            left = new BinaryOperationExpression(left, operation, right);
-        }
-
-        return left;
-    }
-
-    /// <summary>
-    /// Разбирает выражение возведения в степень.
-    /// Правила: power = unary, [ "^", power ] ;
-    /// Оператор ^ правоассоциативный
-    /// </summary>
-    private Expression ParsePower()
-    {
-        Expression left = ParseUnary();
-
-        if (_tokens.Peek().Type == TokenType.Power)
-        {
-            _tokens.Advance();
-            Expression right = ParsePower(); // Рекурсия для правой ассоциативности
-            left = new BinaryOperationExpression(left, BinaryOperation.Power, right);
-        }
-
-        return left;
-    }
-
-    /// <summary>
-    /// Разбирает унарное выражение.
-    /// Правила: unary = "+" , unary | "-" , unary | "!" , unary | primary ;
-    /// </summary>
-    private Expression ParseUnary()
-    {
-        if (_tokens.Peek().Type == TokenType.Plus)
-        {
-            _tokens.Advance();
-            Expression operand = ParseUnary();
-            return new UnaryOperationExpression(UnaryOperation.Plus, operand);
-        }
-
-        if (_tokens.Peek().Type == TokenType.Minus)
-        {
-            _tokens.Advance();
-            Expression operand = ParseUnary();
-            return new UnaryOperationExpression(UnaryOperation.Minus, operand);
-        }
-
-        if (_tokens.Peek().Type == TokenType.Not)
-        {
-            _tokens.Advance();
-            Expression operand = ParseUnary();
-            return new UnaryOperationExpression(UnaryOperation.LogicalNot, operand);
-        }
-
-        return ParsePrimary();
-    }
-
-    /// <summary>
-    /// Разбирает первичное выражение.
-    /// Правила: primary = number | identifier | function_call_expression | "(", expression, ")" ;
-    /// </summary>
-    private Expression ParsePrimary()
+    private LiteralExpression ParseLiteral()
     {
         Token token = _tokens.Peek();
 
-        switch (token.Type)
+        return token.Type switch
         {
-            case TokenType.IntegerLiteral:
-                _tokens.Advance();
-                return new LiteralExpression(DataType.Int, token.Value!.ToInt());
-
-            case TokenType.NumLiteral:
-                _tokens.Advance();
-                return new LiteralExpression(DataType.Num, token.Value!.ToDouble());
-
-            case TokenType.StringLiteral:
-                _tokens.Advance();
-                return new LiteralExpression(DataType.String, token.Value!.ToString()!);
-
-            case TokenType.True:
-                _tokens.Advance();
-                return new LiteralExpression(DataType.Bool, true);
-
-            case TokenType.False:
-                _tokens.Advance();
-                return new LiteralExpression(DataType.Bool, false);
-
-            case TokenType.Identifier:
-                return ParseFunctionCallOrIdentifier();
-
-            case TokenType.OpenParenthesis:
-                _tokens.Advance();
-                Expression result = ParseExpression();
-                Match(TokenType.CloseParenthesis);
-                return result;
-
-            default:
-                throw new UnexpectedLexemeException("primary expression", token);
-        }
+            TokenType.IntegerLiteral => ParseIntLiteral(),
+            TokenType.NumLiteral => ParseNumLiteral(),
+            TokenType.StringLiteral => ParseStringLiteral(),
+            _ => throw new UnexpectedLexemeException("literal", token),
+        };
     }
 
-    /// <summary>
-    /// Разбирает вызов функции или идентификатор.
-    /// Правила: function_call_expression = (built_in_function | identifier), "(", [ argument_list ], ")" ;
-    /// </summary>
-    private Expression ParseFunctionCallOrIdentifier()
+    private LiteralExpression ParseIntLiteral()
     {
-        string name = ParseIdentifier();
+        Token token = _tokens.Peek();
 
-        if (_tokens.Peek().Type == TokenType.OpenParenthesis)
+        if (token.Type != TokenType.IntegerLiteral)
         {
-            _tokens.Advance();
-
-            List<Expression> arguments = [];
-            if (_tokens.Peek().Type != TokenType.CloseParenthesis)
-            {
-                arguments.Add(ParseExpression());
-
-                while (_tokens.Peek().Type == TokenType.Comma)
-                {
-                    _tokens.Advance();
-                    arguments.Add(ParseExpression());
-                }
-            }
-
-            Match(TokenType.CloseParenthesis);
-            return new FunctionCall(name, arguments);
+            throw new UnexpectedLexemeException(TokenType.IntegerLiteral, token);
         }
 
-        return new VariableExpression(name);
+        _tokens.Advance();
+        return new LiteralExpression(DataType.Int, token.Value!.ToInt());
     }
 
+    private LiteralExpression ParseNumLiteral()
+    {
+        Token token = _tokens.Peek();
+
+        if (token.Type != TokenType.NumLiteral)
+        {
+            throw new UnexpectedLexemeException(TokenType.NumLiteral, token);
+        }
+
+        _tokens.Advance();
+        return new LiteralExpression(DataType.Num, token.Value!.ToDouble());
+    }
+
+    private LiteralExpression ParseStringLiteral()
+    {
+        Token token = _tokens.Peek();
+
+        if (token.Type != TokenType.StringLiteral)
+        {
+            throw new UnexpectedLexemeException(TokenType.StringLiteral, token);
+        }
+
+        _tokens.Advance();
+        return new LiteralExpression(DataType.String, token.Value!.ToString()!);
+    }
 
     private string ParseIdentifier()
     {
         Token token = _tokens.Peek();
-        if (token.Type == TokenType.Identifier)
+
+        if (token.Type != TokenType.Identifier)
         {
-            _tokens.Advance();
-            return token.Value?.ToString() ?? throw new InvalidOperationException("Identifier value cannot be null");
+            throw new UnexpectedLexemeException(TokenType.Identifier, token);
         }
 
-        throw new UnexpectedLexemeException("identifier", token);
-    }
-
-    private bool IsComparisonOperator(TokenType type)
-    {
-        return type == TokenType.Less || type == TokenType.Greater ||
-               type == TokenType.LessOrEqual || type == TokenType.GreaterOrEqual;
-    }
-
-    private bool IsMultiplicativeOperator(TokenType type)
-    {
-        return type == TokenType.Multiply || type == TokenType.Divide ||
-               type == TokenType.IntegerDivide || type == TokenType.Modulo;
-    }
-
-    private DataType ParseDataType()
-    {
-        Token token = _tokens.Peek();
-        DataType type = token.Type switch
-        {
-            TokenType.Int => DataType.Int,
-            TokenType.Num => DataType.Num,
-            TokenType.String => DataType.String,
-            TokenType.Bool => DataType.Bool,
-            _ => throw new UnexpectedLexemeException("data type", token)
-        };
         _tokens.Advance();
-        return type;
-    }
-
-    private bool IsTypeToken(TokenType type)
-    {
-        return type == TokenType.Int || type == TokenType.Num ||
-               type == TokenType.String || type == TokenType.Bool;
+        return token.Value!.ToString();
     }
 
     private void Match(TokenType expected)
     {
-        Token t = _tokens.Peek();
-        if (t.Type != expected)
+        Token token = _tokens.Peek();
+
+        if (token.Type != expected)
         {
-            throw new UnexpectedLexemeException(expected, t);
+            throw new UnexpectedLexemeException(expected, token);
         }
+
         _tokens.Advance();
     }
 }
