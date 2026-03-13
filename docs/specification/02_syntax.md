@@ -119,7 +119,7 @@ constant_declaration = "const", type, identifier, "=", expression ;
 input_statement = "input", "(", identifier, ")" ;
 
 (* Вывод *)
-print_statement = "print", "(", [ argument_list ], ")" ;
+print_statement = "print", "(", argument_list, ")" ;
 
 (* Возврат из функции или процедуры *)
 return_statement = "return", [ expression ] ;
