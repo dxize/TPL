@@ -5,7 +5,7 @@ using Semantics.Passes;
 namespace Semantics;
 
 /// <summary>
-/// Фасад над несколькими семантическими проходами в стиле pstiger.
+/// Фасад над несколькими семантическими проходами в стиле DEA.
 /// </summary>
 public sealed class SemanticsChecker
 {

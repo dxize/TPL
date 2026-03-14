@@ -6,7 +6,7 @@ namespace Semantics.Passes;
 /// <summary>
 /// Во 2-й итерации почти нечего резолвить по именам:
 /// есть только main, литералы, print и return.
-/// Проход оставлен для соответствия шаблону pstiger.
+/// Проход оставлен для соответствия шаблону DEA.
 /// </summary>
 public sealed class ResolveNamesPass : AbstractPass
 {

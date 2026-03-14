@@ -1,15 +1,16 @@
 using Lexer;
+using DeaLexer = global::Lexer.Lexer;
 
 namespace Parser;
 
 public sealed class TokenStream
 {
-    private readonly Lexer.Lexer _lexer;
+    private readonly DeaLexer _lexer;
     private readonly List<Token> _buffer = [];
 
     public TokenStream(string sourceCode)
     {
-        _lexer = new Lexer.Lexer(sourceCode);
+        _lexer = new DeaLexer(sourceCode);
     }
 
     public Token Peek()

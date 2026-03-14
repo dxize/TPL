@@ -1,11 +1,11 @@
-using Execution;
+using Semantics;
+using VirtualMachine;
+using VirtualMachineCodegen;
+using DeaParser = global::Parser.Parser;
 
 namespace Interpreter;
 
-/// <summary>
-/// Интерпретатор языка DEA
-/// </summary>
-public class Interpreter
+public sealed class Interpreter
 {
     private readonly IEnvironment _environment;
 
@@ -14,20 +14,23 @@ public class Interpreter
         _environment = environment;
     }
 
-    /// <summary>
-    /// Выполняет программу на языке DEA
-    /// </summary>
-    /// <param name="sourceCode">Исходный код программы</param>
-    public void Execute(string sourceCode)
+    public int Execute(string sourceCode)
     {
-        if (string.IsNullOrEmpty(sourceCode))
+        if (string.IsNullOrWhiteSpace(sourceCode))
         {
-            throw new ArgumentException("Source code cannot be null or empty", nameof(sourceCode));
+            throw new ArgumentException("Source code cannot be null or empty.", nameof(sourceCode));
         }
 
-        // Создаем контекст и парсер
-        Context context = new();
-        Parser.Parser parser = new(context, sourceCode, _environment);
-        parser.ParseProgram();
+        DeaParser parser = new(sourceCode);
+        Ast.ProgramNode program = parser.ParseProgram();
+
+        SemanticsChecker checker = new();
+        checker.Check(program);
+
+        DeaVmCodegen codegen = new();
+        IReadOnlyList<VirtualMachine.Instructions.Instruction> instructions = codegen.Generate(program);
+
+        DeaVM vm = new(_environment, instructions);
+        return vm.RunProgram();
     }
 }

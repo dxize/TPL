@@ -1,5 +1,5 @@
-using Execution;
 using Parser;
+using Semantics.Exceptions;
 
 namespace Interpreter;
 
@@ -24,21 +24,23 @@ public static class Program
             }
 
             string sourceCode = File.ReadAllText(filePath);
-
             ConsoleEnvironment environment = new();
             Interpreter interpreter = new(environment);
-            interpreter.Execute(sourceCode);
-
-            return 0;
+            return interpreter.Execute(sourceCode);
         }
         catch (UnexpectedLexemeException ex)
         {
-            Console.Error.WriteLine($"Parse error: {ex.Message}");
+            Console.Error.WriteLine($"Syntax error: {ex.Message}");
+            return 1;
+        }
+        catch (SemanticException ex)
+        {
+            Console.Error.WriteLine($"Semantic error: {ex.Message}");
             return 1;
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error: {ex.Message}");
+            Console.Error.WriteLine($"Runtime error: {ex.Message}");
             return 1;
         }
     }

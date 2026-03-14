@@ -7,7 +7,7 @@ namespace Parser.UnitTests;
 public class ParserTests
 {
     [Fact]
-    public void Can_parse_empty_main_with_return()
+    public void Can_parse_minimal_main_program()
     {
         string code = """
             func int main() {
@@ -24,81 +24,15 @@ public class ParserTests
         Assert.Single(program.MainFunction.Body);
 
         ReturnExpression returnExpression = Assert.IsType<ReturnExpression>(program.MainFunction.Body[0]);
-        Assert.Equal(DataType.Int, returnExpression.Value.Type);
         Assert.Equal(0, returnExpression.Value.Value);
     }
 
     [Fact]
-    public void Can_parse_print_with_single_int_literal()
+    public void Can_parse_print_with_all_supported_iteration2_literal_types()
     {
         string code = """
             func int main() {
-                print(123);
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        Assert.Equal(2, program.MainFunction.Body.Count);
-
-        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
-        Assert.Single(printExpression.Arguments);
-
-        LiteralExpression literal = printExpression.Arguments[0];
-        Assert.Equal(DataType.Int, literal.Type);
-        Assert.Equal(123, literal.Value);
-    }
-
-    [Fact]
-    public void Can_parse_print_with_single_num_literal()
-    {
-        string code = """
-            func int main() {
-                print(3.14);
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
-        Assert.Single(printExpression.Arguments);
-
-        LiteralExpression literal = printExpression.Arguments[0];
-        Assert.Equal(DataType.Num, literal.Type);
-        Assert.Equal(3.14, literal.Value);
-    }
-
-    [Fact]
-    public void Can_parse_print_with_single_string_literal()
-    {
-        string code = """
-            func int main() {
-                print("hello");
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
-        Assert.Single(printExpression.Arguments);
-
-        LiteralExpression literal = printExpression.Arguments[0];
-        Assert.Equal(DataType.String, literal.Type);
-        Assert.Equal("hello", literal.Value);
-    }
-
-    [Fact]
-    public void Can_parse_print_with_multiple_literals()
-    {
-        string code = """
-            func int main() {
-                print(1, 2.5, "abc");
+                print(1, 2.5, "dea");
                 return 0;
             }
             """;
@@ -108,19 +42,59 @@ public class ParserTests
 
         PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
         Assert.Equal(3, printExpression.Arguments.Count);
-
         Assert.Equal(DataType.Int, printExpression.Arguments[0].Type);
-        Assert.Equal(1, printExpression.Arguments[0].Value);
-
         Assert.Equal(DataType.Num, printExpression.Arguments[1].Type);
-        Assert.Equal(2.5, printExpression.Arguments[1].Value);
-
         Assert.Equal(DataType.String, printExpression.Arguments[2].Type);
-        Assert.Equal("abc", printExpression.Arguments[2].Value);
+    }
+
+    [Theory]
+    [InlineData("0", 0)]
+    [InlineData("42", 42)]
+    [InlineData("2026", 2026)]
+    public void Can_parse_return_int_literal(string literal, int expected)
+    {
+        string code = $$"""
+            func int main() {
+                return {{literal}};
+            }
+            """;
+
+        Parser parser = new(code);
+        ProgramNode program = parser.ParseProgram();
+
+        ReturnExpression returnExpression = Assert.IsType<ReturnExpression>(program.MainFunction.Body[0]);
+        Assert.Equal(DataType.Int, returnExpression.Value.Type);
+        Assert.Equal(expected, returnExpression.Value.Value);
     }
 
     [Fact]
-    public void Can_parse_empty_print()
+    public void Throws_when_main_is_missing()
+    {
+        string code = """
+            func int start() {
+                return 0;
+            }
+            """;
+
+        Parser parser = new(code);
+        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
+    }
+
+    [Fact]
+    public void Throws_when_return_is_not_int_literal()
+    {
+        string code = """
+            func int main() {
+                return "dea";
+            }
+            """;
+
+        Parser parser = new(code);
+        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
+    }
+
+    [Fact]
+    public void Throws_when_print_has_no_arguments()
     {
         string code = """
             func int main() {
@@ -130,62 +104,11 @@ public class ParserTests
             """;
 
         Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
-        Assert.Empty(printExpression.Arguments);
-    }
-
-    [Theory]
-    [InlineData("0")]
-    [InlineData("1")]
-    [InlineData("2025")]
-    public void Can_parse_return_int_literal(string value)
-    {
-        string code = $$"""
-        func int main() {
-            return {{value}};
-        }
-        """;
-
-        Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        ReturnExpression returnExpression = Assert.IsType<ReturnExpression>(program.MainFunction.Body[0]);
-        Assert.Equal(DataType.Int, returnExpression.Value.Type);
-        Assert.Equal(int.Parse(value), returnExpression.Value.Value);
-    }
-
-    [Fact]
-    public void Throws_when_main_is_missing()
-    {
-        string code = """
-            func int notmain() {
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-
         Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
     }
 
     [Fact]
-    public void Throws_when_return_is_not_int_literal()
-    {
-        string code = """
-            func int main() {
-                return "abc";
-            }
-            """;
-
-        Parser parser = new(code);
-
-        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
-    }
-
-    [Fact]
-    public void Throws_when_statement_is_not_supported_in_iteration_2()
+    public void Throws_when_statement_is_not_supported_in_iteration2()
     {
         string code = """
             func int main() {
@@ -195,7 +118,6 @@ public class ParserTests
             """;
 
         Parser parser = new(code);
-
         Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
     }
 }

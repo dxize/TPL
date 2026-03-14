@@ -101,17 +101,17 @@ public sealed class Parser
         Match(TokenType.Print);
         Match(TokenType.OpenParenthesis);
 
-        List<LiteralExpression> arguments = [];
-
-        if (_tokens.Peek().Type != TokenType.CloseParenthesis)
+        if (_tokens.Peek().Type == TokenType.CloseParenthesis)
         {
-            arguments.Add(ParseLiteral());
+            throw new UnexpectedLexemeException("literal", _tokens.Peek());
+        }
 
-            while (_tokens.Peek().Type == TokenType.Comma)
-            {
-                _tokens.Advance();
-                arguments.Add(ParseLiteral());
-            }
+        List<LiteralExpression> arguments = [ParseLiteral()];
+
+        while (_tokens.Peek().Type == TokenType.Comma)
+        {
+            _tokens.Advance();
+            arguments.Add(ParseLiteral());
         }
 
         Match(TokenType.CloseParenthesis);
