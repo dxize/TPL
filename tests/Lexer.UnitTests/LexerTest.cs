@@ -1,4 +1,3 @@
-using Lexer;
 using DeaLexer = global::Lexer.Lexer;
 
 namespace Lexer.UnitTests;

@@ -1,5 +1,5 @@
-using Semantics;
 using Semantics.Exceptions;
+
 using DeaParser = global::Parser.Parser;
 
 namespace Semantics.UnitTests;

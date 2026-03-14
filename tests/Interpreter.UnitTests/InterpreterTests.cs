@@ -1,4 +1,5 @@
 using VirtualMachine;
+
 using DeaInterpreter = global::Interpreter.Interpreter;
 
 namespace Interpreter.UnitTests;

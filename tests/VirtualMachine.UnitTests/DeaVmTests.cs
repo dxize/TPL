@@ -1,5 +1,4 @@
 using Runtime;
-using VirtualMachine;
 using VirtualMachine.Builtins;
 using VirtualMachine.Instructions;
 
@@ -13,10 +12,10 @@ public class DeaVmTests
         FakeEnvironment environment = new();
         IReadOnlyList<Instruction> instructions =
         [
-            new Instruction(InstructionCode.Push, new Value("DEA")),
-            new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
-            new Instruction(InstructionCode.Push, new Value(0)),
-            new Instruction(InstructionCode.Halt),
+            new (InstructionCode.Push, new Value("DEA")),
+            new (InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
+            new (InstructionCode.Push, new Value(0)),
+            new (InstructionCode.Halt),
         ];
 
         DeaVM vm = new(environment, instructions);

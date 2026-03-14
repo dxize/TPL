@@ -2,6 +2,7 @@ using Runtime;
 using VirtualMachine.Builtins;
 using VirtualMachine.Instructions;
 using VirtualMachineCodegen;
+
 using DeaParser = global::Parser.Parser;
 
 namespace VirtualMachineCodegen.UnitTests;
