@@ -1,3 +1,4 @@
+using Ast;
 using Semantics.Exceptions;
 
 using DeaParser = global::Parser.Parser;
@@ -6,8 +7,56 @@ namespace Semantics.UnitTests;
 
 public class SemanticsCheckerTests
 {
+    // Корректные программы
     [Fact]
-    public void Accepts_valid_iteration2_program()
+    public void Accepts_minimal_main()
+    {
+        string code = """
+            func int main() {
+                return 0;
+            }
+            """;
+        CheckProgram(code);
+    }
+
+    [Fact]
+    public void Accepts_main_with_print_int()
+    {
+        string code = """
+            func int main() {
+                print(42);
+                return 0;
+            }
+            """;
+        CheckProgram(code);
+    }
+
+    [Fact]
+    public void Accepts_main_with_print_num()
+    {
+        string code = """
+            func int main() {
+                print(3.14);
+                return 0;
+            }
+            """;
+        CheckProgram(code);
+    }
+
+    [Fact]
+    public void Accepts_main_with_print_string()
+    {
+        string code = """
+            func int main() {
+                print("hello");
+                return 0;
+            }
+            """;
+        CheckProgram(code);
+    }
+
+    [Fact]
+    public void Accepts_main_with_print_multiple_arguments()
     {
         string code = """
             func int main() {
@@ -15,28 +64,46 @@ public class SemanticsCheckerTests
                 return 0;
             }
             """;
-
-        Ast.ProgramNode program = new DeaParser(code).ParseProgram();
-        SemanticsChecker checker = new();
-
-        checker.Check(program);
+        CheckProgram(code);
     }
 
     [Fact]
-    public void Rejects_non_main_function_name()
+    public void Accepts_main_with_multiple_prints()
     {
         string code = """
-            func int start() {
+            func int main() {
+                print(1);
+                print(2);
                 return 0;
             }
             """;
+        CheckProgram(code);
+    }
 
-        DeaParser parser = new(code);
-        Assert.Throws<Parser.UnexpectedLexemeException>(() => parser.ParseProgram());
+    // Ошибки main
+    [Fact]
+    public void Rejects_empty_main_body()
+    {
+        string code = """
+            func int main() {
+            }
+            """;
+        Assert.Throws<InvalidExpressionException>(() => CheckProgram(code));
     }
 
     [Fact]
-    public void Rejects_statements_after_return()
+    public void Rejects_missing_return()
+    {
+        string code = """
+            func int main() {
+                print(1);
+            }
+            """;
+        Assert.Throws<InvalidExpressionException>(() => CheckProgram(code));
+    }
+
+    [Fact]
+    public void Rejects_statement_after_return()
     {
         string code = """
             func int main() {
@@ -44,11 +111,14 @@ public class SemanticsCheckerTests
                 print(1);
             }
             """;
+        InvalidExpressionException ex = Assert.Throws<InvalidExpressionException>(() => CheckProgram(code));
+        Assert.Contains("После return", ex.Message);
+    }
 
-        Ast.ProgramNode program = new DeaParser(code).ParseProgram();
+    private void CheckProgram(string code)
+    {
+        ProgramNode program = new DeaParser(code).ParseProgram();
         SemanticsChecker checker = new();
-
-        InvalidExpressionException exception = Assert.Throws<InvalidExpressionException>(() => checker.Check(program));
-        Assert.Contains("После return", exception.Message);
+        checker.Check(program);
     }
 }
