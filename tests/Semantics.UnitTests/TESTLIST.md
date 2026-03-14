@@ -13,5 +13,3 @@ func int main() { print(1); print(2); return 0; }
 - [x] Пустое тело: `func int main() {}`
 - [x] Отсутствие return: `func int main() { print(1); }`
 - [x] Инструкция после return: `func int main() { return 0; print(1); }`
-
-- [ ] Программа с main и другой функцией: `func int main() { return 0; } func int extra() { return 0; }`
