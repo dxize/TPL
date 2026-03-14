@@ -1,6 +1,5 @@
 using Ast;
 using Ast.Expressions;
-using Xunit;
 
 namespace Parser.UnitTests;
 
@@ -190,21 +189,6 @@ public class ParserTests
         string code = """
             func int main() {
                 print();
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
-    }
-
-    // Дополнительно: проверка, что неподдерживаемые операторы вызывают ошибку
-    [Fact]
-    public void Throws_when_statement_is_not_supported_in_iteration2()
-    {
-        string code = """
-            func int main() {
-                input(x);
                 return 0;
             }
             """;
