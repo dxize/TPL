@@ -60,7 +60,7 @@ public sealed class DeaVmCodegen : IAstVisitor
             DataType.Int => new Value((int)literal.Value),
             DataType.Num => new Value((double)literal.Value),
             DataType.String => new Value((string)literal.Value),
-            _ => throw new InvalidOperationException($"Unsupported data type '{literal.Type}'.")
+            _ => throw new InvalidOperationException($"Unsupported data type '{literal.Type}'."),
         };
     }
 }

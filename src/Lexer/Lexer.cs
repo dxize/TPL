@@ -31,7 +31,7 @@ public class Lexer
         { "int", TokenType.Int },
         { "num", TokenType.Num },
         { "string", TokenType.String },
-        { "bool", TokenType.Bool }
+        { "bool", TokenType.Bool },
     };
 
     private readonly TextScanner _scanner;
@@ -249,7 +249,7 @@ public class Lexer
             {
                 TokenType.True => new Token(TokenType.True, new TokenValue(true)),
                 TokenType.False => new Token(TokenType.False, new TokenValue(false)),
-                _ => new Token(type)
+                _ => new Token(type),
             };
         }
 

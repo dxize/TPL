@@ -63,7 +63,7 @@ public class TokenValue
         {
             int i => i,
             string s => int.Parse(s, CultureInfo.InvariantCulture),
-            _ => throw new InvalidOperationException("Значение токена не является int.")
+            _ => throw new InvalidOperationException("Значение токена не является int."),
         };
     }
 
@@ -77,7 +77,7 @@ public class TokenValue
             int i => i,
             double d => d,
             string s => double.Parse(s, CultureInfo.InvariantCulture),
-            _ => throw new InvalidOperationException("Значение токена не является double.")
+            _ => throw new InvalidOperationException("Значение токена не является double."),
         };
     }
 
@@ -90,7 +90,7 @@ public class TokenValue
         {
             bool b => b,
             string s => bool.Parse(s),
-            _ => throw new InvalidOperationException("Значение токена не является bool.")
+            _ => throw new InvalidOperationException("Значение токена не является bool."),
         };
     }
 

@@ -1,6 +1,7 @@
 using Semantics;
 using VirtualMachine;
 using VirtualMachineCodegen;
+
 using DeaParser = global::Parser.Parser;
 
 namespace Interpreter;

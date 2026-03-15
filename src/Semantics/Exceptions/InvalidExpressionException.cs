@@ -1,9 +1,18 @@
 ﻿namespace Semantics.Exceptions;
 
-public sealed class InvalidExpressionException : SemanticException
+public class InvalidExpressionException : SemanticException
 {
+    public InvalidExpressionException()
+    {
+    }
+
     public InvalidExpressionException(string message)
         : base(message)
+    {
+    }
+
+    public InvalidExpressionException(string message, Exception innerException)
+        : base(message, innerException)
     {
     }
 }

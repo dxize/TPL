@@ -44,7 +44,7 @@ public sealed class Value
     {
         double value => value,
         int value => value,
-        _ => throw new InvalidOperationException($"Value '{this}' is not num.")
+        _ => throw new InvalidOperationException($"Value '{this}' is not num."),
     };
 
     public string AsString() => _value is string value
@@ -59,7 +59,7 @@ public sealed class Value
             double value => value.ToString(CultureInfo.InvariantCulture),
             string value => value,
             VoidValue => string.Empty,
-            _ => throw new InvalidOperationException($"Unsupported runtime value '{_value}'.")
+            _ => throw new InvalidOperationException($"Unsupported runtime value '{_value}'."),
         };
     }
 

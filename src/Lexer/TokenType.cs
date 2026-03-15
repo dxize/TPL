@@ -253,5 +253,5 @@ public enum TokenType
     /// <summary>
     /// Ошибка лексического анализа
     /// </summary>
-    Error
+    Error,
 }

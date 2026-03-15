@@ -23,6 +23,7 @@ public sealed class CheckTypesPass : AbstractPass
                     throw new TypeErrorException(
                         "Литерал типа int должен содержать значение типа int.");
                 }
+
                 break;
 
             case DataType.Num:
@@ -31,6 +32,7 @@ public sealed class CheckTypesPass : AbstractPass
                     throw new TypeErrorException(
                         "Литерал типа num должен содержать значение типа double.");
                 }
+
                 break;
 
             case DataType.String:
@@ -39,6 +41,7 @@ public sealed class CheckTypesPass : AbstractPass
                     throw new TypeErrorException(
                         "Литерал типа string должен содержать значение типа string.");
                 }
+
                 break;
 
             default:
