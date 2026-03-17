@@ -18,5 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\VirtualMachine\VirtualMachine.csproj" />
     <ProjectReference Include="..\..\src\Runtime\Runtime.csproj" />
+    <ProjectReference Include="..\TestsLibrary\TestsLibrary.csproj" />
   </ItemGroup>
 </Project>

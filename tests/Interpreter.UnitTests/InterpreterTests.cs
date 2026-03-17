@@ -1,4 +1,4 @@
-using VirtualMachine;
+using TestsLibrary;
 
 using DeaInterpreter = global::Interpreter.Interpreter;
 
@@ -32,17 +32,5 @@ public class InterpreterTests
 
         Action action = () => interpreter.Execute("   ");
         Assert.Throws<ArgumentException>(action);
-    }
-
-    private sealed class FakeEnvironment : IEnvironment
-    {
-        public string Output { get; private set; } = string.Empty;
-
-        public string ReadLine() => string.Empty;
-
-        public void Print(string text)
-        {
-            Output += text;
-        }
     }
 }
