@@ -9,18 +9,13 @@ public class InterpreterTests
     [Fact]
     public void Executes_full_iteration2_pipeline()
     {
+        string code = Samples.GetSampleProgram("example.dea");
         FakeEnvironment environment = new();
         DeaInterpreter interpreter = new(environment);
 
-        int exitCode = interpreter.Execute(
-            """
-            func int main() {
-                print(1, 2.5, "dea");
-                return 3;
-            }
-            """);
+        int exitCode = interpreter.Execute(code);
 
-        Assert.Equal(3, exitCode);
+        Assert.Equal(0, exitCode);
         Assert.Equal("12.5dea", environment.Output);
     }
 
