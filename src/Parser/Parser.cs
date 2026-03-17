@@ -93,7 +93,7 @@ public sealed class Parser
     }
 
     /// <summary>
-    /// print_statement = "print", "(", [ literal_list ], ")" ;
+    /// print_statement = "print", "(", literal_list, ")" ;
     /// literal_list = literal, { ",", literal } ;
     /// </summary>
     private AstNode ParsePrintStatement()
