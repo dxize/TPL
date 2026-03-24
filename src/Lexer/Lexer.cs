@@ -208,27 +208,6 @@ public class Lexer
     }
 
     /// <summary>
-    /// Возвращает все токены.
-    /// </summary>
-    public List<Token> ParseAllTokens()
-    {
-        List<Token> tokens = new();
-
-        while (true)
-        {
-            Token token = ParseToken();
-            tokens.Add(token);
-
-            if (token.Type == TokenType.EndOfFile)
-            {
-                break;
-            }
-        }
-
-        return tokens;
-    }
-
-    /// <summary>
     /// Читает идентификатор или ключевое слово.
     /// </summary>
     private Token ParseIdentifierOrKeyword()
