@@ -12,58 +12,6 @@ public class LexerTest
         Assert.Equal(expected, actual);
     }
 
-    [Fact]
-    public void Returns_error_for_unterminated_multiline_comment()
-    {
-        List<Token> actual = Tokenize("/* comment");
-
-        Assert.Equal(
-            [
-                new Token(TokenType.Error, new TokenValue("Незакрытый многострочный комментарий")),
-                new Token(TokenType.EndOfFile),
-            ],
-            actual);
-    }
-
-    [Fact]
-    public void Returns_error_for_unknown_symbol()
-    {
-        List<Token> actual = Tokenize("@");
-
-        Assert.Equal(
-            [
-                new Token(TokenType.Error, new TokenValue("@")),
-                new Token(TokenType.EndOfFile),
-            ],
-            actual);
-    }
-
-    [Fact]
-    public void Rejects_integer_with_leading_zero()
-    {
-        List<Token> actual = Tokenize("012");
-
-        Assert.Equal(
-            [
-                new Token(TokenType.Error, new TokenValue("012")),
-                new Token(TokenType.EndOfFile),
-            ],
-            actual);
-    }
-
-    [Fact]
-    public void Accepts_zero_and_zero_point_five()
-    {
-        List<Token> actual = Tokenize("0 0.5");
-        Assert.Equal(
-            [
-                new Token(TokenType.IntegerLiteral, new TokenValue(0)),
-                new Token(TokenType.NumLiteral, new TokenValue(0.5)),
-                new Token(TokenType.EndOfFile),
-            ],
-            actual);
-    }
-
     public static TheoryData<string, List<Token>> GetTokenizeData()
     {
         return new TheoryData<string, List<Token>>
@@ -173,6 +121,35 @@ public class LexerTest
                     new Token(TokenType.Not),
                     new Token(TokenType.Identifier, new TokenValue("b")),
                     new Token(TokenType.Semicolon),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+            {
+                "/* comment",
+                [
+                    new Token(TokenType.Error, new TokenValue("Незакрытый многострочный комментарий")),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+            {
+                "@",
+                [
+                    new Token(TokenType.Error, new TokenValue("@")),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+            {
+                "012",
+                [
+                    new Token(TokenType.Error, new TokenValue("012")),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+            {
+                "0 0.5",
+                [
+                    new Token(TokenType.IntegerLiteral, new TokenValue(0)),
+                    new Token(TokenType.NumLiteral, new TokenValue(0.5)),
                     new Token(TokenType.EndOfFile),
                 ]
             },
