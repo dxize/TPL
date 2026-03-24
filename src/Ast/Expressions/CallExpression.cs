@@ -1,11 +1,14 @@
 namespace Ast.Expressions;
 
-public sealed class PrintExpression : Expression
+public sealed class CallExpression : Expression
 {
-    public PrintExpression(List<Expression> arguments)
+    public CallExpression(string name, List<Expression> arguments)
     {
+        Name = name;
         Arguments = arguments;
     }
+
+    public string Name { get; }
 
     public List<Expression> Arguments { get; }
 

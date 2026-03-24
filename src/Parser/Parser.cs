@@ -75,9 +75,37 @@ public sealed class Parser
     {
         Token token = _tokens.Peek();
 
+        if (token.Type is TokenType.Int or TokenType.Num or TokenType.String)
+        {
+            AstNode statement = ParseVariableDeclarationStatement();
+            Match(TokenType.Semicolon);
+            return statement;
+        }
+
+        if (token.Type == TokenType.Const)
+        {
+            AstNode statement = ParseConstantDeclarationStatement();
+            Match(TokenType.Semicolon);
+            return statement;
+        }
+
+        if (token.Type == TokenType.Identifier && _tokens.Peek(1).Type == TokenType.Assign)
+        {
+            AstNode statement = ParseAssignmentStatement();
+            Match(TokenType.Semicolon);
+            return statement;
+        }
+
         if (token.Type == TokenType.Print)
         {
             AstNode statement = ParsePrintStatement();
+            Match(TokenType.Semicolon);
+            return statement;
+        }
+
+        if (token.Type == TokenType.Input)
+        {
+            AstNode statement = ParseInputStatement();
             Match(TokenType.Semicolon);
             return statement;
         }
@@ -89,7 +117,7 @@ public sealed class Parser
             return statement;
         }
 
-        throw new UnexpectedLexemeException("print or return", token);
+        throw new UnexpectedLexemeException("declaration, assignment, input, print or return", token);
     }
 
     /// <summary>
@@ -103,15 +131,15 @@ public sealed class Parser
 
         if (_tokens.Peek().Type == TokenType.CloseParenthesis)
         {
-            throw new UnexpectedLexemeException("literal", _tokens.Peek());
+            throw new UnexpectedLexemeException("expression", _tokens.Peek());
         }
 
-        List<LiteralExpression> arguments = [ParseLiteral()];
+        List<Expression> arguments = [ParseExpression()];
 
         while (_tokens.Peek().Type == TokenType.Comma)
         {
             _tokens.Advance();
-            arguments.Add(ParseLiteral());
+            arguments.Add(ParseExpression());
         }
 
         Match(TokenType.CloseParenthesis);
@@ -126,21 +154,159 @@ public sealed class Parser
     private AstNode ParseReturnStatement()
     {
         Match(TokenType.Return);
-        LiteralExpression value = ParseIntLiteral();
+        Expression value = ParseExpression();
         return new ReturnExpression(value);
     }
 
-    private LiteralExpression ParseLiteral()
+    private AstNode ParseInputStatement()
+    {
+        Match(TokenType.Input);
+        Match(TokenType.OpenParenthesis);
+        string name = ParseIdentifier();
+        Match(TokenType.CloseParenthesis);
+        return new InputExpression(name);
+    }
+
+    private AstNode ParseVariableDeclarationStatement()
+    {
+        DataType type = ParseDataType();
+        string name = ParseIdentifier();
+        Expression? initializer = null;
+
+        if (_tokens.Peek().Type == TokenType.Assign)
+        {
+            _tokens.Advance();
+            initializer = ParseExpression();
+        }
+
+        return new VariableDeclarationExpression(type, name, initializer);
+    }
+
+    private AstNode ParseConstantDeclarationStatement()
+    {
+        Match(TokenType.Const);
+        DataType type = ParseDataType();
+        string name = ParseIdentifier();
+        Match(TokenType.Assign);
+        Expression initializer = ParseExpression();
+        return new ConstantDeclarationExpression(type, name, initializer);
+    }
+
+    private AstNode ParseAssignmentStatement()
+    {
+        string name = ParseIdentifier();
+        Match(TokenType.Assign);
+        Expression value = ParseExpression();
+        return new AssignmentExpression(name, value);
+    }
+
+    private Expression ParseExpression()
+    {
+        return ParseAdditiveExpression();
+    }
+
+    private Expression ParseAdditiveExpression()
+    {
+        Expression expression = ParseMultiplicativeExpression();
+
+        while (_tokens.Peek().Type is TokenType.Plus or TokenType.Minus)
+        {
+            OperatorKind op = MapBinaryOperator(_tokens.Advance().Type);
+            Expression right = ParseMultiplicativeExpression();
+            expression = new BinaryExpression(expression, op, right);
+        }
+
+        return expression;
+    }
+
+    private Expression ParseMultiplicativeExpression()
+    {
+        Expression expression = ParseUnaryExpression();
+
+        while (_tokens.Peek().Type is TokenType.Multiply or TokenType.Divide or TokenType.IntegerDivide or TokenType.Modulo)
+        {
+            OperatorKind op = MapBinaryOperator(_tokens.Advance().Type);
+            Expression right = ParseUnaryExpression();
+            expression = new BinaryExpression(expression, op, right);
+        }
+
+        return expression;
+    }
+
+    private Expression ParseUnaryExpression()
+    {
+        if (_tokens.Peek().Type is TokenType.Plus or TokenType.Minus)
+        {
+            OperatorKind op = MapUnaryOperator(_tokens.Advance().Type);
+            Expression operand = ParseUnaryExpression();
+            return new UnaryExpression(op, operand);
+        }
+
+        return ParsePowerExpression();
+    }
+
+    private Expression ParsePowerExpression()
+    {
+        Expression left = ParsePrimaryExpression();
+        if (_tokens.Peek().Type == TokenType.Power)
+        {
+            OperatorKind op = MapBinaryOperator(_tokens.Advance().Type);
+            Expression right = ParsePowerExpression();
+            return new BinaryExpression(left, op, right);
+        }
+
+        return left;
+    }
+
+    private Expression ParsePrimaryExpression()
     {
         Token token = _tokens.Peek();
-
-        return token.Type switch
+        switch (token.Type)
         {
-            TokenType.IntegerLiteral => ParseIntLiteral(),
-            TokenType.NumLiteral => ParseNumLiteral(),
-            TokenType.StringLiteral => ParseStringLiteral(),
-            _ => throw new UnexpectedLexemeException("literal", token),
-        };
+            case TokenType.IntegerLiteral:
+                return ParseIntLiteral();
+            case TokenType.NumLiteral:
+                return ParseNumLiteral();
+            case TokenType.StringLiteral:
+                return ParseStringLiteral();
+            case TokenType.Identifier:
+            {
+                if (_tokens.Peek(1).Type == TokenType.OpenParenthesis)
+                {
+                    return ParseCallExpression();
+                }
+
+                string name = ParseIdentifier();
+                return new IdentifierExpression(name);
+            }
+            case TokenType.OpenParenthesis:
+                Match(TokenType.OpenParenthesis);
+                Expression nested = ParseExpression();
+                Match(TokenType.CloseParenthesis);
+                return nested;
+            default:
+                throw new UnexpectedLexemeException("expression", token);
+        }
+    }
+
+    private Expression ParseCallExpression()
+    {
+        string name = ParseIdentifier();
+        Match(TokenType.OpenParenthesis);
+
+        List<Expression> arguments = [];
+        if (_tokens.Peek().Type != TokenType.CloseParenthesis)
+        {
+            arguments.Add(ParseExpression());
+            while (_tokens.Peek().Type == TokenType.Comma)
+            {
+                _tokens.Advance();
+                arguments.Add(ParseExpression());
+            }
+        }
+
+        Match(TokenType.CloseParenthesis);
+        return new CallExpression(name, arguments);
     }
 
     private LiteralExpression ParseIntLiteral()
@@ -193,6 +359,49 @@ public sealed class Parser
 
         _tokens.Advance();
         return token.Value!.ToString();
+    }
+
+    private DataType ParseDataType()
+    {
+        Token token = _tokens.Peek();
+        return token.Type switch
+        {
+            TokenType.Int => AdvanceAndGet(DataType.Int),
+            TokenType.Num => AdvanceAndGet(DataType.Num),
+            TokenType.String => AdvanceAndGet(DataType.String),
+            _ => throw new UnexpectedLexemeException("type (int, num, string)", token),
+        };
+    }
+
+    private DataType AdvanceAndGet(DataType type)
+    {
+        _tokens.Advance();
+        return type;
+    }
+
+    private static OperatorKind MapBinaryOperator(TokenType tokenType)
+    {
+        return tokenType switch
+        {
+            TokenType.Plus => OperatorKind.Plus,
+            TokenType.Minus => OperatorKind.Minus,
+            TokenType.Multiply => OperatorKind.Multiply,
+            TokenType.Divide => OperatorKind.Divide,
+            TokenType.IntegerDivide => OperatorKind.IntegerDivide,
+            TokenType.Modulo => OperatorKind.Modulo,
+            TokenType.Power => OperatorKind.Power,
+            _ => throw new InvalidOperationException($"Unsupported binary operator token: {tokenType}"),
+        };
+    }
+
+    private static OperatorKind MapUnaryOperator(TokenType tokenType)
+    {
+        return tokenType switch
+        {
+            TokenType.Plus => OperatorKind.Plus,
+            TokenType.Minus => OperatorKind.Minus,
+            _ => throw new InvalidOperationException($"Unsupported unary operator token: {tokenType}"),
+        };
     }
 
     private void Match(TokenType expected)

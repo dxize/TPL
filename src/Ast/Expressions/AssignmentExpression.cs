@@ -1,11 +1,14 @@
 namespace Ast.Expressions;
 
-public sealed class ReturnExpression : Expression
+public sealed class AssignmentExpression : Expression
 {
-    public ReturnExpression(Expression value)
+    public AssignmentExpression(string name, Expression value)
     {
+        Name = name;
         Value = value;
     }
+
+    public string Name { get; }
 
     public Expression Value { get; }
 
