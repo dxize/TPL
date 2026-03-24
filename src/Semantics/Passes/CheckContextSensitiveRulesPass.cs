@@ -1,4 +1,4 @@
-﻿using Ast;
+using Ast;
 using Ast.Declarations;
 using Ast.Expressions;
 
@@ -67,7 +67,7 @@ public sealed class CheckContextSensitiveRulesPass : AbstractPass
         if (!_hasReturn)
         {
             throw new InvalidExpressionException(
-                "Функция main должна содержать return <int literal>.");
+                "Функция main должна содержать return выражение типа int.");
         }
     }
 
