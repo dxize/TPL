@@ -38,6 +38,32 @@ public class LexerTest
             actual);
     }
 
+    [Fact]
+    public void Rejects_integer_with_leading_zero()
+    {
+        List<Token> actual = Tokenize("012");
+
+        Assert.Equal(
+            [
+                new Token(TokenType.Error, new TokenValue("012")),
+                new Token(TokenType.EndOfFile),
+            ],
+            actual);
+    }
+
+    [Fact]
+    public void Accepts_zero_and_zero_point_five()
+    {
+        List<Token> actual = Tokenize("0 0.5");
+        Assert.Equal(
+            [
+                new Token(TokenType.IntegerLiteral, new TokenValue(0)),
+                new Token(TokenType.NumLiteral, new TokenValue(0.5)),
+                new Token(TokenType.EndOfFile),
+            ],
+            actual);
+    }
+
     public static TheoryData<string, List<Token>> GetTokenizeData()
     {
         return new TheoryData<string, List<Token>>
