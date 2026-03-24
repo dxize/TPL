@@ -153,6 +153,13 @@ public class LexerTest
                     new Token(TokenType.EndOfFile),
                 ]
             },
+            {
+                "\"\\\" \\\\ \\n \\t \\r\"",
+                [
+                    new Token(TokenType.StringLiteral, new TokenValue("\" \\ \n \t \r")),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
         };
     }
 
