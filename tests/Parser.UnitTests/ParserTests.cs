@@ -5,195 +5,190 @@ namespace Parser.UnitTests;
 
 public class ParserTests
 {
-    // Точка входа
-    [Fact]
-    public void Can_parse_empty_main_with_return()
+    [Theory]
+    [MemberData(nameof(GetValidProgramData))]
+    public void Can_parse_valid_programs(string code, Action<ProgramNode> assertProgram)
     {
-        string code = """
-            func int main() {
-                return 0;
-            }
-            """;
-
         Parser parser = new(code);
         ProgramNode program = parser.ParseProgram();
-
-        Assert.NotNull(program);
-        Assert.Equal("main", program.MainFunction.Name);
-        Assert.Equal(DataType.Int, program.MainFunction.ReturnType);
-        Assert.Single(program.MainFunction.Body);
-
-        ReturnExpression returnExpression = Assert.IsType<ReturnExpression>(program.MainFunction.Body[0]);
-        Assert.Equal(DataType.Int, returnExpression.Value.Type);
-        Assert.Equal(0, returnExpression.Value.Value);
+        assertProgram(program);
     }
 
-    // Ошибки (точка входа)
-    [Fact]
-    public void Throws_when_main_is_missing()
+    public static TheoryData<string, Action<ProgramNode>> GetValidProgramData()
     {
-        string code = """
+        return new TheoryData<string, Action<ProgramNode>>
+        {
+            {
+                """
+                func int main() {
+                    return 0;
+                }
+                """,
+                program =>
+                {
+                    Assert.Equal("main", program.MainFunction.Name);
+                    Assert.Equal(DataType.Int, program.MainFunction.ReturnType);
+                    Assert.Single(program.MainFunction.Body);
+
+                    ReturnExpression ret = Assert.IsType<ReturnExpression>(program.MainFunction.Body[0]);
+                    LiteralExpression literal = Assert.IsType<LiteralExpression>(ret.Value);
+                    Assert.Equal(DataType.Int, literal.Type);
+                    Assert.Equal(0, literal.Value);
+                }
+            },
+            {
+                """
+                func int main() {
+                    int x = 2;
+                    x = x + 5;
+                    print(x, "!");
+                    return x;
+                }
+                """,
+                program =>
+                {
+                    Assert.Equal(4, program.MainFunction.Body.Count);
+
+                    VariableDeclarationExpression variable = Assert.IsType<VariableDeclarationExpression>(program.MainFunction.Body[0]);
+                    Assert.Equal(DataType.Int, variable.Type);
+                    Assert.Equal("x", variable.Name);
+                    Assert.NotNull(variable.Initializer);
+
+                    AssignmentExpression assignment = Assert.IsType<AssignmentExpression>(program.MainFunction.Body[1]);
+                    Assert.Equal("x", assignment.Name);
+                    BinaryExpression sum = Assert.IsType<BinaryExpression>(assignment.Value);
+                    Assert.Equal(OperatorKind.Plus, sum.OperatorKind);
+
+                    PrintExpression print = Assert.IsType<PrintExpression>(program.MainFunction.Body[2]);
+                    Assert.Equal(2, print.Arguments.Count);
+                    Assert.IsType<IdentifierExpression>(print.Arguments[0]);
+                    Assert.IsType<LiteralExpression>(print.Arguments[1]);
+
+                    ReturnExpression ret = Assert.IsType<ReturnExpression>(program.MainFunction.Body[3]);
+                    Assert.IsType<IdentifierExpression>(ret.Value);
+                }
+            },
+            {
+                """
+                func int main() {
+                    const num pi = 3.14;
+                    string name;
+                    input(name);
+                    print(substr(name, 0, len(name)));
+                    return 0;
+                }
+                """,
+                program =>
+                {
+                    Assert.Equal(5, program.MainFunction.Body.Count);
+
+                    ConstantDeclarationExpression constant = Assert.IsType<ConstantDeclarationExpression>(program.MainFunction.Body[0]);
+                    Assert.Equal(DataType.Num, constant.Type);
+                    Assert.Equal("pi", constant.Name);
+                    LiteralExpression pi = Assert.IsType<LiteralExpression>(constant.Initializer);
+                    Assert.Equal(3.14, pi.Value);
+
+                    VariableDeclarationExpression variable = Assert.IsType<VariableDeclarationExpression>(program.MainFunction.Body[1]);
+                    Assert.Equal(DataType.String, variable.Type);
+                    Assert.Null(variable.Initializer);
+
+                    InputExpression input = Assert.IsType<InputExpression>(program.MainFunction.Body[2]);
+                    Assert.Equal("name", input.VariableName);
+
+                    PrintExpression print = Assert.IsType<PrintExpression>(program.MainFunction.Body[3]);
+                    Assert.Single(print.Arguments);
+                    CallExpression outerCall = Assert.IsType<CallExpression>(print.Arguments[0]);
+                    Assert.Equal("substr", outerCall.Name);
+                    Assert.Equal(3, outerCall.Arguments.Count);
+                    Assert.IsType<IdentifierExpression>(outerCall.Arguments[0]);
+                    Assert.IsType<LiteralExpression>(outerCall.Arguments[1]);
+                    CallExpression nestedCall = Assert.IsType<CallExpression>(outerCall.Arguments[2]);
+                    Assert.Equal("len", nestedCall.Name);
+                }
+            },
+            {
+                """
+                func int main() {
+                    return -2 ^ 3 ^ 2;
+                }
+                """,
+                program =>
+                {
+                    ReturnExpression ret = Assert.IsType<ReturnExpression>(program.MainFunction.Body[0]);
+                    UnaryExpression unaryMinus = Assert.IsType<UnaryExpression>(ret.Value);
+                    Assert.Equal(OperatorKind.Minus, unaryMinus.OperatorKind);
+
+                    BinaryExpression power = Assert.IsType<BinaryExpression>(unaryMinus.Operand);
+                    Assert.Equal(OperatorKind.Power, power.OperatorKind);
+                    LiteralExpression left = Assert.IsType<LiteralExpression>(power.Left);
+                    Assert.Equal(2, left.Value);
+
+                    BinaryExpression rightPower = Assert.IsType<BinaryExpression>(power.Right);
+                    Assert.Equal(OperatorKind.Power, rightPower.OperatorKind);
+                }
+            },
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(GetInvalidProgramData))]
+    public void Throws_for_invalid_programs(string code)
+    {
+        Parser parser = new(code);
+        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
+    }
+
+    public static TheoryData<string> GetInvalidProgramData()
+    {
+        return new TheoryData<string>
+        {
+            // Нет main
+            """
             func int start() {
                 return 0;
             }
-            """;
-
-        Parser parser = new(code);
-        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
-    }
-
-    [Fact]
-    public void Throws_when_return_type_is_not_int()
-    {
-        string code = """
+            """,
+            // Неверный тип возврата main
+            """
             func string main() {
                 return 0;
             }
-            """;
-
-        Parser parser = new(code);
-        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
-    }
-
-    [Fact]
-    public void Throws_when_return_value_is_not_int_literal()
-    {
-        string code = """
-            func int main() {
-                return "dea";
-            }
-            """;
-
-        Parser parser = new(code);
-        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
-    }
-
-    // Литералы + вывод
-    [Fact]
-    public void Can_parse_print_with_int_literal()
-    {
-        string code = """
-            func int main() {
-                print(2025);
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
-        Assert.Single(printExpression.Arguments);
-
-        LiteralExpression literal = printExpression.Arguments[0];
-        Assert.Equal(DataType.Int, literal.Type);
-        Assert.Equal(2025, literal.Value);
-    }
-
-    [Fact]
-    public void Can_parse_print_with_num_literal()
-    {
-        string code = """
-            func int main() {
-                print(3.14);
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
-        Assert.Single(printExpression.Arguments);
-
-        LiteralExpression literal = printExpression.Arguments[0];
-        Assert.Equal(DataType.Num, literal.Type);
-        Assert.Equal(3.14, literal.Value);
-    }
-
-    [Fact]
-    public void Can_parse_print_with_string_literal()
-    {
-        string code = """
-            func int main() {
-                print("hello dea");
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
-        Assert.Single(printExpression.Arguments);
-
-        LiteralExpression literal = printExpression.Arguments[0];
-        Assert.Equal(DataType.String, literal.Type);
-        Assert.Equal("hello dea", literal.Value);
-    }
-
-    [Fact]
-    public void Can_parse_print_with_empty_string()
-    {
-        string code = """
-            func int main() {
-                print("");
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
-        Assert.Single(printExpression.Arguments);
-
-        LiteralExpression literal = printExpression.Arguments[0];
-        Assert.Equal(DataType.String, literal.Type);
-        Assert.Equal("", literal.Value);
-    }
-
-    [Fact]
-    public void Can_parse_print_with_multiple_arguments()
-    {
-        string code = """
-            func int main() {
-                print(1, 2.5, "dea");
-                return 0;
-            }
-            """;
-
-        Parser parser = new(code);
-        ProgramNode program = parser.ParseProgram();
-
-        PrintExpression printExpression = Assert.IsType<PrintExpression>(program.MainFunction.Body[0]);
-        Assert.Equal(3, printExpression.Arguments.Count);
-
-        LiteralExpression first = printExpression.Arguments[0];
-        Assert.Equal(DataType.Int, first.Type);
-        Assert.Equal(1, first.Value);
-
-        LiteralExpression second = printExpression.Arguments[1];
-        Assert.Equal(DataType.Num, second.Type);
-        Assert.Equal(2.5, second.Value);
-
-        LiteralExpression third = printExpression.Arguments[2];
-        Assert.Equal(DataType.String, third.Type);
-        Assert.Equal("dea", third.Value);
-    }
-
-    // Ошибки (Инструкции верхнего уровня)
-    [Fact]
-    public void Throws_when_print_has_no_arguments()
-    {
-        string code = """
+            """,
+            // print без аргументов
+            """
             func int main() {
                 print();
                 return 0;
             }
-            """;
-
-        Parser parser = new(code);
-        Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
+            """,
+            // Константа без инициализации
+            """
+            func int main() {
+                const int x;
+                return 0;
+            }
+            """,
+            // input ожидает идентификатор
+            """
+            func int main() {
+                input(1);
+                return 0;
+            }
+            """,
+            // Пропущен разделитель инструкции
+            """
+            func int main() {
+                int x = 1
+                return 0;
+            }
+            """,
+            // Лишний токен после программы
+            """
+            func int main() {
+                return 0;
+            }
+            func int other() { return 0; }
+            """,
+        };
     }
 }
