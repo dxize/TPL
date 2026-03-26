@@ -75,19 +75,19 @@
 - [x] Конкатенация строки и переменной: `string s = "dea"; print(s + "lang");`
 
 ### Длина строки
-- [ ] Длина непустой строки: `print(len("dea"));`
-- [ ] Длина пустой строки: `print(len(""));`
-- [ ] Длина строки в переменной: `string s = "hello"; print(len(s));`
+- [x] Длина непустой строки: `print(len("dea"));`
+- [x] Длина пустой строки: `print(len(""));`
+- [x] Длина строки в переменной: `string s = "hello"; print(len(s));`
 
 ### Декомпозиция строки
-- [ ] Подстрока из строки: `print(substr("dealang", 0, 3));`
-- [ ] Подстрока из переменной: `string s = "dealang"; print(substr(s, 3, 4));`
-- [ ] Вложенный вызов строковых функций: `string s = "dea"; print(substr(s, 0, len(s)));`
+- [x] Подстрока из строки: `print(substr("dealang", 0, 3));`
+- [x] Подстрока из переменной: `string s = "dealang"; print(substr(s, 3, 4));`
+- [x] Вложенный вызов строковых функций: `string s = "dea"; print(substr(s, 0, len(s)));`
 
 ### Ошибки (Операции над строками, семантика)
-- [ ] `len` без аргументов: `print(len());` => SemanticException
-- [ ] `len` с лишним аргументом: `print(len("dea", "x"));` => SemanticException
-- [ ] `len` от значения неверного типа: `print(len(10));` => SemanticException
-- [ ] `substr` с недостаточным числом аргументов: `print(substr("dea"));` => SemanticException
-- [ ] `substr` с аргументами неверных типов: `print(substr("dea", "x", 1));` => SemanticException
+- [x] `len` без аргументов: `print(len());` => SemanticException
+- [x] `len` с лишним аргументом: `print(len("dea", "x"));` => SemanticException
+- [x] `len` от значения неверного типа: `print(len(10));` => SemanticException
+- [x] `substr` с недостаточным числом аргументов: `print(substr("dea"));` => SemanticException
+- [x] `substr` с аргументами неверных типов: `print(substr("dea", "x", 1));` => SemanticException
 - [x] Конкатенация несовместимых типов: `print("dea" + 1);` => SemanticException

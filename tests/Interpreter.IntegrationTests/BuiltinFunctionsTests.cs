@@ -1,5 +1,4 @@
 using Semantics.Exceptions;
-
 using TestsLibrary;
 
 using DeaInterpreter = Interpreter.Interpreter;
@@ -20,10 +19,23 @@ public class BuiltinFunctionsTests
         Assert.Equal(expectedOutput, environment.Output);
     }
 
+    [Theory]
+    [MemberData(nameof(GetInvalidFunctionCallsData))]
+    public void Throws_on_invalid_function_calls(string code)
+    {
+        FakeEnvironment environment = new();
+        DeaInterpreter interpreter = new(environment);
+
+        // Пока общий класс ошибки
+        // TODO: сделать конкретный
+        Assert.Throws<SemanticException>(() => interpreter.Execute(code));
+    }
+
     public static TheoryData<string, string> GetEvaluateBuiltinFunctionsData()
     {
         return new TheoryData<string, string>
         {
+            // Длина строки
             {
                 """
                 func int main() {
@@ -45,6 +57,18 @@ public class BuiltinFunctionsTests
             {
                 """
                 func int main() {
+                    string s = "hello";
+                    print(len(s));
+                    return 0;
+                }
+                """,
+                "5"
+            },
+
+            // Декомпозиция строки
+            {
+                """
+                func int main() {
                     print(substr("dealang", 0, 3));
                     return 0;
                 }
@@ -54,37 +78,38 @@ public class BuiltinFunctionsTests
             {
                 """
                 func int main() {
-                    print(abs(-5));
+                    string s = "dealang";
+                    print(substr(s, 3, 4));
                     return 0;
                 }
                 """,
-                "5"
+                "lang"
+            },
+            {
+                """
+                func int main() {
+                    string s = "dea";
+                    print(substr(s, 0, len(s)));
+                    return 0;
+                }
+                """,
+                "dea"
             },
         };
     }
 
-    [Theory]
-    [MemberData(nameof(GetInvalidFunctionCallsData))]
-    public void Throws_on_invalid_function_calls(string code, Type expectedExceptionType)
+    public static TheoryData<string> GetInvalidFunctionCallsData()
     {
-        FakeEnvironment environment = new();
-        DeaInterpreter interpreter = new(environment);
-
-        Assert.Throws(expectedExceptionType, () => interpreter.Execute(code));
-    }
-
-    public static TheoryData<string, Type> GetInvalidFunctionCallsData()
-    {
-        return new TheoryData<string, Type>
+        return new TheoryData<string>
         {
+            // len
             {
                 """
                 func int main() {
                     print(len());
                     return 0;
                 }
-                """,
-                typeof(InvalidOperationException)
+                """
             },
             {
                 """
@@ -92,44 +117,34 @@ public class BuiltinFunctionsTests
                     print(len("dea", "x"));
                     return 0;
                 }
-                """,
-                typeof(InvalidOperationException)
+                """
             },
+            {
+                """
+                func int main() {
+                    print(len(10));
+                    return 0;
+                }
+                """
+            },
+
+            // substr
             {
                 """
                 func int main() {
                     print(substr("dea"));
                     return 0;
                 }
-                """,
-                typeof(InvalidOperationException)
+                """
             },
             {
                 """
                 func int main() {
-                    print(abs("dea"));
+                    print(substr("dea", "x", 1));
                     return 0;
                 }
-                """,
-                typeof(TypeErrorException)
+                """
             },
-        };
-    }
-
-    [Theory]
-    [MemberData(nameof(GetInvalidRuntimeBuiltinCallsData))]
-    public void Throws_on_invalid_runtime_builtin_calls(string code, Type expectedExceptionType)
-    {
-        FakeEnvironment environment = new();
-        DeaInterpreter interpreter = new(environment);
-
-        Assert.Throws(expectedExceptionType, () => interpreter.Execute(code));
-    }
-
-    public static TheoryData<string, Type> GetInvalidRuntimeBuiltinCallsData()
-    {
-        return new TheoryData<string, Type>
-        {
         };
     }
 }
