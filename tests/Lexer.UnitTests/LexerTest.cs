@@ -44,7 +44,7 @@ public class LexerTest
                 ]
             },
             {
-                "func INT Main",
+                "fUNc INT Main",
                 [
                     new Token(TokenType.Func),
                     new Token(TokenType.Int),
@@ -53,49 +53,78 @@ public class LexerTest
                 ]
             },
             {
-                "123 45.67 \"dea\"",
+                "var1 abc123 myVar myvar",
+                [
+                    new Token(TokenType.Identifier, new TokenValue("var1")),
+                    new Token(TokenType.Identifier, new TokenValue("abc123")),
+                    new Token(TokenType.Identifier, new TokenValue("myVar")),
+                    new Token(TokenType.Identifier, new TokenValue("myvar")),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+
+            // Литералы
+            {
+                "123 45.67",
                 [
                     new Token(TokenType.IntegerLiteral, new TokenValue(123)),
                     new Token(TokenType.NumLiteral, new TokenValue(45.67)),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+            {
+                "0.5",
+                [
+                    new Token(TokenType.NumLiteral, new TokenValue(0.5)),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+
+            // Строки
+            {
+                "\"dea\"",
+                [
                     new Token(TokenType.StringLiteral, new TokenValue("dea")),
                     new Token(TokenType.EndOfFile),
                 ]
             },
             {
-                "func int main() { print(1, 2.5, \"ok\"); return 0; }",
+                "\"\"",
                 [
-                    new Token(TokenType.Func),
-                    new Token(TokenType.Int),
-                    new Token(TokenType.Identifier, new TokenValue("main")),
-                    new Token(TokenType.OpenParenthesis),
-                    new Token(TokenType.CloseParenthesis),
-                    new Token(TokenType.OpenBrace),
-                    new Token(TokenType.Print),
-                    new Token(TokenType.OpenParenthesis),
-                    new Token(TokenType.IntegerLiteral, new TokenValue(1)),
-                    new Token(TokenType.Comma),
-                    new Token(TokenType.NumLiteral, new TokenValue(2.5)),
-                    new Token(TokenType.Comma),
-                    new Token(TokenType.StringLiteral, new TokenValue("ok")),
-                    new Token(TokenType.CloseParenthesis),
-                    new Token(TokenType.Semicolon),
-                    new Token(TokenType.Return),
-                    new Token(TokenType.IntegerLiteral, new TokenValue(0)),
-                    new Token(TokenType.Semicolon),
-                    new Token(TokenType.CloseBrace),
+                    new Token(TokenType.StringLiteral, new TokenValue("")),
                     new Token(TokenType.EndOfFile),
                 ]
             },
             {
-                "# one line\nprint(1); /* two\nline */ return 0;",
+                "\"quote: \\\" and slash: \\\\ and tab:\\t\"",
                 [
-                    new Token(TokenType.Print),
-                    new Token(TokenType.OpenParenthesis),
-                    new Token(TokenType.IntegerLiteral, new TokenValue(1)),
-                    new Token(TokenType.CloseParenthesis),
-                    new Token(TokenType.Semicolon),
-                    new Token(TokenType.Return),
-                    new Token(TokenType.IntegerLiteral, new TokenValue(0)),
+                    new Token(TokenType.StringLiteral, new TokenValue("quote: \" and slash: \\ and tab:\t")),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+            {
+                "\"line1\\nline2\\r\"",
+                [
+                    new Token(TokenType.StringLiteral, new TokenValue("line1\nline2\r")),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+            {
+                "\"# not comment\" \"/* not comment */\"",
+                [
+                    new Token(TokenType.StringLiteral, new TokenValue("# not comment")),
+                    new Token(TokenType.StringLiteral, new TokenValue("/* not comment */")),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+
+            // Операторы
+            {
+                "x = y;",
+                [
+                    new Token(TokenType.Identifier, new TokenValue("x")),
+                    new Token(TokenType.Assign),
+                    new Token(TokenType.Identifier, new TokenValue("y")),
                     new Token(TokenType.Semicolon),
                     new Token(TokenType.EndOfFile),
                 ]
@@ -138,9 +167,55 @@ public class LexerTest
                 ]
             },
             {
-                "\"quote: \\\" and slash: \\\\ and tab:\\t\"",
+                "a ^ b;",
                 [
-                    new Token(TokenType.StringLiteral, new TokenValue("quote: \" and slash: \\ and tab:\t")),
+                    new Token(TokenType.Identifier, new TokenValue("a")),
+                    new Token(TokenType.Power),
+                    new Token(TokenType.Identifier, new TokenValue("b")),
+                    new Token(TokenType.Semicolon),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+
+            // Прочие лексемы (Delimiters)
+            {
+                "func int main() { print(1, 0.5, \"ok\"); return 0; }",
+                [
+                    new Token(TokenType.Func),
+                    new Token(TokenType.Int),
+                    new Token(TokenType.Identifier, new TokenValue("main")),
+                    new Token(TokenType.OpenParenthesis),
+                    new Token(TokenType.CloseParenthesis),
+                    new Token(TokenType.OpenBrace),
+                    new Token(TokenType.Print),
+                    new Token(TokenType.OpenParenthesis),
+                    new Token(TokenType.IntegerLiteral, new TokenValue(1)),
+                    new Token(TokenType.Comma),
+                    new Token(TokenType.NumLiteral, new TokenValue(0.5)),
+                    new Token(TokenType.Comma),
+                    new Token(TokenType.StringLiteral, new TokenValue("ok")),
+                    new Token(TokenType.CloseParenthesis),
+                    new Token(TokenType.Semicolon),
+                    new Token(TokenType.Return),
+                    new Token(TokenType.IntegerLiteral, new TokenValue(0)),
+                    new Token(TokenType.Semicolon),
+                    new Token(TokenType.CloseBrace),
+                    new Token(TokenType.EndOfFile),
+                ]
+            },
+
+            // Комментарии
+            {
+                "# one line\nprint(1); /* two\nline */ return 0;",
+                [
+                    new Token(TokenType.Print),
+                    new Token(TokenType.OpenParenthesis),
+                    new Token(TokenType.IntegerLiteral, new TokenValue(1)),
+                    new Token(TokenType.CloseParenthesis),
+                    new Token(TokenType.Semicolon),
+                    new Token(TokenType.Return),
+                    new Token(TokenType.IntegerLiteral, new TokenValue(0)),
+                    new Token(TokenType.Semicolon),
                     new Token(TokenType.EndOfFile),
                 ]
             },
