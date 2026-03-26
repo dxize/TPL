@@ -21,7 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Interpreter\Interpreter.csproj" />
     <ProjectReference Include="..\..\src\Parser\Parser.csproj" />
+    <ProjectReference Include="..\TestsLibrary\TestsLibrary.csproj" />
   </ItemGroup>
 
 </Project>
