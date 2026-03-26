@@ -1,4 +1,4 @@
-# Список тестов парсера
+# Список интеграционных тестов Interpreter
 
 ## Точка входа
 - [x] Пустая функция:` func int main() { return 0; } `
@@ -61,13 +61,13 @@
 - [x] Пустые скобки в выражении: `print(());` => UnexpectedLexemeException
 
 ### Ошибки (Арифметические, семантика)
-- [ ] Нельзя складывать число и строку: `print(10 + "5");` => SemanticException
-- [ ] Нельзя умножать строку на число: `print("cat" * 2);` => SemanticException
-- [ ] Нельзя делить строку на число: `print("ten" / 2);` => SemanticException
-- [ ] Нельзя вычитать число из строки: `print("10" - 5);` => SemanticException
-- [ ] Нельзя применять унарный минус к строке: `print(-"one");` => SemanticException
-- [ ] Нельзя использовать `//` для `num`: `print(7.5 // 2.0);` => SemanticException
-- [ ] Нельзя использовать `%` для `num`: `print(7.5 % 2.0);` => SemanticException
+- [x] Нельзя складывать число и строку: `print(10 + "5");` => SemanticException
+- [x] Нельзя умножать строку на число: `print("cat" * 2);` => SemanticException
+- [x] Нельзя делить строку на число: `print("ten" / 2);` => SemanticException
+- [x] Нельзя вычитать число из строки: `print("10" - 5);` => SemanticException
+- [x] Нельзя применять унарный минус к строке: `print(-"one");` => SemanticException
+- [x] Нельзя использовать `//` для `num`: `print(7.5 // 2.0);` => SemanticException
+- [x] Нельзя использовать `%` для `num`: `print(7.5 % 2.0);` => SemanticException
 
 ## Операции над строками
 ### Конкатенация
@@ -90,4 +90,4 @@
 - [ ] `len` от значения неверного типа: `print(len(10));` => SemanticException
 - [ ] `substr` с недостаточным числом аргументов: `print(substr("dea"));` => SemanticException
 - [ ] `substr` с аргументами неверных типов: `print(substr("dea", "x", 1));` => SemanticException
-- [ ] Конкатенация несовместимых типов: `print("dea" + 1);` => SemanticException
+- [x] Конкатенация несовместимых типов: `print("dea" + 1);` => SemanticException

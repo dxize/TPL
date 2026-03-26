@@ -22,7 +22,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ast", "src\Ast\Ast.csproj",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interpreter", "src\Interpreter\Interpreter.csproj", "{5EDBEDA7-5F27-D676-954E-62DCD7502634}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser.UnitTests", "tests\Parser.UnitTests\Parser.UnitTests.csproj", "{B0EDCFCD-7C25-A99E-DAE8-E0E24B76B89F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interpreter.IntegrationTests", "tests\Interpreter.IntegrationTests\Interpreter.IntegrationTests.csproj", "{B0EDCFCD-7C25-A99E-DAE8-E0E24B76B89F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semantics", "src\Semantics\Semantics.csproj", "{849A5937-7046-4012-B2C8-7C17362DD3A7}"
 EndProject

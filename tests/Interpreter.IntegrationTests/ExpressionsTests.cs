@@ -1,6 +1,12 @@
+using Parser;
+
+using Semantics.Exceptions;
+
 using TestsLibrary;
+
 using DeaInterpreter = Interpreter.Interpreter;
-namespace Parser.UnitTests;
+
+namespace Interpreter.IntegrationTests;
 
 public class ExpressionsTests
 {
@@ -17,13 +23,25 @@ public class ExpressionsTests
     }
 
     [Theory]
-    [MemberData(nameof(GetInvalidExpressionsData))]
-    public void Rejects_invalid_expressions(string code)
+    [MemberData(nameof(GetInvalidSyntaxExpressionsData))]
+    public void Rejects_invalid_syntax_expressions(string code)
     {
         FakeEnvironment environment = new();
         DeaInterpreter interpreter = new(environment);
 
         Assert.Throws<UnexpectedLexemeException>(() => interpreter.Execute(code));
+    }
+
+    [Theory]
+    [MemberData(nameof(GetInvalidSemanticExpressionsData))]
+    public void Rejects_invalid_semantic_expressions(string code)
+    {
+        FakeEnvironment environment = new();
+        DeaInterpreter interpreter = new(environment);
+
+        // Пока общий класс ошибки
+        // TODO: сделать конкретный
+        Assert.Throws<SemanticException>(() => interpreter.Execute(code));
     }
 
     public static TheoryData<string, string> GetEvaluateExpressionsData()
@@ -203,7 +221,7 @@ public class ExpressionsTests
         };
     }
 
-    public static TheoryData<string> GetInvalidExpressionsData()
+    public static TheoryData<string> GetInvalidSyntaxExpressionsData()
     {
         return new TheoryData<string>
         {
@@ -235,6 +253,80 @@ public class ExpressionsTests
                 """
                 func int main() {
                     print(());
+                    return 0;
+                }
+                """
+            },
+        };
+    }
+
+    public static TheoryData<string> GetInvalidSemanticExpressionsData()
+    {
+        return new TheoryData<string>
+        {
+            // Арифметика с несовместимыми типами
+            {
+                """
+                func int main() {
+                    print(10 + "5");
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print("cat" * 2);
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print("ten" / 2);
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print("10" - 5);
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(-"one");
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(7.5 // 2.0);
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(7.5 % 2.0);
+                    return 0;
+                }
+                """
+            },
+
+            // Конкатенация несовместимых типов
+            {
+                """
+                func int main() {
+                    print("dea" + 1);
                     return 0;
                 }
                 """
