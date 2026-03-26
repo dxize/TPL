@@ -4,11 +4,14 @@
 - [x] Пустая функция:` func int main() { return 0; } `
 - [ ] Главная функция с телом из нескольких инструкций: `func int main() { print(1); return 0; }`
 - [ ] Главная функция с объявлением переменной: `func int main() { int x = 10; return 0; }`
-### Ошибки (точка входа)
+### Ошибки (точка входа, синтаксис)
 - [x] Пропущен main: ` func int start() { return 0; }` => UnexpectedLexemeException
 - [x] Пропущен int: `  func string main() { return 0; }` => UnexpectedLexemeException
 - [ ] После программы есть лишний код: `func int main() { return 0; } func int other() { return 0; }`=> UnexpectedLexemeException
-
+### Ошибки (точка входа, семантика)
+- [ ] Отсутствует return: `func int main() { print(1); }` => SemanticException
+- [ ] Возвращение не int: `func int main() { return "dea"; }` => SemanticException
+- 
 ## (далее все тесты будут описаны в сокращенном варианте явно не показывая: func int main() { return 0; })
 
 ## Литералы + вывод
@@ -16,7 +19,7 @@
 - [x] Вещественное число: `print(3.14);`
 - [x] Строка в двойных кавычках: `print("hello dea");`
 - [x] Пустая строка: `print("");`
-### Ошибки (Литералы + вывод)
+### Ошибки (Литералы + вывод, синтаксис)
 - [x] Вывод без аргументов: `print();` => UnexpectedLexemeException
 - [ ] Пропущена закрывающая скобка: `print(1;` => UnexpectedLexemeException
 - [ ] Лишняя запятая: `print(1,)` => UnexpectedLexemeException
@@ -24,7 +27,10 @@
 ## Ввод
 - [ ] Ввод строки в переменную: `string name; input(name);`
 ### Ошибки (Ввод)
-- [ ] Ввод вызывается не с идентификатором: `input(1);`
+- [ ] Ввод вызывается не с идентификатором: `input(1);` => UnexpectedLexemeException
+### Ошибки (Ввод, семантика)
+- [ ] Ввод вызывается с `const`: `const string name = "dea"; input(name);` => SemanticException
+- [ ] Ввод вызывается с необъявленной переменной: `input(name);` => SemanticException
 
 ## Арифметические операции над числами
 - [x] Сложение целых чисел: `print(2 + 3);`
@@ -48,11 +54,20 @@
 - [x] Ассоциативность степени: `print(2 ^ 3 ^ 2);`
 - [x] Приоритет унарного минуса и степени: `return -2 ^ 3 ^ 2;`
 
-### Ошибки (Арифметические)
+### Ошибки (Арифметические, синтаксис)
 - [x] Пропущен правый/левый операнд: `print(1 +);` => UnexpectedLexemeException
 - [x] Пропущен правый/левый операнд: `print(* 2);` => UnexpectedLexemeException
 - [x] Пропущена скобка: `print((1 + 2);` => UnexpectedLexemeException
 - [x] Пустые скобки в выражении: `print(());` => UnexpectedLexemeException
+
+### Ошибки (Арифметические, семантика)
+- [ ] Нельзя складывать число и строку: `print(10 + "5");` => SemanticException
+- [ ] Нельзя умножать строку на число: `print("cat" * 2);` => SemanticException
+- [ ] Нельзя делить строку на число: `print("ten" / 2);` => SemanticException
+- [ ] Нельзя вычитать число из строки: `print("10" - 5);` => SemanticException
+- [ ] Нельзя применять унарный минус к строке: `print(-"one");` => SemanticException
+- [ ] Нельзя использовать `//` для `num`: `print(7.5 // 2.0);` => SemanticException
+- [ ] Нельзя использовать `%` для `num`: `print(7.5 % 2.0);` => SemanticException
 
 ## Операции над строками
 ### Конкатенация
@@ -68,3 +83,11 @@
 - [ ] Подстрока из строки: `print(substr("dealang", 0, 3));`
 - [ ] Подстрока из переменной: `string s = "dealang"; print(substr(s, 3, 4));`
 - [ ] Вложенный вызов строковых функций: `string s = "dea"; print(substr(s, 0, len(s)));`
+
+### Ошибки (Операции над строками, семантика)
+- [ ] `len` без аргументов: `print(len());` => SemanticException
+- [ ] `len` с лишним аргументом: `print(len("dea", "x"));` => SemanticException
+- [ ] `len` от значения неверного типа: `print(len(10));` => SemanticException
+- [ ] `substr` с недостаточным числом аргументов: `print(substr("dea"));` => SemanticException
+- [ ] `substr` с аргументами неверных типов: `print(substr("dea", "x", 1));` => SemanticException
+- [ ] Конкатенация несовместимых типов: `print("dea" + 1);` => SemanticException
