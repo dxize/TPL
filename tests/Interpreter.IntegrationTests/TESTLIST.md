@@ -32,6 +32,8 @@
 - [ ] Ввод вызывается с `const`: `const string name = "dea"; input(name);` => SemanticException
 - [ ] Ввод вызывается с необъявленной переменной: `input(name);` => SemanticException
 
+`Expressions`
+
 ## Арифметические операции над числами
 - [x] Сложение целых чисел: `print(2 + 3);`
 - [x] Вычитание целых чисел: `print(7 - 2);`
@@ -60,6 +62,8 @@
 - [x] Пропущена скобка: `print((1 + 2);` => UnexpectedLexemeException
 - [x] Пустые скобки в выражении: `print(());` => UnexpectedLexemeException
 
+`TypesSemantic`
+
 ### Ошибки (Арифметические, семантика)
 - [x] Нельзя складывать число и строку: `print(10 + "5");` => SemanticException
 - [x] Нельзя умножать строку на число: `print("cat" * 2);` => SemanticException
@@ -75,6 +79,9 @@
 - [x] Конкатенация двух строк: `print("dea" + "lang");`
 - [x] Конкатенация строки и переменной: `string s = "dea"; print(s + "lang");`
 
+`BuiltInFunctions`
+
+### Built-in функции (строки)
 ### Длина строки
 - [x] Длина непустой строки: `print(len("dea"));`
 - [x] Длина пустой строки: `print(len(""));`
@@ -85,7 +92,7 @@
 - [x] Подстрока из переменной: `string s = "dealang"; print(substr(s, 3, 4));`
 - [x] Вложенный вызов строковых функций: `string s = "dea"; print(substr(s, 0, len(s)));`
 
-### Ошибки (Операции над строками, семантика)
+### Ошибки (Built-in операции над строками, семантика)
 - [x] `len` без аргументов: `print(len());` => SemanticException
 - [x] `len` с лишним аргументом: `print(len("dea", "x"));` => SemanticException
 - [x] `len` от значения неверного типа: `print(len(10));` => SemanticException
@@ -93,7 +100,23 @@
 - [x] `substr` с аргументами неверных типов: `print(substr("dea", "x", 1));` => SemanticException
 - [x] `substr` с неверным типом третьего аргумента: `print(substr("dea", 0, "x"));` => SemanticException
 
-### Built-in функции чисел
+### Built-in функции (числа)
+- [ ] abs от целого числа: `print(abs(-5));`
+- [ ] abs от вещественного числа: `print(abs(-3.14));`
+- [ ] min от двух целых чисел: `print(min(3, 1));`
+- [ ] min от нескольких целых чисел: `print(min(5, 2, 7, 1));`
+- [ ] min от двух вещественных чисел: `print(min(3.5, 1.2));`
+- [ ] max от двух целых чисел: `print(max(3, 1));`
+- [ ] max от нескольких целых чисел: `print(max(5, 2, 7, 1));`
+- [ ] max от двух вещественных чисел: `print(max(3.5, 1.2));`
+
+### Ошибки (Built-in функции чисел, семантика)
+- [ ] abs без аргументов: `print(abs());` => SemanticException
+- [ ] abs с лишним аргументом: `print(abs(1, 2));` => SemanticException
+- [ ] min без аргументов: `print(min());` => SemanticException
+- [ ] min с одним аргументом: `print(min(1));` => SemanticException
+- [ ] max без аргументов: `print(max());` => SemanticException
+- [ ] max с одним аргументом: `print(max(1));` => SemanticException
 - [x] abs от строки: `print(abs("dea"));` => SemanticException
 - [x] min с аргументами разных типов: `print(min(1, "x"));` => SemanticException
 - [x] max с аргументами разных типов: `print(max("x", 1));` => SemanticException

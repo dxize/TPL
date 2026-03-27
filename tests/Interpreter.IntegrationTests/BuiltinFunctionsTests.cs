@@ -145,6 +145,14 @@ public class BuiltinFunctionsTests
                 }
                 """
             },
+            {
+                """
+                func int main() {
+                    print(substr("dea", 0, "x"));
+                    return 0;
+                }
+                """
+            },
         };
     }
 }
