@@ -2,16 +2,16 @@
 
 ## Точка входа
 - [x] Пустая функция:` func int main() { return 0; } `
-- [ ] Главная функция с телом из нескольких инструкций: `func int main() { print(1); return 0; }`
-- [ ] Главная функция с объявлением переменной: `func int main() { int x = 10; return 0; }`
+- [x] Главная функция с телом из нескольких инструкций: `func int main() { print(1); return 0; }`
+- [x] Главная функция с объявлением переменной: `func int main() { int x = 10; return 0; }`
 ### Ошибки (точка входа, синтаксис)
 - [x] Пропущен main: ` func int start() { return 0; }` => UnexpectedLexemeException
 - [x] Пропущен int: `  func string main() { return 0; }` => UnexpectedLexemeException
-- [ ] После программы есть лишний код: `func int main() { return 0; } func int other() { return 0; }`=> UnexpectedLexemeException
+- [x] После программы есть лишний код: `func int main() { return 0; } func int other() { return 0; }`=> UnexpectedLexemeException
 ### Ошибки (точка входа, семантика)
-- [ ] Отсутствует return: `func int main() { print(1); }` => SemanticException
-- [ ] Возвращение не int: `func int main() { return "dea"; }` => SemanticException
-- 
+- [x] Отсутствует return: `func int main() { print(1); }` => SemanticException
+- [x] Возвращение не int: `func int main() { return "dea"; }` => SemanticException
+
 ## (далее все тесты будут описаны в сокращенном варианте явно не показывая: func int main() { return 0; })
 
 ## Литералы + вывод
