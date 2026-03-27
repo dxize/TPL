@@ -1,5 +1,7 @@
 # Список интеграционных тестов Interpreter
 
+`EntryPoint`
+
 ## Точка входа
 - [x] Пустая функция:` func int main() { return 0; } `
 - [x] Главная функция с телом из нескольких инструкций: `func int main() { print(1); return 0; }`
@@ -14,23 +16,25 @@
 
 ## (далее все тесты будут описаны в сокращенном варианте явно не показывая: func int main() { return 0; })
 
-## Литералы + вывод
-- [x] Целое число: `print(2025);`
-- [x] Вещественное число: `print(3.14);`
-- [x] Строка в двойных кавычках: `print("hello dea");`
+`InputOutput`
+
+## Вывод
 - [x] Пустая строка: `print("");`
-### Ошибки (Литералы + вывод, синтаксис)
+- [x] Вывод нескольких аргументов разных типов: `print(1, 2.5, "dea");`
+### Ошибки (Вывод, синтаксис)
 - [x] Вывод без аргументов: `print();` => UnexpectedLexemeException
-- [ ] Пропущена закрывающая скобка: `print(1;` => UnexpectedLexemeException
-- [ ] Лишняя запятая: `print(1,)` => UnexpectedLexemeException
+- [x] Лишняя запятая: `print(1,)` => UnexpectedLexemeException
 
 ## Ввод
-- [ ] Ввод строки в переменную: `string name; input(name);`
+- [x] Ввод строки в переменную: `string name; input(name);`
+- [x] Ввод целого числа в переменную: `int x; input(x);`
+- [x] Ввод вещественного числа в переменную: `num x; input(x);`
+- [x] Ввод строки и последующий вывод: `string name; input(name); print(name);`
 ### Ошибки (Ввод)
-- [ ] Ввод вызывается не с идентификатором: `input(1);` => UnexpectedLexemeException
+- [x] Ввод вызывается не с идентификатором: `input(1);` => UnexpectedLexemeException
 ### Ошибки (Ввод, семантика)
-- [ ] Ввод вызывается с `const`: `const string name = "dea"; input(name);` => SemanticException
-- [ ] Ввод вызывается с необъявленной переменной: `input(name);` => SemanticException
+- [x] Ввод вызывается с `const`: `const string name = "dea"; input(name);` => SemanticException
+- [x] Ввод вызывается с необъявленной переменной: `input(name);` => SemanticException
 
 `Expressions`
 
