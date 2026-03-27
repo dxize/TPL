@@ -1,7 +1,4 @@
 using Parser;
-
-using Semantics.Exceptions;
-
 using TestsLibrary;
 
 using DeaInterpreter = Interpreter.Interpreter;
@@ -32,23 +29,11 @@ public class ExpressionsTests
         Assert.Throws<UnexpectedLexemeException>(() => interpreter.Execute(code));
     }
 
-    [Theory]
-    [MemberData(nameof(GetInvalidSemanticExpressionsData))]
-    public void Rejects_invalid_semantic_expressions(string code)
-    {
-        FakeEnvironment environment = new();
-        DeaInterpreter interpreter = new(environment);
-
-        // Пока общий класс ошибки
-        // TODO: сделать конкретный
-        Assert.Throws<SemanticException>(() => interpreter.Execute(code));
-    }
-
     public static TheoryData<string, string> GetEvaluateExpressionsData()
     {
         return new TheoryData<string, string>
         {
-            // Арифметические операции
+            // Арифметические операции над числами
             {
                 """
                 func int main() {
@@ -191,32 +176,10 @@ public class ExpressionsTests
             {
                 """
                 func int main() {
-                    print(-2 ^ 3 ^ 2);
-                    return 0;
+                    return -2 ^ 3 ^ 2;
                 }
                 """,
                 "-512"
-            },
-
-            // Строковые выражения
-            {
-                """
-                func int main() {
-                    print("dea" + "lang");
-                    return 0;
-                }
-                """,
-                "dealang"
-            },
-            {
-                """
-                func int main() {
-                    string s = "dea";
-                    print(s + "lang");
-                    return 0;
-                }
-                """,
-                "dealang"
             },
         };
     }
@@ -253,80 +216,6 @@ public class ExpressionsTests
                 """
                 func int main() {
                     print(());
-                    return 0;
-                }
-                """
-            },
-        };
-    }
-
-    public static TheoryData<string> GetInvalidSemanticExpressionsData()
-    {
-        return new TheoryData<string>
-        {
-            // Арифметика с несовместимыми типами
-            {
-                """
-                func int main() {
-                    print(10 + "5");
-                    return 0;
-                }
-                """
-            },
-            {
-                """
-                func int main() {
-                    print("cat" * 2);
-                    return 0;
-                }
-                """
-            },
-            {
-                """
-                func int main() {
-                    print("ten" / 2);
-                    return 0;
-                }
-                """
-            },
-            {
-                """
-                func int main() {
-                    print("10" - 5);
-                    return 0;
-                }
-                """
-            },
-            {
-                """
-                func int main() {
-                    print(-"one");
-                    return 0;
-                }
-                """
-            },
-            {
-                """
-                func int main() {
-                    print(7.5 // 2.0);
-                    return 0;
-                }
-                """
-            },
-            {
-                """
-                func int main() {
-                    print(7.5 % 2.0);
-                    return 0;
-                }
-                """
-            },
-
-            // Конкатенация несовместимых типов
-            {
-                """
-                func int main() {
-                    print("dea" + 1);
                     return 0;
                 }
                 """

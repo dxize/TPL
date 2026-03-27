@@ -52,7 +52,7 @@
 - [x] Левая ассоциативность вычитания: `print(10 - 3 - 2);`
 - [x] Левая ассоциативность деления: `print(16 / 4 / 2);`
 - [x] Ассоциативность степени: `print(2 ^ 3 ^ 2);`
-- [x] Приоритет унарного минуса и степени: `return -2 ^ 3 ^ 2;`
+- [x] Приоритет унарного минуса и степени: `print(-2 ^ 3 ^ 2);`
 
 ### Ошибки (Арифметические, синтаксис)
 - [x] Пропущен правый/левый операнд: `print(1 +);` => UnexpectedLexemeException
@@ -68,6 +68,7 @@
 - [x] Нельзя применять унарный минус к строке: `print(-"one");` => SemanticException
 - [x] Нельзя использовать `//` для `num`: `print(7.5 // 2.0);` => SemanticException
 - [x] Нельзя использовать `%` для `num`: `print(7.5 % 2.0);` => SemanticException
+- [x] Нельзя конкатенировать строку с числом: `print("dea" + 1);` => SemanticException
 
 ## Операции над строками
 ### Конкатенация
@@ -90,4 +91,9 @@
 - [x] `len` от значения неверного типа: `print(len(10));` => SemanticException
 - [x] `substr` с недостаточным числом аргументов: `print(substr("dea"));` => SemanticException
 - [x] `substr` с аргументами неверных типов: `print(substr("dea", "x", 1));` => SemanticException
-- [x] Конкатенация несовместимых типов: `print("dea" + 1);` => SemanticException
+- [x] `substr` с неверным типом третьего аргумента: `print(substr("dea", 0, "x"));` => SemanticException
+
+### Built-in функции чисел
+- [x] abs от строки: `print(abs("dea"));` => SemanticException
+- [x] min с аргументами разных типов: `print(min(1, "x"));` => SemanticException
+- [x] max с аргументами разных типов: `print(max("x", 1));` => SemanticException

@@ -1,7 +1,9 @@
 using Ast;
 using Ast.Expressions;
 
-namespace Parser.UnitTests;
+using Parser;
+
+namespace Interpreter.IntegrationTests;
 
 public class ParserTests
 {
@@ -9,7 +11,7 @@ public class ParserTests
     [MemberData(nameof(GetValidProgramData))]
     public void Can_parse_valid_programs(string code, Action<ProgramNode> assertProgram)
     {
-        Parser parser = new(code);
+        Parser.Parser parser = new(code);
         ProgramNode program = parser.ParseProgram();
         assertProgram(program);
     }
@@ -134,7 +136,7 @@ public class ParserTests
     [MemberData(nameof(GetInvalidProgramData))]
     public void Throws_for_invalid_programs(string code)
     {
-        Parser parser = new(code);
+        Parser.Parser parser = new(code);
         Assert.Throws<UnexpectedLexemeException>(() => parser.ParseProgram());
     }
 
