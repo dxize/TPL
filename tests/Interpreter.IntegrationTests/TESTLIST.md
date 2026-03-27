@@ -62,6 +62,11 @@
 - [x] Пропущена скобка: `print((1 + 2);` => UnexpectedLexemeException
 - [x] Пустые скобки в выражении: `print(());` => UnexpectedLexemeException
 
+## Операции над строками
+### Конкатенация
+- [x] Конкатенация двух строк: `print("dea" + "lang");`
+- [x] Конкатенация строки и переменной: `string s = "dea"; print(s + "lang");`
+
 `TypesSemantic`
 
 ### Ошибки (Арифметические, семантика)
@@ -73,11 +78,6 @@
 - [x] Нельзя использовать `//` для `num`: `print(7.5 // 2.0);` => SemanticException
 - [x] Нельзя использовать `%` для `num`: `print(7.5 % 2.0);` => SemanticException
 - [x] Нельзя конкатенировать строку с числом: `print("dea" + 1);` => SemanticException
-
-## Операции над строками
-### Конкатенация
-- [x] Конкатенация двух строк: `print("dea" + "lang");`
-- [x] Конкатенация строки и переменной: `string s = "dea"; print(s + "lang");`
 
 `BuiltInFunctions`
 

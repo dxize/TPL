@@ -176,10 +176,31 @@ public class ExpressionsTests
             {
                 """
                 func int main() {
-                    return -2 ^ 3 ^ 2;
+                    print(-2 ^ 3 ^ 2);
+                    return 0;
                 }
                 """,
                 "-512"
+            },
+
+            // Операции над строками
+            {
+                """
+                func int main() {
+                    print("dea" + "lang");
+                    return 0;
+                }
+                """,
+                "dealang"
+            },
+            {
+                """
+                func int main() {
+                    string s = "dea"; print(s + "lang");
+                    return 0;
+                }
+                """,
+                "dealang"
             },
         };
     }
