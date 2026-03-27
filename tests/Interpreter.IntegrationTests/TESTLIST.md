@@ -6,22 +6,22 @@
 - [x] Пустая функция:` func int main() { return 0; } `
 - [x] Главная функция с телом из нескольких инструкций: `func int main() { print(1); return 0; }`
 - [x] Главная функция с объявлением переменной: `func int main() { int x = 10; return 0; }`
-### Ошибки (точка входа, синтаксис)
+### Негативные тесты (точка входа, синтаксис)
 - [x] Пропущен main: ` func int start() { return 0; }` => UnexpectedLexemeException
 - [x] Пропущен int: `  func string main() { return 0; }` => UnexpectedLexemeException
 - [x] После программы есть лишний код: `func int main() { return 0; } func int other() { return 0; }`=> UnexpectedLexemeException
-### Ошибки (точка входа, семантика)
+### Негативные тесты (точка входа, семантика)
 - [x] Отсутствует return: `func int main() { print(1); }` => SemanticException
 - [x] Возвращение не int: `func int main() { return "dea"; }` => SemanticException
 
-## (далее все тесты будут описаны в сокращенном варианте явно не показывая: func int main() { return 0; })
+## (далее все тесты будут описаны в сокращенном варианте явно не показывая: func int main() {return 0;})
 
 `InputOutput`
 
 ## Вывод
 - [x] Пустая строка: `print("");`
 - [x] Вывод нескольких аргументов разных типов: `print(1, 2.5, "dea");`
-### Ошибки (Вывод, синтаксис)
+### Негативные тесты (Вывод, синтаксис)
 - [x] Вывод без аргументов: `print();` => UnexpectedLexemeException
 - [x] Лишняя запятая: `print(1,)` => UnexpectedLexemeException
 
@@ -30,9 +30,9 @@
 - [x] Ввод целого числа в переменную: `int x; input(x);`
 - [x] Ввод вещественного числа в переменную: `num x; input(x);`
 - [x] Ввод строки и последующий вывод: `string name; input(name); print(name);`
-### Ошибки (Ввод)
+### Негативные тесты (Ввод)
 - [x] Ввод вызывается не с идентификатором: `input(1);` => UnexpectedLexemeException
-### Ошибки (Ввод, семантика)
+### Негативные тесты (Ввод, семантика)
 - [x] Ввод вызывается с `const`: `const string name = "dea"; input(name);` => SemanticException
 - [x] Ввод вызывается с необъявленной переменной: `input(name);` => SemanticException
 
@@ -60,7 +60,7 @@
 - [x] Ассоциативность степени: `print(2 ^ 3 ^ 2);`
 - [x] Приоритет унарного минуса и степени: `print(-2 ^ 3 ^ 2);`
 
-### Ошибки (Арифметические, синтаксис)
+### Негативные тесты (Арифметические, синтаксис)
 - [x] Пропущен правый/левый операнд: `print(1 +);` => UnexpectedLexemeException
 - [x] Пропущен правый/левый операнд: `print(* 2);` => UnexpectedLexemeException
 - [x] Пропущена скобка: `print((1 + 2);` => UnexpectedLexemeException
@@ -73,7 +73,7 @@
 
 `TypesSemantic`
 
-### Ошибки (Арифметические, семантика)
+### Негативные тесты (Арифметические, семантика)
 - [x] Нельзя складывать число и строку: `print(10 + "5");` => SemanticException
 - [x] Нельзя умножать строку на число: `print("cat" * 2);` => SemanticException
 - [x] Нельзя делить строку на число: `print("ten" / 2);` => SemanticException
@@ -96,7 +96,7 @@
 - [x] Подстрока из переменной: `string s = "dealang"; print(substr(s, 3, 4));`
 - [x] Вложенный вызов строковых функций: `string s = "dea"; print(substr(s, 0, len(s)));`
 
-### Ошибки (Built-in операции над строками, семантика)
+### Негативные тесты (Built-in операции над строками, семантика)
 - [x] `len` без аргументов: `print(len());` => SemanticException
 - [x] `len` с лишним аргументом: `print(len("dea", "x"));` => SemanticException
 - [x] `len` от значения неверного типа: `print(len(10));` => SemanticException
@@ -114,7 +114,7 @@
 - [x] max от нескольких целых чисел: `print(max(5, 2, 7, 1));`
 - [x] max от двух вещественных чисел: `print(max(3.5, 1.2));`
 
-### Ошибки (Built-in функции чисел, семантика)
+### Негативные тесты (Built-in функции чисел, семантика)
 - [x] abs без аргументов: `print(abs());` => SemanticException
 - [x] abs с лишним аргументом: `print(abs(1, 2));` => SemanticException
 - [x] min без аргументов: `print(min());` => SemanticException
@@ -124,3 +124,40 @@
 - [x] abs от строки: `print(abs("dea"));` => SemanticException
 - [x] min с аргументами разных типов: `print(min(1, 1.5));` => SemanticException
 - [x] max с аргументами разных типов: `print(max(1.5, 1));` => SemanticException
+
+`Variables`
+
+## Переменные и константы
+- [x] Объявление и инициализация переменной типа int: `int x = 10;`
+- [x] Объявление и инициализация переменной типа num: `num x = 3.14;`
+- [x] Объявление и инициализация переменной типа string: `string s = "dea";`
+- [x] Объявление переменной без инициализации: `string name;`
+- [x] Присваивание переменной значения того же типа: `int x = 1; x = 2;`
+- [x] Использование переменной в выражении: `int x = 2; int y = 3; print(x + y);`
+- [x] Использование переменной в print: `int x = 10; print(x);`
+- [x] Объявление и использование константы типа int: `const int x = 10; print(x);`
+- [x] Объявление и использование константы типа num: `const num pi = 3.14; print(pi);`
+- [x] Объявление и использование константы типа string: `const string name = "dea"; print(name);`
+- [x] Использование константы в выражении: `const int x = 10; print(x + 5);`
+- [x] Использование глобальной переменной в main: `int x = 10; func int main() { print(x); return 0; }`
+- [x] Использование глобальной константы в main: `const int x = 10; func int main() { print(x); return 0; }`
+
+### Негативные тесты (синтаксические ошибки, связанные с переменными)
+- [x] Присваивание не является выражением: `x = y = 0;` => UnexpectedLexemeException
+- [x] Слева в присваивании должен быть идентификатор: `10 = x;` => UnexpectedLexemeException
+- [x] Константа должна быть инициализирована при объявлении: `const int x;` => UnexpectedLexemeException
+
+### Негативные тесты (семантические ошибки, связанные с переменными)
+- [x] Нельзя использовать необъявленную переменную: `print(x);` => SemanticException
+- [x] Нельзя инициализировать переменную значением другого типа: `int x = "dea";` => SemanticException
+- [x] Нельзя присвоить переменной значение другого типа: `int x = 10; x = "dea";` => SemanticException
+- [x] Нельзя изменять константу: `const int x = 10; x = 20;` => SemanticException
+- [x] Нельзя повторно объявлять переменную с тем же именем в одной области видимости: `int x = 1; int x = 2;` => SemanticException
+- [x] Нельзя повторно объявлять константу с тем же именем в одной области видимости: `const int x = 1; const int x = 2;` => SemanticException
+- [x] Нельзя объявлять локальную переменную с именем глобальной переменной: `int x = 10; func int main() { int x = 20; return 0; }` => SemanticException
+- [x] Нельзя объявлять локальную переменную с именем глобальной константы: `const int x = 10; func int main() { int x = 20; return 0; }` => SemanticException
+- [x] Нельзя использовать имя встроенной функции как имя переменной: `int len = 10;` => SemanticException
+- [x] Нельзя использовать имя встроенной функции как имя константы: `const int len = 10;` => SemanticException
+
+### Негативные тесты выполнения, связанные с переменными
+- [x] Нельзя читать значение неинициализированной переменной: `int x; print(x);` => RuntimeException
