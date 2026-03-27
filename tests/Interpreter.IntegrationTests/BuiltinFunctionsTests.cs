@@ -20,14 +20,13 @@ public class BuiltinFunctionsTests
     }
 
     [Theory]
-    [MemberData(nameof(GetInvalidFunctionCallsData))]
-    public void Throws_on_invalid_function_calls(string code)
+    [MemberData(nameof(GetInvalidBuiltinFunctionCallsData))]
+    public void Rejects_invalid_builtin_function_calls(string code)
     {
         FakeEnvironment environment = new();
         DeaInterpreter interpreter = new(environment);
 
-        // Пока общий класс ошибки
-        // TODO: сделать конкретный
+        // TODO переделать на конкретную ошибку
         Assert.Throws<SemanticException>(() => interpreter.Execute(code));
     }
 
@@ -35,6 +34,7 @@ public class BuiltinFunctionsTests
     {
         return new TheoryData<string, string>
         {
+            // Built-in функции (строки)
             // Длина строки
             {
                 """
@@ -95,14 +95,88 @@ public class BuiltinFunctionsTests
                 """,
                 "dea"
             },
+
+            // Built-in функции (числа)
+            {
+                """
+                func int main() {
+                    print(abs(-5));
+                    return 0;
+                }
+                """,
+                "5"
+            },
+            {
+                """
+                func int main() {
+                    print(abs(-3.14));
+                    return 0;
+                }
+                """,
+                "3.14"
+            },
+            {
+                """
+                func int main() {
+                    print(min(3, 1));
+                    return 0;
+                }
+                """,
+                "1"
+            },
+            {
+                """
+                func int main() {
+                    print(min(5, 2, 7, 1));
+                    return 0;
+                }
+                """,
+                "1"
+            },
+            {
+                """
+                func int main() {
+                    print(min(3.5, 1.2));
+                    return 0;
+                }
+                """,
+                "1.2"
+            },
+            {
+                """
+                func int main() {
+                    print(max(3, 1));
+                    return 0;
+                }
+                """,
+                "3"
+            },
+            {
+                """
+                func int main() {
+                    print(max(5, 2, 7, 1));
+                    return 0;
+                }
+                """,
+                "7"
+            },
+            {
+                """
+                func int main() {
+                    print(max(3.5, 1.2));
+                    return 0;
+                }
+                """,
+                "3.5"
+            },
         };
     }
 
-    public static TheoryData<string> GetInvalidFunctionCallsData()
+    public static TheoryData<string> GetInvalidBuiltinFunctionCallsData()
     {
         return new TheoryData<string>
         {
-            // len
+            // Ошибки (Built-in операции над строками, семантика)
             {
                 """
                 func int main() {
@@ -127,8 +201,6 @@ public class BuiltinFunctionsTests
                 }
                 """
             },
-
-            // substr
             {
                 """
                 func int main() {
@@ -149,6 +221,80 @@ public class BuiltinFunctionsTests
                 """
                 func int main() {
                     print(substr("dea", 0, "x"));
+                    return 0;
+                }
+                """
+            },
+
+            // Ошибки (Built-in функции чисел, семантика)
+            {
+                """
+                func int main() {
+                    print(abs());
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(abs(1, 2));
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(min());
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(min(1));
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(max());
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(max(1));
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(abs("dea"));
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(min(1, 1.5));
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(max(1.5, 1));
                     return 0;
                 }
                 """

@@ -101,22 +101,22 @@
 - [x] `substr` с неверным типом третьего аргумента: `print(substr("dea", 0, "x"));` => SemanticException
 
 ### Built-in функции (числа)
-- [ ] abs от целого числа: `print(abs(-5));`
-- [ ] abs от вещественного числа: `print(abs(-3.14));`
-- [ ] min от двух целых чисел: `print(min(3, 1));`
-- [ ] min от нескольких целых чисел: `print(min(5, 2, 7, 1));`
-- [ ] min от двух вещественных чисел: `print(min(3.5, 1.2));`
-- [ ] max от двух целых чисел: `print(max(3, 1));`
-- [ ] max от нескольких целых чисел: `print(max(5, 2, 7, 1));`
-- [ ] max от двух вещественных чисел: `print(max(3.5, 1.2));`
+- [x] abs от целого числа: `print(abs(-5));`
+- [x] abs от вещественного числа: `print(abs(-3.14));`
+- [x] min от двух целых чисел: `print(min(3, 1));`
+- [x] min от нескольких целых чисел: `print(min(5, 2, 7, 1));`
+- [x] min от двух вещественных чисел: `print(min(3.5, 1.2));`
+- [x] max от двух целых чисел: `print(max(3, 1));`
+- [x] max от нескольких целых чисел: `print(max(5, 2, 7, 1));`
+- [x] max от двух вещественных чисел: `print(max(3.5, 1.2));`
 
 ### Ошибки (Built-in функции чисел, семантика)
-- [ ] abs без аргументов: `print(abs());` => SemanticException
-- [ ] abs с лишним аргументом: `print(abs(1, 2));` => SemanticException
-- [ ] min без аргументов: `print(min());` => SemanticException
-- [ ] min с одним аргументом: `print(min(1));` => SemanticException
-- [ ] max без аргументов: `print(max());` => SemanticException
-- [ ] max с одним аргументом: `print(max(1));` => SemanticException
+- [x] abs без аргументов: `print(abs());` => SemanticException
+- [x] abs с лишним аргументом: `print(abs(1, 2));` => SemanticException
+- [x] min без аргументов: `print(min());` => SemanticException
+- [x] min с одним аргументом: `print(min(1));` => SemanticException
+- [x] max без аргументов: `print(max());` => SemanticException
+- [x] max с одним аргументом: `print(max(1));` => SemanticException
 - [x] abs от строки: `print(abs("dea"));` => SemanticException
-- [x] min с аргументами разных типов: `print(min(1, "x"));` => SemanticException
-- [x] max с аргументами разных типов: `print(max("x", 1));` => SemanticException
+- [x] min с аргументами разных типов: `print(min(1, 1.5));` => SemanticException
+- [x] max с аргументами разных типов: `print(max(1.5, 1));` => SemanticException
