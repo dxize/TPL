@@ -121,6 +121,12 @@ public sealed class CheckTypesPass : AbstractPass
         }
     }
 
+    public override void Visit(CallExpression e)
+    {
+        ResolveCallType(e);
+        base.Visit(e);
+    }
+
     public override void Visit(ReturnExpression e)
     {
         DataType type = ResolveExpressionType(e.Value);
@@ -249,7 +255,7 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (call.Arguments.Count != 1)
         {
-            throw new TypeErrorException("len ожидает 1 аргумент.");
+            throw new InvalidBuiltinCallException("len ожидает 1 аргумент.");
         }
 
         if (ResolveExpressionType(call.Arguments[0]) != DataType.String)
@@ -264,7 +270,7 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (call.Arguments.Count != 3)
         {
-            throw new TypeErrorException("substr ожидает 3 аргумента.");
+            throw new InvalidBuiltinCallException("substr ожидает 3 аргумента.");
         }
 
         if (ResolveExpressionType(call.Arguments[0]) != DataType.String ||
@@ -281,7 +287,7 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (call.Arguments.Count != 1)
         {
-            throw new TypeErrorException("abs ожидает 1 аргумент.");
+            throw new InvalidBuiltinCallException("abs ожидает 1 аргумент.");
         }
 
         DataType type = ResolveExpressionType(call.Arguments[0]);
@@ -297,7 +303,7 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (call.Arguments.Count < 2)
         {
-            throw new TypeErrorException($"{functionName} ожидает минимум 2 аргумента.");
+            throw new InvalidBuiltinCallException($"{functionName} ожидает минимум 2 аргумента.");
         }
 
         DataType first = ResolveExpressionType(call.Arguments[0]);

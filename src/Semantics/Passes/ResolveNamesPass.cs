@@ -2,6 +2,8 @@ using Ast;
 using Ast.Declarations;
 using Ast.Expressions;
 
+using Semantics.Exceptions;
+
 namespace Semantics.Passes;
 
 /// <summary>
@@ -38,7 +40,7 @@ public sealed class ResolveNamesPass : AbstractPass
     {
         if (!string.Equals(d.Name, "main", StringComparison.Ordinal))
         {
-            throw new Exceptions.InvalidExpressionException(
+            throw new InvalidExpressionException(
                 "Поддерживается только точка входа func int main().");
         }
 
@@ -63,13 +65,13 @@ public sealed class ResolveNamesPass : AbstractPass
             // Локальное объявление
             if (_currentScope.ContainsKey(e.Name))
             {
-                throw new Exceptions.InvalidExpressionException($"Идентификатор '{e.Name}' уже объявлен в текущей области.");
+                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен в текущей области.");
             }
 
             // Проверяем, нет ли такого имени в глобальной области (скрытие запрещено)
             if (_globalSymbols.ContainsKey(e.Name))
             {
-                throw new Exceptions.InvalidExpressionException($"Идентификатор '{e.Name}' уже объявлен в глобальной области.");
+                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен в глобальной области.");
             }
 
             if (e.Initializer is not null)
@@ -84,7 +86,7 @@ public sealed class ResolveNamesPass : AbstractPass
             // Глобальное объявление
             if (_globalSymbols.ContainsKey(e.Name))
             {
-                throw new Exceptions.InvalidExpressionException($"Идентификатор '{e.Name}' уже объявлен.");
+                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен.");
             }
 
             if (e.Initializer is not null)
@@ -104,13 +106,13 @@ public sealed class ResolveNamesPass : AbstractPass
             // Локальное объявление
             if (_currentScope.ContainsKey(e.Name))
             {
-                throw new Exceptions.InvalidExpressionException($"Идентификатор '{e.Name}' уже объявлен в текущей области.");
+                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен в текущей области.");
             }
 
             // Проверяем, нет ли такого имени в глобальной области (скрытие запрещено)
             if (_globalSymbols.ContainsKey(e.Name))
             {
-                throw new Exceptions.InvalidExpressionException($"Идентификатор '{e.Name}' уже объявлен в глобальной области.");
+                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен в глобальной области.");
             }
 
             e.Initializer.Accept(this);
@@ -121,7 +123,7 @@ public sealed class ResolveNamesPass : AbstractPass
             // Глобальное объявление
             if (_globalSymbols.ContainsKey(e.Name))
             {
-                throw new Exceptions.InvalidExpressionException($"Идентификатор '{e.Name}' уже объявлен.");
+                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен.");
             }
 
             e.Initializer.Accept(this);
@@ -148,12 +150,12 @@ public sealed class ResolveNamesPass : AbstractPass
 
         if (!found)
         {
-            throw new Exceptions.InvalidExpressionException($"Идентификатор '{e.Name}' не объявлен.");
+            throw new UnknownIdentifierException($"Идентификатор '{e.Name}' не объявлен.");
         }
 
         if (isConst)
         {
-            throw new Exceptions.InvalidExpressionException($"Нельзя присваивать значение константе '{e.Name}'.");
+            throw new InvalidExpressionException($"Нельзя присваивать значение константе '{e.Name}'.");
         }
 
         e.Value.Accept(this);
@@ -175,7 +177,7 @@ public sealed class ResolveNamesPass : AbstractPass
 
         if (!found)
         {
-            throw new Exceptions.InvalidExpressionException($"Идентификатор '{e.Name}' не объявлен.");
+            throw new UnknownIdentifierException($"Идентификатор '{e.Name}' не объявлен.");
         }
     }
 
@@ -198,12 +200,12 @@ public sealed class ResolveNamesPass : AbstractPass
 
         if (!found)
         {
-            throw new Exceptions.InvalidExpressionException($"Идентификатор '{e.VariableName}' не объявлен.");
+            throw new UnknownIdentifierException($"Идентификатор '{e.VariableName}' не объявлен.");
         }
 
         if (isConst)
         {
-            throw new Exceptions.InvalidExpressionException($"Нельзя выполнять input в константу '{e.VariableName}'.");
+            throw new InvalidExpressionException($"Нельзя выполнять input в константу '{e.VariableName}'.");
         }
     }
 
@@ -211,7 +213,7 @@ public sealed class ResolveNamesPass : AbstractPass
     {
         if (e.Name is not ("abs" or "min" or "max" or "len" or "substr"))
         {
-            throw new Exceptions.InvalidExpressionException($"Неизвестная функция '{e.Name}'.");
+            throw new UnknownIdentifierException($"Неизвестная функция '{e.Name}'.");
         }
 
         base.Visit(e);

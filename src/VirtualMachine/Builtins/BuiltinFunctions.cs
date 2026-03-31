@@ -1,4 +1,5 @@
 using Runtime;
+using Semantics.Exceptions;
 
 namespace VirtualMachine.Builtins;
 
@@ -29,7 +30,7 @@ public sealed class BuiltinFunctions
 
         if (startIndex < 0 || sliceLength < 0 || startIndex > text.Length || startIndex + sliceLength > text.Length)
         {
-            throw new InvalidOperationException("Invalid substr bounds.");
+            throw new RuntimeExceptionException("Invalid substr bounds.");
         }
 
         return new Value(text.Substring(startIndex, sliceLength));
@@ -47,6 +48,6 @@ public sealed class BuiltinFunctions
             return new Value(Math.Abs(value.AsNum()));
         }
 
-        throw new InvalidOperationException("abs supports only int or num.");
+        throw new RuntimeExceptionException("abs supports only int or num.");
     }
 }

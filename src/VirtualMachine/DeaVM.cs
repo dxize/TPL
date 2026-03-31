@@ -1,4 +1,5 @@
 using Runtime;
+using Semantics.Exceptions;
 using VirtualMachine.Builtins;
 using VirtualMachine.Instructions;
 
@@ -90,7 +91,7 @@ public sealed class DeaVM
                     return _evaluationStack.Pop().AsInt();
 
                 default:
-                    throw new InvalidOperationException($"Unsupported instruction '{instruction.Code}'.");
+                    throw new RuntimeExceptionException($"Unsupported instruction '{instruction.Code}'.");
             }
         }
     }
@@ -125,7 +126,7 @@ public sealed class DeaVM
                 break;
 
             default:
-                throw new InvalidOperationException($"Unsupported builtin '{builtin}'.");
+                throw new RuntimeExceptionException($"Unsupported builtin '{builtin}'.");
         }
     }
 
@@ -141,12 +142,12 @@ public sealed class DeaVM
             0 => Runtime.ValueType.Int,
             1 => Runtime.ValueType.Num,
             2 => Runtime.ValueType.String,
-            _ => throw new InvalidOperationException("Unsupported variable type tag."),
+            _ => throw new RuntimeExceptionException("Unsupported variable type tag."),
         };
 
         if (_variables.ContainsKey(name))
         {
-            throw new InvalidOperationException($"Identifier '{name}' already declared.");
+            throw new RuntimeExceptionException($"Identifier '{name}' already declared.");
         }
 
         if (hasInitializer)
@@ -162,7 +163,7 @@ public sealed class DeaVM
         VariableEntry variable = GetVariable(name);
         if (!variable.IsInitialized)
         {
-            throw new InvalidOperationException($"Variable '{name}' is not initialized.");
+            throw new RuntimeExceptionException($"Variable '{name}' is not initialized.");
         }
 
         return variable.Value;
@@ -174,7 +175,7 @@ public sealed class DeaVM
         VariableEntry variable = GetVariable(name);
         if (variable.IsConst)
         {
-            throw new InvalidOperationException($"Cannot assign to const '{name}'.");
+            throw new RuntimeExceptionException($"Cannot assign to const '{name}'.");
         }
 
         EnsureTypeCompatible(name, variable.Type, value);
@@ -186,7 +187,7 @@ public sealed class DeaVM
         VariableEntry variable = GetVariable(name);
         if (variable.IsConst)
         {
-            throw new InvalidOperationException($"Cannot input into const '{name}'.");
+            throw new RuntimeExceptionException($"Cannot input into const '{name}'.");
         }
 
         string text = _environment.ReadLine();
@@ -194,12 +195,12 @@ public sealed class DeaVM
         {
             _ when variable.Type == Runtime.ValueType.Int => int.TryParse(text, out int intValue)
                 ? new Value(intValue)
-                : throw new InvalidOperationException($"Input value '{text}' is not int."),
+                : throw new RuntimeExceptionException($"Input value '{text}' is not int."),
             _ when variable.Type == Runtime.ValueType.Num => double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double numValue)
                 ? new Value(numValue)
-                : throw new InvalidOperationException($"Input value '{text}' is not num."),
+                : throw new RuntimeExceptionException($"Input value '{text}' is not num."),
             _ when variable.Type == Runtime.ValueType.String => new Value(text),
-            _ => throw new InvalidOperationException("Unsupported variable type for input."),
+            _ => throw new RuntimeExceptionException("Unsupported variable type for input."),
         };
 
         variable.SetValue(value);
@@ -209,7 +210,7 @@ public sealed class DeaVM
     {
         if (!_variables.TryGetValue(name, out VariableEntry? value))
         {
-            throw new InvalidOperationException($"Identifier '{name}' is not declared.");
+            throw new RuntimeExceptionException($"Identifier '{name}' is not declared.");
         }
 
         return value;
@@ -219,17 +220,17 @@ public sealed class DeaVM
     {
         if (declaredType == Runtime.ValueType.Int && value.Type != Runtime.ValueType.Int)
         {
-            throw new InvalidOperationException($"Type mismatch for '{name}'.");
+            throw new RuntimeExceptionException($"Type mismatch for '{name}'.");
         }
 
         if (declaredType == Runtime.ValueType.Num && value.Type != Runtime.ValueType.Num)
         {
-            throw new InvalidOperationException($"Type mismatch for '{name}'.");
+            throw new RuntimeExceptionException($"Type mismatch for '{name}'.");
         }
 
         if (declaredType == Runtime.ValueType.String && value.Type != Runtime.ValueType.String)
         {
-            throw new InvalidOperationException($"Type mismatch for '{name}'.");
+            throw new RuntimeExceptionException($"Type mismatch for '{name}'.");
         }
     }
 
@@ -269,7 +270,7 @@ public sealed class DeaVM
             return;
         }
 
-        throw new InvalidOperationException("Numeric operation supports only int or num.");
+        throw new RuntimeExceptionException("Numeric operation supports only int or num.");
     }
 
     private void ExecuteDivide()
@@ -279,13 +280,13 @@ public sealed class DeaVM
         if ((left.Type != Runtime.ValueType.Int && left.Type != Runtime.ValueType.Num) ||
             (right.Type != Runtime.ValueType.Int && right.Type != Runtime.ValueType.Num))
         {
-            throw new InvalidOperationException("Operator '/' supports only int or num.");
+            throw new RuntimeExceptionException("Operator '/' supports only int or num.");
         }
 
         double divisor = right.AsNum();
         if (Math.Abs(divisor) < double.Epsilon)
         {
-            throw new InvalidOperationException("Division by zero.");
+            throw new RuntimeExceptionException("Division by zero.");
         }
 
         _evaluationStack.Push(new Value(left.AsNum() / divisor));
@@ -297,13 +298,13 @@ public sealed class DeaVM
         Value left = _evaluationStack.Pop();
         if (left.Type != Runtime.ValueType.Int || right.Type != Runtime.ValueType.Int)
         {
-            throw new InvalidOperationException("Operator '//' supports only int.");
+            throw new RuntimeExceptionException("Operator '//' supports only int.");
         }
 
         int divisor = right.AsInt();
         if (divisor == 0)
         {
-            throw new InvalidOperationException("Division by zero.");
+            throw new RuntimeExceptionException("Division by zero.");
         }
 
         _evaluationStack.Push(new Value(left.AsInt() / divisor));
@@ -315,13 +316,13 @@ public sealed class DeaVM
         Value left = _evaluationStack.Pop();
         if (left.Type != Runtime.ValueType.Int || right.Type != Runtime.ValueType.Int)
         {
-            throw new InvalidOperationException("Operator '%' supports only int.");
+            throw new RuntimeExceptionException("Operator '%' supports only int.");
         }
 
         int divisor = right.AsInt();
         if (divisor == 0)
         {
-            throw new InvalidOperationException("Division by zero.");
+            throw new RuntimeExceptionException("Division by zero.");
         }
 
         _evaluationStack.Push(new Value(left.AsInt() % divisor));
@@ -344,7 +345,7 @@ public sealed class DeaVM
             return;
         }
 
-        throw new InvalidOperationException("Operator '^' supports only int or num.");
+        throw new RuntimeExceptionException("Operator '^' supports only int or num.");
     }
 
     private void ExecuteNegate()
@@ -362,7 +363,7 @@ public sealed class DeaVM
             return;
         }
 
-        throw new InvalidOperationException("Unary '-' supports only int or num.");
+        throw new RuntimeExceptionException("Unary '-' supports only int or num.");
     }
 
     private void ExecuteMinOrMax(bool isMin)
@@ -370,7 +371,7 @@ public sealed class DeaVM
         int count = _evaluationStack.Pop().AsInt();
         if (count < 2)
         {
-            throw new InvalidOperationException("min/max requires at least 2 arguments.");
+            throw new RuntimeExceptionException("min/max requires at least 2 arguments.");
         }
 
         List<Value> values = new(count);
@@ -383,12 +384,12 @@ public sealed class DeaVM
         Runtime.ValueType expectedType = values[0].Type;
         if (expectedType != Runtime.ValueType.Int && expectedType != Runtime.ValueType.Num)
         {
-            throw new InvalidOperationException("min/max supports only int or num.");
+            throw new RuntimeExceptionException("min/max supports only int or num.");
         }
 
         if (values.Any(v => v.Type != expectedType))
         {
-            throw new InvalidOperationException("min/max requires arguments of the same type.");
+            throw new RuntimeExceptionException("min/max requires arguments of the same type.");
         }
 
         if (expectedType == Runtime.ValueType.Int)

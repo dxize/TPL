@@ -1,4 +1,5 @@
 using Runtime;
+using Semantics.Exceptions;
 using TestsLibrary;
 using VirtualMachine.Builtins;
 using VirtualMachine.Instructions;
@@ -93,7 +94,7 @@ public class CallBuiltinTest
     {
         FakeEnvironment environment = new();
         DeaVM vm = new(environment, program);
-        Assert.Throws<InvalidOperationException>(() => vm.RunProgram());
+        Assert.Throws<RuntimeExceptionException>(() => vm.RunProgram());
     }
 
     public static TheoryData<IReadOnlyList<Instruction>> GetInvalidBuiltinData()

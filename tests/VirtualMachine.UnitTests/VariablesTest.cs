@@ -1,4 +1,5 @@
 using Runtime;
+using Semantics.Exceptions;
 using TestsLibrary;
 using VirtualMachine.Instructions;
 
@@ -76,7 +77,7 @@ public class VariablesTest
         }
 
         DeaVM vm = new(environment, program);
-        Assert.Throws<InvalidOperationException>(() => vm.RunProgram());
+        Assert.Throws<RuntimeExceptionException>(() => vm.RunProgram());
     }
 
     public static TheoryData<IReadOnlyList<Instruction>, string?> GetInvalidVariableProgramsData()

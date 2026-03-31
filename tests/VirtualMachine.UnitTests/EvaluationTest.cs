@@ -1,4 +1,5 @@
 using Runtime;
+using Semantics.Exceptions;
 using TestsLibrary;
 using VirtualMachine.Instructions;
 
@@ -85,7 +86,7 @@ public class EvaluationTest
         FakeEnvironment environment = new();
         DeaVM vm = new(environment, instructions);
 
-        Assert.Throws<InvalidOperationException>(() => vm.RunProgram());
+        Assert.Throws<RuntimeExceptionException>(() => vm.RunProgram());
     }
 
     public static TheoryData<IReadOnlyList<Instruction>> GetInvalidEvaluateExpressionData()
