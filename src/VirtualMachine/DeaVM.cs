@@ -83,6 +83,30 @@ public sealed class DeaVM
                     ExecuteNegate();
                     break;
 
+                case InstructionCode.Less:
+                    ExecuteComparison((a, b) => a < b, (a, b) => a < b);
+                    break;
+
+                case InstructionCode.LessOrEqual:
+                    ExecuteComparison((a, b) => a <= b, (a, b) => a <= b);
+                    break;
+
+                case InstructionCode.Greater:
+                    ExecuteComparison((a, b) => a > b, (a, b) => a > b);
+                    break;
+
+                case InstructionCode.GreaterOrEqual:
+                    ExecuteComparison((a, b) => a >= b, (a, b) => a >= b);
+                    break;
+
+                case InstructionCode.Equal:
+                    ExecuteEquality();
+                    break;
+
+                case InstructionCode.NotEqual:
+                    ExecuteNotEqual();
+                    break;
+
                 case InstructionCode.CallBuiltin:
                     ExecuteBuiltin(instruction.Operand);
                     break;
@@ -364,6 +388,107 @@ public sealed class DeaVM
         }
 
         throw new RuntimeExceptionException("Unary '-' supports only int or num.");
+    }
+
+    private void ExecuteComparison(Func<int, int, bool> intCompare, Func<double, double, bool> numCompare)
+    {
+        Value right = _evaluationStack.Pop();
+        Value left = _evaluationStack.Pop();
+
+        if (left.Type == Runtime.ValueType.Int && right.Type == Runtime.ValueType.Int)
+        {
+            _evaluationStack.Push(new Value(intCompare(left.AsInt(), right.AsInt()) ? 1 : 0));
+            return;
+        }
+
+        if ((left.Type == Runtime.ValueType.Int || left.Type == Runtime.ValueType.Num) &&
+            (right.Type == Runtime.ValueType.Int || right.Type == Runtime.ValueType.Num))
+        {
+            _evaluationStack.Push(new Value(numCompare(left.AsNum(), right.AsNum()) ? 1 : 0));
+            return;
+        }
+
+        throw new RuntimeExceptionException("Comparison supports only int/num types.");
+    }
+
+    private void ExecuteEquality()
+    {
+        Value right = _evaluationStack.Pop();
+        Value left = _evaluationStack.Pop();
+
+        if (left.Type == right.Type)
+        {
+            bool result;
+            if (left.Type == Runtime.ValueType.Int)
+            {
+                result = left.AsInt() == right.AsInt();
+            }
+            else if (left.Type == Runtime.ValueType.Num)
+            {
+                result = Math.Abs(left.AsNum() - right.AsNum()) < double.Epsilon;
+            }
+            else if (left.Type == Runtime.ValueType.String)
+            {
+                result = string.Equals(left.AsString(), right.AsString(), StringComparison.Ordinal);
+            }
+            else
+            {
+                throw new RuntimeExceptionException($"Equality not supported for type '{left.Type}'.");
+            }
+            _evaluationStack.Push(new Value(result ? 1 : 0));
+            return;
+        }
+
+        // Разные типы - не равны (кроме int/num)
+        if ((left.Type == Runtime.ValueType.Int && right.Type == Runtime.ValueType.Num) ||
+            (left.Type == Runtime.ValueType.Num && right.Type == Runtime.ValueType.Int))
+        {
+            bool result = Math.Abs(left.AsNum() - right.AsNum()) < double.Epsilon;
+            _evaluationStack.Push(new Value(result ? 1 : 0));
+            return;
+        }
+
+        _evaluationStack.Push(new Value(0));
+    }
+
+    private void ExecuteNotEqual()
+    {
+        Value right = _evaluationStack.Pop();
+        Value left = _evaluationStack.Pop();
+
+        if (left.Type == right.Type)
+        {
+            bool result;
+            if (left.Type == Runtime.ValueType.Int)
+            {
+                result = left.AsInt() != right.AsInt();
+            }
+            else if (left.Type == Runtime.ValueType.Num)
+            {
+                result = Math.Abs(left.AsNum() - right.AsNum()) >= double.Epsilon;
+            }
+            else if (left.Type == Runtime.ValueType.String)
+            {
+                result = !string.Equals(left.AsString(), right.AsString(), StringComparison.Ordinal);
+            }
+            else
+            {
+                throw new RuntimeExceptionException($"NotEqual not supported for type '{left.Type}'.");
+            }
+            _evaluationStack.Push(new Value(result ? 1 : 0));
+            return;
+        }
+
+        // Разные типы - не равны (кроме int/num)
+        if ((left.Type == Runtime.ValueType.Int && right.Type == Runtime.ValueType.Num) ||
+            (left.Type == Runtime.ValueType.Num && right.Type == Runtime.ValueType.Int))
+        {
+            bool result = Math.Abs(left.AsNum() - right.AsNum()) >= double.Epsilon;
+            _evaluationStack.Push(new Value(result ? 1 : 0));
+            return;
+        }
+
+        _evaluationStack.Push(new Value(1));
     }
 
     private void ExecuteMinOrMax(bool isMin)

@@ -170,6 +170,12 @@ public sealed class DeaVmCodegen : IAstVisitor
             OperatorKind.IntegerDivide => InstructionCode.IntegerDivide,
             OperatorKind.Modulo => InstructionCode.Modulo,
             OperatorKind.Power => InstructionCode.Power,
+            OperatorKind.Less => InstructionCode.Less,
+            OperatorKind.LessOrEqual => InstructionCode.LessOrEqual,
+            OperatorKind.Greater => InstructionCode.Greater,
+            OperatorKind.GreaterOrEqual => InstructionCode.GreaterOrEqual,
+            OperatorKind.Equal => InstructionCode.Equal,
+            OperatorKind.NotEqual => InstructionCode.NotEqual,
             _ => throw new InvalidOperationException($"Unsupported operator '{operatorKind}'."),
         };
     }

@@ -210,6 +210,33 @@ public sealed class CheckTypesPass : AbstractPass
         DataType left = ResolveExpressionType(e.Left);
         DataType right = ResolveExpressionType(e.Right);
 
+        // Операторы сравнения возвращают int (1 = true, 0 = false)
+        if (e.OperatorKind is OperatorKind.Less or OperatorKind.LessOrEqual or 
+            OperatorKind.Greater or OperatorKind.GreaterOrEqual)
+        {
+            if (left is DataType.Int or DataType.Num && right is DataType.Int or DataType.Num)
+            {
+                return DataType.Int;
+            }
+            throw new TypeErrorException($"Оператор '{e.OperatorKind}' поддерживает только int/num.");
+        }
+
+        if (e.OperatorKind is OperatorKind.Equal or OperatorKind.NotEqual)
+        {
+            // == и != поддерживают int, num, string
+            if (left == right)
+            {
+                return DataType.Int;
+            }
+            // int и num можно сравнивать
+            if ((left == DataType.Int && right == DataType.Num) || 
+                (left == DataType.Num && right == DataType.Int))
+            {
+                return DataType.Int;
+            }
+            throw new TypeErrorException($"Оператор '{e.OperatorKind}' не поддерживает типы {left} и {right}.");
+        }
+
         if (e.OperatorKind == OperatorKind.Plus && left == DataType.String && right == DataType.String)
         {
             return DataType.String;

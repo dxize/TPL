@@ -17,4 +17,12 @@ public enum InstructionCode
     Negate,
     CallBuiltin,
     Halt,
+
+    // Операторы сравнения
+    Less,
+    LessOrEqual,
+    Greater,
+    GreaterOrEqual,
+    Equal,
+    NotEqual,
 }

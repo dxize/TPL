@@ -258,7 +258,35 @@ public sealed class Parser
 
     private Expression ParseExpression()
     {
-        return ParseAdditiveExpression();
+        return ParseEqualityExpression();
+    }
+
+    private Expression ParseEqualityExpression()
+    {
+        Expression expression = ParseComparisonExpression();
+
+        while (_tokens.Peek().Type is TokenType.Equal or TokenType.NotEqual)
+        {
+            OperatorKind op = MapBinaryOperator(_tokens.Advance().Type);
+            Expression right = ParseComparisonExpression();
+            expression = new BinaryExpression(expression, op, right);
+        }
+
+        return expression;
+    }
+
+    private Expression ParseComparisonExpression()
+    {
+        Expression expression = ParseAdditiveExpression();
+
+        while (_tokens.Peek().Type is TokenType.Less or TokenType.LessOrEqual or TokenType.Greater or TokenType.GreaterOrEqual)
+        {
+            OperatorKind op = MapBinaryOperator(_tokens.Advance().Type);
+            Expression right = ParseAdditiveExpression();
+            expression = new BinaryExpression(expression, op, right);
+        }
+
+        return expression;
     }
 
     private Expression ParseAdditiveExpression()
@@ -446,6 +474,12 @@ public sealed class Parser
             TokenType.IntegerDivide => OperatorKind.IntegerDivide,
             TokenType.Modulo => OperatorKind.Modulo,
             TokenType.Power => OperatorKind.Power,
+            TokenType.Less => OperatorKind.Less,
+            TokenType.LessOrEqual => OperatorKind.LessOrEqual,
+            TokenType.Greater => OperatorKind.Greater,
+            TokenType.GreaterOrEqual => OperatorKind.GreaterOrEqual,
+            TokenType.Equal => OperatorKind.Equal,
+            TokenType.NotEqual => OperatorKind.NotEqual,
             _ => throw new InvalidOperationException($"Unsupported binary operator token: {tokenType}"),
         };
     }
