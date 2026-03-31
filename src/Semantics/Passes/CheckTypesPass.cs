@@ -1,4 +1,5 @@
 using Ast;
+using Ast.Declarations;
 using Ast.Expressions;
 
 using Semantics.Exceptions;
@@ -6,56 +7,58 @@ using Semantics.Exceptions;
 namespace Semantics.Passes;
 
 /// <summary>
-/// Минимальные проверки типов для 3-й итерации (без bool):
-/// - допустимы только int / num / string литералы
-/// Остальные проверки выполняются на этапе интерпретации.
+/// Проверка типов для 3-й итерации с поддержкой глобальных переменных.
 /// </summary>
 public sealed class CheckTypesPass : AbstractPass
 {
-    private readonly Dictionary<string, DataType> _types = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, bool> _constness = new(StringComparer.Ordinal);
+    /// <summary>
+    /// Глобальные типы: имя -> тип
+    /// </summary>
+    private readonly Dictionary<string, DataType> _globalTypes = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Глобальные константы: имя -> isConst
+    /// </summary>
+    private readonly Dictionary<string, bool> _globalConstness = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Локальные типы (для функции)
+    /// </summary>
+    private Dictionary<string, DataType>? _localTypes;
+
+    /// <summary>
+    /// Локальные константы
+    /// </summary>
+    private Dictionary<string, bool>? _localConstness;
 
     public override void Visit(ProgramNode p)
     {
-        _types.Clear();
-        _constness.Clear();
-        base.Visit(p);
+        _globalTypes.Clear();
+        _globalConstness.Clear();
+        _localTypes = null;
+        _localConstness = null;
+
+        foreach (Declaration decl in p.GlobalDeclarations)
+        {
+            decl.Accept(this);
+        }
+
+        p.MainFunction.Accept(this);
     }
 
-    public override void Visit(LiteralExpression e)
+    public override void Visit(FunctionDeclaration d)
     {
-        switch (e.Type)
+        _localTypes = new Dictionary<string, DataType>(StringComparer.Ordinal);
+        _localConstness = new Dictionary<string, bool>(StringComparer.Ordinal);
+
+        try
         {
-            case DataType.Int:
-                if (e.Value is not int)
-                {
-                    throw new TypeErrorException(
-                        "Литерал типа int должен содержать значение типа int.");
-                }
-
-                break;
-
-            case DataType.Num:
-                if (e.Value is not double)
-                {
-                    throw new TypeErrorException(
-                        "Литерал типа num должен содержать значение типа double.");
-                }
-
-                break;
-
-            case DataType.String:
-                if (e.Value is not string)
-                {
-                    throw new TypeErrorException(
-                        "Литерал типа string должен содержать значение типа string.");
-                }
-
-                break;
-
-            default:
-                throw new TypeErrorException(
-                    $"Тип {e.Type} пока не поддерживается.");
+            base.Visit(d);
+        }
+        finally
+        {
+            _localTypes = null;
+            _localConstness = null;
         }
     }
 
@@ -67,26 +70,41 @@ public sealed class CheckTypesPass : AbstractPass
             EnsureAssignable(e.Type, initType, e.Name);
         }
 
-        _types[e.Name] = e.Type;
-        _constness[e.Name] = false;
+        if (_localTypes != null)
+        {
+            _localTypes[e.Name] = e.Type;
+            _localConstness![e.Name] = false;
+        }
+        else
+        {
+            _globalTypes[e.Name] = e.Type;
+            _globalConstness[e.Name] = false;
+        }
     }
 
     public override void Visit(ConstantDeclarationExpression e)
     {
         DataType initType = ResolveExpressionType(e.Initializer);
         EnsureAssignable(e.Type, initType, e.Name);
-        _types[e.Name] = e.Type;
-        _constness[e.Name] = true;
+
+        if (_localTypes != null)
+        {
+            _localTypes[e.Name] = e.Type;
+            _localConstness![e.Name] = true;
+        }
+        else
+        {
+            _globalTypes[e.Name] = e.Type;
+            _globalConstness[e.Name] = true;
+        }
     }
 
     public override void Visit(AssignmentExpression e)
     {
-        if (!_types.TryGetValue(e.Name, out DataType expectedType))
-        {
-            throw new TypeErrorException($"Идентификатор '{e.Name}' не объявлен.");
-        }
+        DataType expectedType = GetTypeForName(e.Name);
+        bool isConst = GetConstnessForName(e.Name);
 
-        if (_constness.TryGetValue(e.Name, out bool isConst) && isConst)
+        if (isConst)
         {
             throw new TypeErrorException($"Нельзя присваивать значение константе '{e.Name}'.");
         }
@@ -97,7 +115,7 @@ public sealed class CheckTypesPass : AbstractPass
 
     public override void Visit(InputExpression e)
     {
-        if (!_types.ContainsKey(e.VariableName))
+        if (!HasTypeForName(e.VariableName))
         {
             throw new TypeErrorException($"Идентификатор '{e.VariableName}' не объявлен.");
         }
@@ -110,6 +128,46 @@ public sealed class CheckTypesPass : AbstractPass
         {
             throw new TypeErrorException("main должна возвращать значение типа int.");
         }
+    }
+
+    private DataType GetTypeForName(string name)
+    {
+        if (_localTypes != null && _localTypes.TryGetValue(name, out DataType localType))
+        {
+            return localType;
+        }
+
+        if (_globalTypes.TryGetValue(name, out DataType globalType))
+        {
+            return globalType;
+        }
+
+        throw new TypeErrorException($"Идентификатор '{name}' не объявлен.");
+    }
+
+    private bool GetConstnessForName(string name)
+    {
+        if (_localConstness != null && _localConstness.TryGetValue(name, out bool localIsConst))
+        {
+            return localIsConst;
+        }
+
+        if (_globalConstness.TryGetValue(name, out bool globalIsConst))
+        {
+            return globalIsConst;
+        }
+
+        return false;
+    }
+
+    private bool HasTypeForName(string name)
+    {
+        if (_localTypes != null && _localTypes.ContainsKey(name))
+        {
+            return true;
+        }
+
+        return _globalTypes.ContainsKey(name);
     }
 
     private DataType ResolveExpressionType(Expression e)
@@ -127,12 +185,7 @@ public sealed class CheckTypesPass : AbstractPass
 
     private DataType ResolveIdentifierType(IdentifierExpression e)
     {
-        if (!_types.TryGetValue(e.Name, out DataType type))
-        {
-            throw new TypeErrorException($"Идентификатор '{e.Name}' не объявлен.");
-        }
-
-        return type;
+        return GetTypeForName(e.Name);
     }
 
     private DataType ResolveUnaryType(UnaryExpression e)

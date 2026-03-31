@@ -1,6 +1,8 @@
+using Ast.Declarations;
+
 namespace Ast.Expressions;
 
-public sealed class ConstantDeclarationExpression : Expression
+public sealed class ConstantDeclarationExpression : Declaration
 {
     public ConstantDeclarationExpression(DataType type, string name, Expression initializer)
     {

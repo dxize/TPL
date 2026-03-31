@@ -37,7 +37,7 @@ public class EntryPointTests
         FakeEnvironment environment = new();
         DeaInterpreter interpreter = new(environment);
 
-        Assert.Throws<SemanticException>(() => interpreter.Execute(code));
+        Assert.ThrowsAny<SemanticException>(() => interpreter.Execute(code));
     }
 
     public static TheoryData<string, string> GetValidEntryPointsData()

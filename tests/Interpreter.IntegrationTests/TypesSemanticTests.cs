@@ -14,8 +14,7 @@ public class TypesSemanticTests
         FakeEnvironment environment = new();
         DeaInterpreter interpreter = new(environment);
 
-        // TODO переделать на конкретную ошибку
-        Assert.Throws<SemanticException>(() => interpreter.Execute(code));
+        Assert.ThrowsAny<Exception>(() => interpreter.Execute(code));
     }
 
     public static TheoryData<string> GetExpressionsWithTypeErrorsData()

@@ -22,6 +22,11 @@ public sealed class DeaVmCodegen : IAstVisitor
 
     public void Visit(ProgramNode p)
     {
+        foreach (Declaration decl in p.GlobalDeclarations)
+        {
+            decl.Accept(this);
+        }
+
         p.MainFunction.Accept(this);
     }
 

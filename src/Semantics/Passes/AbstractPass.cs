@@ -11,6 +11,11 @@ public abstract class AbstractPass : IAstVisitor
 {
     public virtual void Visit(ProgramNode p)
     {
+        foreach (Declaration decl in p.GlobalDeclarations)
+        {
+            decl.Accept(this);
+        }
+        
         p.MainFunction.Accept(this);
     }
 
@@ -20,6 +25,16 @@ public abstract class AbstractPass : IAstVisitor
         {
             node.Accept(this);
         }
+    }
+
+    public virtual void Visit(VariableDeclarationExpression d)
+    {
+        d.Initializer?.Accept(this);
+    }
+
+    public virtual void Visit(ConstantDeclarationExpression d)
+    {
+        d.Initializer.Accept(this);
     }
 
     public virtual void Visit(LiteralExpression e)
@@ -47,16 +62,6 @@ public abstract class AbstractPass : IAstVisitor
         {
             argument.Accept(this);
         }
-    }
-
-    public virtual void Visit(VariableDeclarationExpression e)
-    {
-        e.Initializer?.Accept(this);
-    }
-
-    public virtual void Visit(ConstantDeclarationExpression e)
-    {
-        e.Initializer.Accept(this);
     }
 
     public virtual void Visit(AssignmentExpression e)

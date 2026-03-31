@@ -1,6 +1,8 @@
+using Ast.Declarations;
+
 namespace Ast.Expressions;
 
-public sealed class VariableDeclarationExpression : Expression
+public sealed class VariableDeclarationExpression : Declaration
 {
     public VariableDeclarationExpression(DataType type, string name, Expression? initializer)
     {

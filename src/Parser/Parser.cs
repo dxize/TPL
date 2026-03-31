@@ -16,14 +16,70 @@ public sealed class Parser
     }
 
     /// <summary>
-    /// Итерация №2:
-    /// program = main_function_declaration, end_of_file ;
+    /// Итерация №3:
+    /// program = { top_level_declaration }, main_function_declaration ;
     /// </summary>
     public ProgramNode ParseProgram()
     {
+        List<Declaration> globalDeclarations = ParseGlobalDeclarations();
         FunctionDeclaration mainFunction = ParseMainFunctionDeclaration();
         Match(TokenType.EndOfFile);
-        return new ProgramNode(mainFunction);
+        return new ProgramNode(globalDeclarations, mainFunction);
+    }
+
+    /// <summary>
+    /// Parse global declarations (variables and constants) before main.
+    /// </summary>
+    private List<Declaration> ParseGlobalDeclarations()
+    {
+        List<Declaration> declarations = [];
+
+        while (_tokens.Peek().Type is TokenType.Int or TokenType.Num or TokenType.String or TokenType.Const)
+        {
+            if (_tokens.Peek().Type == TokenType.Const)
+            {
+                declarations.Add(ParseConstantDeclaration());
+                Match(TokenType.Semicolon);
+            }
+            else
+            {
+                declarations.Add(ParseVariableDeclaration());
+                Match(TokenType.Semicolon);
+            }
+        }
+
+        return declarations;
+    }
+
+    /// <summary>
+    /// Parse global variable declaration: type name [= expr]
+    /// </summary>
+    private Declaration ParseVariableDeclaration()
+    {
+        DataType type = ParseDataType();
+        string name = ParseIdentifier();
+        Expression? initializer = null;
+
+        if (_tokens.Peek().Type == TokenType.Assign)
+        {
+            _tokens.Advance();
+            initializer = ParseExpression();
+        }
+
+        return new VariableDeclarationExpression(type, name, initializer);
+    }
+
+    /// <summary>
+    /// Parse global constant declaration: const type name = expr
+    /// </summary>
+    private Declaration ParseConstantDeclaration()
+    {
+        Match(TokenType.Const);
+        DataType type = ParseDataType();
+        string name = ParseIdentifier();
+        Match(TokenType.Assign);
+        Expression initializer = ParseExpression();
+        return new ConstantDeclarationExpression(type, name, initializer);
     }
 
     /// <summary>
