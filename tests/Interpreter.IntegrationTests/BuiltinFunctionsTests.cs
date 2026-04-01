@@ -26,7 +26,7 @@ public class BuiltinFunctionsTests
         FakeEnvironment environment = new();
         DeaInterpreter interpreter = new(environment);
 
-        Assert.ThrowsAny<Exception>(() => interpreter.Execute(code));
+        Assert.ThrowsAny<SemanticException>(() => interpreter.Execute(code));
     }
 
     public static TheoryData<string, string> GetEvaluateBuiltinFunctionsData()

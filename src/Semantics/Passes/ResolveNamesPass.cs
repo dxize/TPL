@@ -11,6 +11,14 @@ namespace Semantics.Passes;
 /// </summary>
 public sealed class ResolveNamesPass : AbstractPass
 {
+    private static readonly HashSet<string> ReservedNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Встроенные функции
+        "abs", "min", "max", "len", "substr",
+        // Типы данных
+        "int", "num", "string", "bool",
+    };
+
     /// <summary>
     /// Глобальная область видимости: имя -> isConst
     /// </summary>
@@ -59,6 +67,8 @@ public sealed class ResolveNamesPass : AbstractPass
 
     public override void Visit(VariableDeclarationExpression e)
     {
+        EnsureNotReservedName(e.Name);
+
         // Проверяем дубликаты в текущей области
         if (_currentScope != null)
         {
@@ -100,6 +110,8 @@ public sealed class ResolveNamesPass : AbstractPass
 
     public override void Visit(ConstantDeclarationExpression e)
     {
+        EnsureNotReservedName(e.Name);
+
         // Проверяем дубликаты в текущей области
         if (_currentScope != null)
         {
@@ -227,5 +239,13 @@ public sealed class ResolveNamesPass : AbstractPass
     public override void Visit(ReturnExpression e)
     {
         base.Visit(e);
+    }
+
+    private static void EnsureNotReservedName(string name)
+    {
+        if (ReservedNames.Contains(name))
+        {
+            throw new DuplicateIdentifierException($"Идентификатор '{name}' является зарезервированным именем.");
+        }
     }
 }

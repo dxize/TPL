@@ -47,8 +47,7 @@ public class VariablesTests
         FakeEnvironment environment = new();
         DeaInterpreter interpreter = new(environment);
 
-        // TODO: заменить на конкретный runtime exception
-        Assert.ThrowsAny<Exception>(() => interpreter.Execute(code));
+        Assert.Throws<RuntimeExceptionException>(() => interpreter.Execute(code));
     }
 
     public static TheoryData<string, string> GetEvaluateVariablesAndConstantsData()
@@ -298,22 +297,22 @@ public class VariablesTests
                 }
                 """
             },
-            // {
-            //     """
-            //     func int main() {
-            //         int len = 10;
-            //         return 0;
-            //     }
-            //     """
-            // },
-            // {
-            //     """
-            //     func int main() {
-            //         const int len = 10;
-            //         return 0;
-            //     }
-            //     """
-            // },
+            {
+                """
+                func int main() {
+                    int len = 10;
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    const int len = 10;
+                    return 0;
+                }
+                """
+            },
         };
     }
 
