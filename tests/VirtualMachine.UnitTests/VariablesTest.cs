@@ -77,7 +77,7 @@ public class VariablesTest
         }
 
         DeaVM vm = new(environment, program);
-        Assert.Throws<RuntimeExceptionException>(() => vm.RunProgram());
+        Assert.Throws<RuntimeException>(() => vm.RunProgram());
     }
 
     public static TheoryData<IReadOnlyList<Instruction>, string?> GetInvalidVariableProgramsData()

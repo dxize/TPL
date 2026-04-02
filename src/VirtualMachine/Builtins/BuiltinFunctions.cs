@@ -30,7 +30,7 @@ public sealed class BuiltinFunctions
 
         if (startIndex < 0 || sliceLength < 0 || startIndex > text.Length || startIndex + sliceLength > text.Length)
         {
-            throw new RuntimeExceptionException("Invalid substr bounds.");
+            throw new RuntimeException("Invalid substr bounds.");
         }
 
         return new Value(text.Substring(startIndex, sliceLength));
@@ -48,6 +48,6 @@ public sealed class BuiltinFunctions
             return new Value(Math.Abs(value.AsNum()));
         }
 
-        throw new RuntimeExceptionException("abs supports only int or num.");
+        throw new RuntimeException("abs supports only int or num.");
     }
 }

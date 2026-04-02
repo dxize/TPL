@@ -86,7 +86,7 @@ public class EvaluationTest
         FakeEnvironment environment = new();
         DeaVM vm = new(environment, instructions);
 
-        Assert.Throws<RuntimeExceptionException>(() => vm.RunProgram());
+        Assert.Throws<RuntimeException>(() => vm.RunProgram());
     }
 
     public static TheoryData<IReadOnlyList<Instruction>> GetInvalidEvaluateExpressionData()

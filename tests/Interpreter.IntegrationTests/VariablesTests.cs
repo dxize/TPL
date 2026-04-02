@@ -47,7 +47,7 @@ public class VariablesTests
         FakeEnvironment environment = new();
         DeaInterpreter interpreter = new(environment);
 
-        Assert.Throws<RuntimeExceptionException>(() => interpreter.Execute(code));
+        Assert.Throws<RuntimeException>(() => interpreter.Execute(code));
     }
 
     public static TheoryData<string, string> GetEvaluateVariablesAndConstantsData()

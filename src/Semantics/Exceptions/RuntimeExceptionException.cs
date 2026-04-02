@@ -3,18 +3,18 @@ namespace Semantics.Exceptions;
 /// <summary>
 /// Исключение, возникающее во время выполнения программы.
 /// </summary>
-public class RuntimeExceptionException : SemanticException
+public class RuntimeException : SemanticException
 {
-    public RuntimeExceptionException()
+    public RuntimeException()
     {
     }
 
-    public RuntimeExceptionException(string message)
+    public RuntimeException(string message)
         : base(message)
     {
     }
 
-    public RuntimeExceptionException(string message, Exception innerException)
+    public RuntimeException(string message, Exception innerException)
         : base(message, innerException)
     {
     }
