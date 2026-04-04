@@ -1,4 +1,7 @@
 using Runtime;
+
+using Semantics.Exceptions;
+
 using TestsLibrary;
 
 using VirtualMachine.Builtins;
@@ -107,5 +110,54 @@ public class EvaluationTest
 
         Assert.Equal(0, exitCode);
         Assert.Equal("200", environment.Output);
+    }
+
+    // Конкатенация строк
+    [Fact]
+    public void Can_concatenate_strings()
+    {
+        FakeEnvironment environment = new();
+        List<Instruction> program = [
+            new(InstructionCode.Push, new Value("Hello, ")),
+            new(InstructionCode.Push, new Value("Dea")),
+            new(InstructionCode.Add),
+            new(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
+            new(InstructionCode.Push, new Value(0)),
+            new(InstructionCode.Halt)
+        ];
+        new DeaVM(environment, program).RunProgram();
+        Assert.Equal("Hello, Dea", environment.Output);
+    }
+
+    // Тесты на ошибки (Деление на ноль и типы)
+    [Theory]
+    [MemberData(nameof(GetInvalidArithmeticData))]
+    public void Throws_runtime_error_on_invalid_arithmetic(InstructionCode op, Value a, Value b)
+    {
+        FakeEnvironment environment = new();
+        List<Instruction> program = [
+            new(InstructionCode.Push, a),
+            new(InstructionCode.Push, b),
+            new(op),
+            new(InstructionCode.Halt)
+        ];
+
+        DeaVM vm = new(environment, program);
+        Assert.Throws<RuntimeException>(() => vm.RunProgram());
+    }
+
+    public static TheoryData<InstructionCode, Value, Value> GetInvalidArithmeticData()
+    {
+        return new TheoryData<InstructionCode, Value, Value>
+        {
+            // Деление на ноль (int)
+            { InstructionCode.Divide, new Value(10), new Value(0) },
+
+            // Деление на ноль (double)
+            { InstructionCode.Divide, new Value(10.5), new Value(0.0) },
+
+            // Сложение несовместимых типов (число + строка)
+            { InstructionCode.Add, new Value(10), new Value("привет") },
+        };
     }
 }
