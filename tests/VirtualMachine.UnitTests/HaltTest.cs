@@ -11,8 +11,9 @@ public class HaltTest
     public void Can_halt_vm_with_exit_code(int exitCode)
     {
         FakeEnvironment environment = new();
-        DeaVM vm = new(environment,
-        [
+        DeaVM vm = new(
+            environment,
+            [
             new Instruction(InstructionCode.Push, new Value(exitCode)),
             new Instruction(InstructionCode.Halt),
         ]);

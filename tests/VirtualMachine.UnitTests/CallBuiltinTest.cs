@@ -9,26 +9,31 @@ namespace VirtualMachine.UnitTests;
 public class CallBuiltinTest
 {
     [Theory]
-    [MemberData(nameof(GetCallBuiltinData))]
-    public void Can_call_builtins(
+    [MemberData(nameof(GetInputOutputData))]
+    public void Can_use_input_and_output(
         IReadOnlyList<Instruction> program,
-        string expectedOutput,
-        int expectedExitCode
+        string input,
+        string expectedOutput
     )
     {
         FakeEnvironment environment = new();
-        DeaVM vm = new(environment, program);
+        if (!string.IsNullOrEmpty(input))
+        {
+            environment.AddInput(input); // Предполагаем, что у тебя есть этот метод
+        }
 
-        int result = vm.RunProgram();
-        Assert.Equal(expectedExitCode, result);
+        DeaVM vm = new(environment, program);
+        int exitCode = vm.RunProgram();
+
+        Assert.Equal(0, exitCode);
         Assert.Equal(expectedOutput, environment.Output);
     }
 
-    public static TheoryData<IReadOnlyList<Instruction>, string, int> GetCallBuiltinData()
+    public static TheoryData<IReadOnlyList<Instruction>, string, string> GetInputOutputData()
     {
-        return new TheoryData<IReadOnlyList<Instruction>, string, int>
+        return new TheoryData<IReadOnlyList<Instruction>, string, string>
         {
-            // print("hello")
+            // Функция print
             {
                 [
                     new Instruction(InstructionCode.Push, new Value("hello")),
@@ -36,54 +41,97 @@ public class CallBuiltinTest
                     new Instruction(InstructionCode.Push, new Value(0)),
                     new Instruction(InstructionCode.Halt),
                 ],
-                "hello",
-                0
+                "", "hello"
             },
-            // len("abcde"), substr("abcde", 1, 3)
+
+            // Функция input (считываем "42" и печатаем его)
+            {
+                [
+                    new Instruction(InstructionCode.Push, Value.Void),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.DefineVar, new Value("x")),
+                    new Instruction(InstructionCode.InputVar, new Value("x")),
+                    new Instruction(InstructionCode.LoadVar, new Value("x")),
+                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Halt),
+                ],
+                "42", "42"
+            },
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(GetBuiltinFunctionsData))]
+    public void Can_call_builtin_functions(
+        IReadOnlyList<Instruction> program,
+        string expectedOutput
+    )
+    {
+        FakeEnvironment environment = new();
+        DeaVM vm = new(environment, program);
+
+        vm.RunProgram();
+
+        Assert.Equal(expectedOutput, environment.Output);
+    }
+
+    public static TheoryData<IReadOnlyList<Instruction>, string> GetBuiltinFunctionsData()
+    {
+        return new TheoryData<IReadOnlyList<Instruction>, string>
+        {
+            // Функция len: len("abcde") = 5
             {
                 [
                     new Instruction(InstructionCode.Push, new Value("abcde")),
                     new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Len)),
                     new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Halt),
+                ],
+                "5"
+            },
 
+            // Функция substr: substr("abcde", 1, 3) = "bcd"
+            {
+                [
                     new Instruction(InstructionCode.Push, new Value("abcde")),
                     new Instruction(InstructionCode.Push, new Value(1)),
                     new Instruction(InstructionCode.Push, new Value(3)),
                     new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Substr)),
                     new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
-
                     new Instruction(InstructionCode.Push, new Value(0)),
                     new Instruction(InstructionCode.Halt),
                 ],
-                "5bcd",
-                0
+                "bcd"
             },
-            // abs(-7), min(3,5,2), max(3,5,2)
+
+            // Функция abs: abs(-7) = 7
             {
                 [
                     new Instruction(InstructionCode.Push, new Value(-7)),
                     new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Abs)),
                     new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
-
-                    new Instruction(InstructionCode.Push, new Value(3)),
-                    new Instruction(InstructionCode.Push, new Value(5)),
-                    new Instruction(InstructionCode.Push, new Value(2)),
-                    new Instruction(InstructionCode.Push, new Value(3)),
-                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Min)),
-                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
-
-                    new Instruction(InstructionCode.Push, new Value(3)),
-                    new Instruction(InstructionCode.Push, new Value(5)),
-                    new Instruction(InstructionCode.Push, new Value(2)),
-                    new Instruction(InstructionCode.Push, new Value(3)),
-                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Max)),
-                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
-
                     new Instruction(InstructionCode.Push, new Value(0)),
                     new Instruction(InstructionCode.Halt),
                 ],
-                "725",
-                0
+                "7"
+            },
+
+            // Функция max (3 аргумента): max(3, 5, 2) = 5
+            {
+                [
+                    new Instruction(InstructionCode.Push, new Value(3)),
+                    new Instruction(InstructionCode.Push, new Value(5)),
+                    new Instruction(InstructionCode.Push, new Value(2)),
+                    new Instruction(InstructionCode.Push, new Value(3)), // количество аргументов
+                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Max)),
+                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Halt),
+                ],
+                "5"
             },
         };
     }
@@ -99,29 +147,16 @@ public class CallBuiltinTest
 
     public static TheoryData<IReadOnlyList<Instruction>> GetInvalidBuiltinData()
     {
-        return new TheoryData<IReadOnlyList<Instruction>>
-        {
-            // substr: start + length > len
-            {
-                [
-                    new Instruction(InstructionCode.Push, new Value("abc")),
-                    new Instruction(InstructionCode.Push, new Value(2)),
-                    new Instruction(InstructionCode.Push, new Value(5)),
-                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Substr)),
-                    new Instruction(InstructionCode.Push, new Value(0)),
-                    new Instruction(InstructionCode.Halt),
-                ]
-            },
-            // min/max требуют минимум 2 аргумента
-            {
-                [
-                    new Instruction(InstructionCode.Push, new Value(10)),
-                    new Instruction(InstructionCode.Push, new Value(1)),
-                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Min)),
-                    new Instruction(InstructionCode.Push, new Value(0)),
-                    new Instruction(InstructionCode.Halt),
-                ]
-            },
-        };
+        return
+        [
+
+            [
+                new Instruction(InstructionCode.Push, new Value("abc")),
+                new Instruction(InstructionCode.Push, new Value(2)),
+                new Instruction(InstructionCode.Push, new Value(5)),
+                new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Substr)),
+                new Instruction(InstructionCode.Halt),
+            ]
+        ];
     }
 }

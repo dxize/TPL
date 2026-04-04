@@ -14,7 +14,9 @@ public class EvaluationTest
         DeaVM vm = new(environment, instructions);
 
         Value result = new Value(vm.RunProgram());
-        Assert.Equal(expected, result);
+
+        // TODO: переопределить операцию сравнения двух Value
+        Assert.Equal(expected.AsInt(), result.AsInt());
         Assert.Equal(string.Empty, environment.Output);
     }
 
