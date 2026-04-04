@@ -46,6 +46,7 @@ public class VariablesTest
                 null,
                 5
             },
+
             // Ввод в переменную и чтение
             {
                 [
@@ -98,6 +99,7 @@ public class VariablesTest
                 ],
                 null
             },
+
             // Чтение неинициализированной переменной
             {
                 [
@@ -110,6 +112,7 @@ public class VariablesTest
                 ],
                 null
             },
+
             // Невалидный ввод для int
             {
                 [
@@ -122,6 +125,24 @@ public class VariablesTest
                     new Instruction(InstructionCode.Halt),
                 ],
                 "abc"
+            },
+
+            // Повторное объявление 'x' в одном блоке
+            {
+                [
+                    new Instruction(InstructionCode.Push, new Value(10)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.DefineVar, new Value("x")),
+
+                    new Instruction(InstructionCode.Push, new Value(20)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.DefineVar, new Value("x")),
+
+                    new Instruction(InstructionCode.Halt),
+                ],
+                null
             },
         };
     }
