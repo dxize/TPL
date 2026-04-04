@@ -1,5 +1,7 @@
 using Runtime;
 using TestsLibrary;
+
+using VirtualMachine.Builtins;
 using VirtualMachine.Instructions;
 
 namespace VirtualMachine.UnitTests;
@@ -8,21 +10,20 @@ public class EvaluationTest
 {
     [Theory]
     [MemberData(nameof(GetEvaluateExpressionData))]
-    public void Can_evaluate_expression(List<Instruction> instructions, Value expected)
+    public void Can_evaluate_expression(List<Instruction> instructions, int expected)
     {
         FakeEnvironment environment = new();
         DeaVM vm = new(environment, instructions);
 
-        Value result = new Value(vm.RunProgram());
+        int result = vm.RunProgram();
 
-        // TODO: переопределить операцию сравнения двух Value
-        Assert.Equal(expected.AsInt(), result.AsInt());
+        Assert.Equal(expected, result);
         Assert.Equal(string.Empty, environment.Output);
     }
 
-    public static TheoryData<List<Instruction>, Value> GetEvaluateExpressionData()
+    public static TheoryData<List<Instruction>, int> GetEvaluateExpressionData()
     {
-        return new TheoryData<List<Instruction>, Value>
+        return new TheoryData<List<Instruction>, int>
         {
             // Возврат одного значения со стека
             {
@@ -30,7 +31,7 @@ public class EvaluationTest
                     new Instruction(InstructionCode.Push, new Value(67)),
                     new Instruction(InstructionCode.Halt)
                 ],
-                new Value(67)
+                67
             },
 
             // Сложение и вычитание: (20 + 50) - 3 = 67
@@ -43,20 +44,7 @@ public class EvaluationTest
                     new Instruction(InstructionCode.Subtract),
                     new Instruction(InstructionCode.Halt)
                 ],
-                new Value(67)
-            },
-
-            // Умножение и деление: (20 * 50) / 5 = 200
-            {
-                [
-                    new Instruction(InstructionCode.Push, new Value(20)),
-                    new Instruction(InstructionCode.Push, new Value(50)),
-                    new Instruction(InstructionCode.Multiply),
-                    new Instruction(InstructionCode.Push, new Value(5)),
-                    new Instruction(InstructionCode.Divide),
-                    new Instruction(InstructionCode.Halt)
-                ],
-                new Value(200)
+                67
             },
 
             // Целочисленное деление и остаток: 17 // 4 + 17 % 4 = 5
@@ -71,7 +59,7 @@ public class EvaluationTest
                     new Instruction(InstructionCode.Add),
                     new Instruction(InstructionCode.Halt)
                 ],
-                new Value(5)
+                5
             },
 
             // Возведение в степень: 2 ^ 10 = 1024
@@ -82,7 +70,7 @@ public class EvaluationTest
                     new Instruction(InstructionCode.Power),
                     new Instruction(InstructionCode.Halt)
                 ],
-                new Value(1024)
+                1024
             },
 
             // Унарный минус: -1024
@@ -92,8 +80,32 @@ public class EvaluationTest
                     new Instruction(InstructionCode.Negate),
                     new Instruction(InstructionCode.Halt)
                 ],
-                new Value(-1024)
+                -1024
             },
         };
+    }
+
+    [Fact]
+    public void Can_divide_with_floating_point_result()
+    {
+        FakeEnvironment environment = new();
+
+        // (20 * 50) / 5 = 200.0
+        List<Instruction> program = [
+            new(InstructionCode.Push, new Value(20)),
+            new(InstructionCode.Push, new Value(50)),
+            new(InstructionCode.Multiply),
+            new(InstructionCode.Push, new Value(5)),
+            new(InstructionCode.Divide), // Результат: Num
+            new(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)), // print выведет как "200"
+            new(InstructionCode.Push, new Value(0)),
+            new(InstructionCode.Halt)
+        ];
+
+        DeaVM vm = new(environment, program);
+        int exitCode = vm.RunProgram();
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal("200", environment.Output);
     }
 }
