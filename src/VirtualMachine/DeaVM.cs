@@ -115,6 +115,7 @@ public sealed class DeaVM
                 _evaluationStack.Push(_builtins.Substr(source, start, length));
                 break;
             }
+
             case BuiltinFunctionCode.Abs:
                 _evaluationStack.Push(_builtins.Abs(_evaluationStack.Pop()));
                 break;

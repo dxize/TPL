@@ -8,15 +8,23 @@ public interface IAstVisitor
     void Visit(ProgramNode p);
 
     void Visit(FunctionDeclaration d);
+
     void Visit(VariableDeclarationExpression d);
+
     void Visit(ConstantDeclarationExpression d);
 
     void Visit(LiteralExpression e);
+
     void Visit(IdentifierExpression e);
+
     void Visit(UnaryExpression e);
+
     void Visit(BinaryExpression e);
+
     void Visit(CallExpression e);
+
     void Visit(AssignmentExpression e);
+
     void Visit(InputExpression e);
 
     void Visit(PrintExpression e);

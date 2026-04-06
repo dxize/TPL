@@ -335,6 +335,7 @@ public sealed class Parser
                 string name = ParseIdentifier();
                 return new IdentifierExpression(name);
             }
+
             case TokenType.OpenParenthesis:
                 Match(TokenType.OpenParenthesis);
                 Expression nested = ParseExpression();

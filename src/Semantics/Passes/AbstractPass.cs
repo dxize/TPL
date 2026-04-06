@@ -15,7 +15,7 @@ public abstract class AbstractPass : IAstVisitor
         {
             decl.Accept(this);
         }
-        
+
         p.MainFunction.Accept(this);
     }
 

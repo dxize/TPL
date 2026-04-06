@@ -15,6 +15,7 @@ public sealed class ResolveNamesPass : AbstractPass
     {
         // Встроенные функции
         "abs", "min", "max", "len", "substr",
+
         // Типы данных
         "int", "num", "string", "bool",
     };
