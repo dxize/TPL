@@ -1,7 +1,5 @@
-using Runtime;
 using VirtualMachine.Builtins;
 using VirtualMachine.Instructions;
-using VirtualMachineCodegen;
 
 using DeaParser = global::Parser.Parser;
 
@@ -41,5 +39,25 @@ public class DeaVmCodegenTests
         Assert.Equal(InstructionCode.Push, instructions[6].Code);
         Assert.Equal(7, instructions[6].Operand.AsInt());
         Assert.Equal(InstructionCode.Halt, instructions[7].Code);
+    }
+
+    [Fact]
+    public void Throws_when_constant_is_redeclared_during_codegen()
+    {
+        string code = """
+                      func int main() {
+                          const int x = 10;
+                          const int x = 20;
+                          return x;
+                      }
+                      """;
+
+        Ast.ProgramNode program = new DeaParser(code).ParseProgram();
+
+        DeaVmCodegen codegen = new();
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => codegen.Generate(program));
+
+        Assert.Contains("Identifier 'x' already declared", exception.Message);
     }
 }

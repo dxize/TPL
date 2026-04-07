@@ -59,6 +59,20 @@ public class CallBuiltinTest
                 ],
                 "42", "42"
             },
+            {
+                [
+                    new Instruction(InstructionCode.Push, Value.Void),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Push, new Value(1)),
+                    new Instruction(InstructionCode.DefineVar, new Value("f")),
+                    new Instruction(InstructionCode.InputVar, new Value("f")),
+                    new Instruction(InstructionCode.LoadVar, new Value("f")),
+                    new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Print)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Halt),
+                ],
+                "3.14", "3.14"
+            },
         };
     }
 
@@ -149,12 +163,16 @@ public class CallBuiltinTest
     {
         return
         [
-
             [
                 new Instruction(InstructionCode.Push, new Value("abc")),
                 new Instruction(InstructionCode.Push, new Value(2)),
                 new Instruction(InstructionCode.Push, new Value(5)),
                 new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Substr)),
+                new Instruction(InstructionCode.Halt),
+            ],
+            [
+                new Instruction(InstructionCode.Push, new Value("abc")),
+                new Instruction(InstructionCode.CallBuiltin, new Value((int)BuiltinFunctionCode.Abs)),
                 new Instruction(InstructionCode.Halt),
             ]
         ];

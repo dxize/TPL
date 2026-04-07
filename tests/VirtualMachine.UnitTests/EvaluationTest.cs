@@ -76,6 +76,17 @@ public class EvaluationTest
                 1024
             },
 
+            // Возведение в степень(Int ^ Num): 4 ^ 0.5 = 2
+            // {
+            //     [
+            //         new Instruction(InstructionCode.Push, new Value(4)),
+            //         new Instruction(InstructionCode.Push, new Value(0.5)),
+            //         new Instruction(InstructionCode.Power),
+            //         new Instruction(InstructionCode.Halt)
+            //     ],
+            //     2
+            // },
+
             // Унарный минус: -1024
             {
                 [
