@@ -50,7 +50,7 @@ public sealed class ResolveNamesPass : AbstractPass
         if (!string.Equals(d.Name, "main", StringComparison.Ordinal))
         {
             throw new InvalidExpressionException(
-                "Поддерживается только точка входа func int main().");
+                "Only the entry point func int main() is supported.");
         }
 
         // Создаём локальную область видимости для функции
@@ -70,19 +70,16 @@ public sealed class ResolveNamesPass : AbstractPass
     {
         EnsureNotReservedName(e.Name);
 
-        // Проверяем дубликаты в текущей области
         if (_currentScope != null)
         {
-            // Локальное объявление
             if (_currentScope.ContainsKey(e.Name))
             {
-                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен в текущей области.");
+                throw new DuplicateIdentifierException($"Duplicate identifier '{e.Name}' in current scope.");
             }
 
-            // Проверяем, нет ли такого имени в глобальной области (скрытие запрещено)
             if (_globalSymbols.ContainsKey(e.Name))
             {
-                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен в глобальной области.");
+                throw new DuplicateIdentifierException($"Identifier '{e.Name}' is already declared in global scope.");
             }
 
             if (e.Initializer is not null)
@@ -94,10 +91,9 @@ public sealed class ResolveNamesPass : AbstractPass
         }
         else
         {
-            // Глобальное объявление
             if (_globalSymbols.ContainsKey(e.Name))
             {
-                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен.");
+                throw new DuplicateIdentifierException($"Duplicate identifier '{e.Name}'.");
             }
 
             if (e.Initializer is not null)
@@ -113,19 +109,16 @@ public sealed class ResolveNamesPass : AbstractPass
     {
         EnsureNotReservedName(e.Name);
 
-        // Проверяем дубликаты в текущей области
         if (_currentScope != null)
         {
-            // Локальное объявление
             if (_currentScope.ContainsKey(e.Name))
             {
-                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен в текущей области.");
+                throw new DuplicateIdentifierException($"Duplicate identifier '{e.Name}' in current scope.");
             }
 
-            // Проверяем, нет ли такого имени в глобальной области (скрытие запрещено)
             if (_globalSymbols.ContainsKey(e.Name))
             {
-                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен в глобальной области.");
+                throw new DuplicateIdentifierException($"Identifier '{e.Name}' is already declared in global scope.");
             }
 
             e.Initializer.Accept(this);
@@ -133,10 +126,9 @@ public sealed class ResolveNamesPass : AbstractPass
         }
         else
         {
-            // Глобальное объявление
             if (_globalSymbols.ContainsKey(e.Name))
             {
-                throw new DuplicateIdentifierException($"Идентификатор '{e.Name}' уже объявлен.");
+                throw new DuplicateIdentifierException($"Duplicate identifier '{e.Name}'.");
             }
 
             e.Initializer.Accept(this);
@@ -146,7 +138,6 @@ public sealed class ResolveNamesPass : AbstractPass
 
     public override void Visit(AssignmentExpression e)
     {
-        // Ищем в локальной области, затем в глобальной
         bool found = false;
         bool isConst = false;
 
@@ -163,12 +154,12 @@ public sealed class ResolveNamesPass : AbstractPass
 
         if (!found)
         {
-            throw new UnknownIdentifierException($"Идентификатор '{e.Name}' не объявлен.");
+            throw new UnknownIdentifierException($"Identifier '{e.Name}' is not declared.");
         }
 
         if (isConst)
         {
-            throw new InvalidExpressionException($"Нельзя присваивать значение константе '{e.Name}'.");
+            throw new InvalidExpressionException($"Cannot assign to constant '{e.Name}'.");
         }
 
         e.Value.Accept(this);
@@ -176,7 +167,6 @@ public sealed class ResolveNamesPass : AbstractPass
 
     public override void Visit(IdentifierExpression e)
     {
-        // Ищем в локальной области, затем в глобальной
         bool found = false;
 
         if (_currentScope != null && _currentScope.ContainsKey(e.Name))
@@ -190,13 +180,12 @@ public sealed class ResolveNamesPass : AbstractPass
 
         if (!found)
         {
-            throw new UnknownIdentifierException($"Идентификатор '{e.Name}' не объявлен.");
+            throw new UnknownIdentifierException($"Identifier '{e.Name}' is not declared.");
         }
     }
 
     public override void Visit(InputExpression e)
     {
-        // Ищем в локальной области, затем в глобальной
         bool found = false;
         bool isConst = false;
 
@@ -213,12 +202,12 @@ public sealed class ResolveNamesPass : AbstractPass
 
         if (!found)
         {
-            throw new UnknownIdentifierException($"Идентификатор '{e.VariableName}' не объявлен.");
+            throw new UnknownIdentifierException($"Identifier '{e.VariableName}' is not declared.");
         }
 
         if (isConst)
         {
-            throw new InvalidExpressionException($"Нельзя выполнять input в константу '{e.VariableName}'.");
+            throw new InvalidExpressionException($"Cannot read input into constant '{e.VariableName}'.");
         }
     }
 
@@ -226,7 +215,7 @@ public sealed class ResolveNamesPass : AbstractPass
     {
         if (e.Name is not ("abs" or "min" or "max" or "len" or "substr"))
         {
-            throw new UnknownIdentifierException($"Неизвестная функция '{e.Name}'.");
+            throw new UnknownIdentifierException($"Unknown function '{e.Name}'.");
         }
 
         base.Visit(e);
@@ -246,7 +235,7 @@ public sealed class ResolveNamesPass : AbstractPass
     {
         if (ReservedNames.Contains(name))
         {
-            throw new DuplicateIdentifierException($"Идентификатор '{name}' является зарезервированным именем.");
+            throw new DuplicateIdentifierException($"Identifier '{name}' is a reserved name.");
         }
     }
 }

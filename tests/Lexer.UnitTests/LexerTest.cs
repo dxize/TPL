@@ -239,7 +239,7 @@ public class LexerTest
     {
         return new TheoryData<string, string>
         {
-            { "/* comment", "Незакрытый многострочный комментарий" },
+            { "/* comment", "Unterminated multi-line comment" },
             { "@", "@" },
             { "\"unterminated", "unterminated" },
             { "01", "01" },

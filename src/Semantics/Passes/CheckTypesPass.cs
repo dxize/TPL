@@ -106,7 +106,7 @@ public sealed class CheckTypesPass : AbstractPass
 
         if (isConst)
         {
-            throw new TypeErrorException($"Нельзя присваивать значение константе '{e.Name}'.");
+            throw new TypeErrorException($"Cannot assign to constant '{e.Name}'.");
         }
 
         DataType valueType = ResolveExpressionType(e.Value);
@@ -117,7 +117,7 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (!HasTypeForName(e.VariableName))
         {
-            throw new TypeErrorException($"Идентификатор '{e.VariableName}' не объявлен.");
+            throw new TypeErrorException($"Identifier '{e.VariableName}' is not declared.");
         }
     }
 
@@ -127,12 +127,20 @@ public sealed class CheckTypesPass : AbstractPass
         base.Visit(e);
     }
 
+    public override void Visit(PrintExpression e)
+    {
+        foreach (Expression argument in e.Arguments)
+        {
+            ResolveExpressionType(argument);
+        }
+    }
+
     public override void Visit(ReturnExpression e)
     {
         DataType type = ResolveExpressionType(e.Value);
         if (type != DataType.Int)
         {
-            throw new TypeErrorException("main должна возвращать значение типа int.");
+            throw new TypeErrorException("Main function must return a value of type int.");
         }
     }
 
@@ -148,7 +156,7 @@ public sealed class CheckTypesPass : AbstractPass
             return globalType;
         }
 
-        throw new TypeErrorException($"Идентификатор '{name}' не объявлен.");
+        throw new TypeErrorException($"Identifier '{name}' is not declared.");
     }
 
     private bool GetConstnessForName(string name)
@@ -185,7 +193,7 @@ public sealed class CheckTypesPass : AbstractPass
             UnaryExpression unary => ResolveUnaryType(unary),
             BinaryExpression binary => ResolveBinaryType(binary),
             CallExpression call => ResolveCallType(call),
-            _ => throw new TypeErrorException($"Неподдерживаемое выражение: {e.GetType().Name}."),
+            _ => throw new TypeErrorException($"Unsupported expression: {e.GetType().Name}."),
         };
     }
 
@@ -202,7 +210,7 @@ public sealed class CheckTypesPass : AbstractPass
             return operandType;
         }
 
-        throw new TypeErrorException("Унарные + и - поддерживаются только для int/num.");
+        throw new TypeErrorException("Unary + and - are only supported for int/num.");
     }
 
     private DataType ResolveBinaryType(BinaryExpression e)
@@ -221,7 +229,7 @@ public sealed class CheckTypesPass : AbstractPass
             {
                 if (left != DataType.Int || right != DataType.Int)
                 {
-                    throw new TypeErrorException("Операции // и % поддерживаются только для int.");
+                    throw new TypeErrorException("Operators // and % are only supported for int.");
                 }
 
                 return DataType.Int;
@@ -235,7 +243,7 @@ public sealed class CheckTypesPass : AbstractPass
             return DataType.Num;
         }
 
-        throw new TypeErrorException($"Операция {e.OperatorKind} не поддерживается для типов {left} и {right}.");
+        throw new TypeErrorException($"Operator {e.OperatorKind} is not supported for types {left} and {right}.");
     }
 
     private DataType ResolveCallType(CallExpression call)
@@ -247,7 +255,7 @@ public sealed class CheckTypesPass : AbstractPass
             "abs" => ResolveAbsType(call),
             "min" => ResolveMinMaxType(call, "min"),
             "max" => ResolveMinMaxType(call, "max"),
-            _ => throw new TypeErrorException($"Неизвестная функция '{call.Name}'."),
+            _ => throw new TypeErrorException($"Unknown function '{call.Name}'."),
         };
     }
 
@@ -255,12 +263,12 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (call.Arguments.Count != 1)
         {
-            throw new InvalidBuiltinCallException("len ожидает 1 аргумент.");
+            throw new InvalidBuiltinCallException("len expects 1 argument.");
         }
 
         if (ResolveExpressionType(call.Arguments[0]) != DataType.String)
         {
-            throw new TypeErrorException("len поддерживает только string.");
+            throw new TypeErrorException("len only supports string.");
         }
 
         return DataType.Int;
@@ -270,14 +278,14 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (call.Arguments.Count != 3)
         {
-            throw new InvalidBuiltinCallException("substr ожидает 3 аргумента.");
+            throw new InvalidBuiltinCallException("substr expects 3 arguments.");
         }
 
         if (ResolveExpressionType(call.Arguments[0]) != DataType.String ||
             ResolveExpressionType(call.Arguments[1]) != DataType.Int ||
             ResolveExpressionType(call.Arguments[2]) != DataType.Int)
         {
-            throw new TypeErrorException("substr ожидает (string, int, int).");
+            throw new TypeErrorException("substr expects (string, int, int).");
         }
 
         return DataType.String;
@@ -287,13 +295,13 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (call.Arguments.Count != 1)
         {
-            throw new InvalidBuiltinCallException("abs ожидает 1 аргумент.");
+            throw new InvalidBuiltinCallException("abs expects 1 argument.");
         }
 
         DataType type = ResolveExpressionType(call.Arguments[0]);
         if (type is not (DataType.Int or DataType.Num))
         {
-            throw new TypeErrorException("abs поддерживает только int/num.");
+            throw new TypeErrorException("abs only supports int/num.");
         }
 
         return type;
@@ -303,13 +311,13 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (call.Arguments.Count < 2)
         {
-            throw new InvalidBuiltinCallException($"{functionName} ожидает минимум 2 аргумента.");
+            throw new InvalidBuiltinCallException($"{functionName} expects at least 2 arguments.");
         }
 
         DataType first = ResolveExpressionType(call.Arguments[0]);
         if (first is not (DataType.Int or DataType.Num))
         {
-            throw new TypeErrorException($"{functionName} поддерживает только int/num.");
+            throw new TypeErrorException($"{functionName} only supports int/num.");
         }
 
         for (int i = 1; i < call.Arguments.Count; i++)
@@ -317,7 +325,7 @@ public sealed class CheckTypesPass : AbstractPass
             DataType type = ResolveExpressionType(call.Arguments[i]);
             if (type != first)
             {
-                throw new TypeErrorException($"{functionName} требует аргументы одного типа.");
+                throw new TypeErrorException($"{functionName} requires arguments of the same type.");
             }
         }
 
@@ -328,7 +336,7 @@ public sealed class CheckTypesPass : AbstractPass
     {
         if (expectedType != actualType)
         {
-            throw new TypeErrorException($"Тип значения несовместим с '{variableName}'.");
+            throw new TypeErrorException($"Type mismatch for '{variableName}'.");
         }
     }
 }

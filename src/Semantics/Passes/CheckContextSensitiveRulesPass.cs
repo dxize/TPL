@@ -24,7 +24,7 @@ public sealed class CheckContextSensitiveRulesPass : AbstractPass
         if (p.MainFunction is null)
         {
             throw new InvalidExpressionException(
-                "Программа должна содержать точку входа func int main().");
+                "Program must contain the entry point func int main().");
         }
 
         _hasReturn = false;
@@ -38,19 +38,19 @@ public sealed class CheckContextSensitiveRulesPass : AbstractPass
         if (!string.Equals(d.Name, "main", StringComparison.Ordinal))
         {
             throw new InvalidExpressionException(
-                "Во 2-й итерации поддерживается только функция main.");
+                "Only the main function is supported in this iteration.");
         }
 
         if (d.ReturnType != Ast.DataType.Int)
         {
             throw new InvalidExpressionException(
-                "Функция main должна возвращать int.");
+                "Main function must return int.");
         }
 
         if (d.Body.Count == 0)
         {
             throw new InvalidExpressionException(
-                "Тело функции main не должно быть пустым.");
+                "Main function body must not be empty.");
         }
 
         foreach (AstNode node in d.Body)
@@ -58,7 +58,7 @@ public sealed class CheckContextSensitiveRulesPass : AbstractPass
             if (_afterReturn)
             {
                 throw new InvalidExpressionException(
-                    "После return не должно быть инструкций.");
+                    "No statements allowed after return.");
             }
 
             node.Accept(this);
@@ -67,7 +67,7 @@ public sealed class CheckContextSensitiveRulesPass : AbstractPass
         if (!_hasReturn)
         {
             throw new InvalidExpressionException(
-                "Функция main должна содержать return выражение типа int.");
+                "Main function must contain a return statement with an int value.");
         }
     }
 

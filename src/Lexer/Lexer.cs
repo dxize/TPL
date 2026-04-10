@@ -55,7 +55,7 @@ public class Lexer
         if (_hasUnterminatedMultiLineComment)
         {
             _hasUnterminatedMultiLineComment = false;
-            return new Token(TokenType.Error, new TokenValue("Незакрытый многострочный комментарий"));
+            return new Token(TokenType.Error, new TokenValue("Unterminated multi-line comment"));
         }
 
         if (_scanner.IsEnd())
