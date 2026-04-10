@@ -45,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestsLibrary", "tests\Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interpreter.Specs", "tests\Interpreter.Specs\Interpreter.Specs.csproj", "{19C0B4BF-A7EF-4B82-8E65-DA3E8A219E18}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semantics.UnitTests", "tests\Semantics.UnitTests\Semantics.UnitTests.csproj", "{43473100-B934-4C36-A39A-E6046C369D9D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -235,6 +237,18 @@ Global
 		{19C0B4BF-A7EF-4B82-8E65-DA3E8A219E18}.Release|x64.Build.0 = Release|Any CPU
 		{19C0B4BF-A7EF-4B82-8E65-DA3E8A219E18}.Release|x86.ActiveCfg = Release|Any CPU
 		{19C0B4BF-A7EF-4B82-8E65-DA3E8A219E18}.Release|x86.Build.0 = Release|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Debug|x64.Build.0 = Debug|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Debug|x86.Build.0 = Debug|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Release|x64.ActiveCfg = Release|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Release|x64.Build.0 = Release|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Release|x86.ActiveCfg = Release|Any CPU
+		{43473100-B934-4C36-A39A-E6046C369D9D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -255,6 +269,7 @@ Global
 		{77777777-7777-7777-7777-777777777777} = {CE774A12-53F2-4F94-ADFA-96E36863AED4}
 		{C614F8E4-09D8-4D7C-86BF-C074D6D7C93B} = {CE774A12-53F2-4F94-ADFA-96E36863AED4}
 		{19C0B4BF-A7EF-4B82-8E65-DA3E8A219E18} = {CE774A12-53F2-4F94-ADFA-96E36863AED4}
+		{43473100-B934-4C36-A39A-E6046C369D9D} = {CE774A12-53F2-4F94-ADFA-96E36863AED4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {65E7C135-BC3E-4C14-B07C-EE4E6DE8D8D1}
