@@ -151,11 +151,7 @@ public sealed class DeaVM
             throw new RuntimeException($"Identifier '{name}' already declared.");
         }
 
-        if (hasInitializer)
-        {
-            EnsureTypeCompatible(name, declaredType, value);
-        }
-
+        // Тип уже проверен на этапе семантики — используем значение как есть.
         _variables[name] = new VariableEntry(declaredType, isConstTag.AsInt() == 1, hasInitializer, hasInitializer ? value : Value.Void);
     }
 
@@ -174,23 +170,16 @@ public sealed class DeaVM
     {
         Value value = _evaluationStack.Pop();
         VariableEntry variable = GetVariable(name);
-        if (variable.IsConst)
-        {
-            throw new RuntimeException($"Cannot assign to const '{name}'.");
-        }
 
-        EnsureTypeCompatible(name, variable.Type, value);
+        // Const и типы уже проверены на этапе семантики.
         variable.SetValue(value);
     }
 
     private void InputVariable(string name)
     {
         VariableEntry variable = GetVariable(name);
-        if (variable.IsConst)
-        {
-            throw new RuntimeException($"Cannot input into const '{name}'.");
-        }
 
+        // Const уже проверен на этапе семантики.
         string text = _environment.ReadLine();
         Value value = variable.Type switch
         {
@@ -217,29 +206,12 @@ public sealed class DeaVM
         return value;
     }
 
-    private static void EnsureTypeCompatible(string name, Runtime.ValueType declaredType, Value value)
-    {
-        if (declaredType == Runtime.ValueType.Int && value.Type != Runtime.ValueType.Int)
-        {
-            throw new RuntimeException($"Type mismatch for '{name}'.");
-        }
-
-        if (declaredType == Runtime.ValueType.Num && value.Type != Runtime.ValueType.Num)
-        {
-            throw new RuntimeException($"Type mismatch for '{name}'.");
-        }
-
-        if (declaredType == Runtime.ValueType.String && value.Type != Runtime.ValueType.String)
-        {
-            throw new RuntimeException($"Type mismatch for '{name}'.");
-        }
-    }
-
     private void ExecuteAdd()
     {
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
 
+        // Типы уже проверены на этапе семантики.
         if (left.Type == Runtime.ValueType.String && right.Type == Runtime.ValueType.String)
         {
             _evaluationStack.Push(new Value(left.AsString() + right.AsString()));
@@ -258,32 +230,23 @@ public sealed class DeaVM
 
     private void ExecuteNumericBinaryCore(Value left, Value right, Func<int, int, int> intOperation, Func<double, double, double> numOperation)
     {
+        // Типы уже проверены на этапе семантики.
         if (left.Type == Runtime.ValueType.Int && right.Type == Runtime.ValueType.Int)
         {
             _evaluationStack.Push(new Value(intOperation(left.AsInt(), right.AsInt())));
             return;
         }
 
-        if ((left.Type == Runtime.ValueType.Int || left.Type == Runtime.ValueType.Num) &&
-            (right.Type == Runtime.ValueType.Int || right.Type == Runtime.ValueType.Num))
-        {
-            _evaluationStack.Push(new Value(numOperation(left.AsNum(), right.AsNum())));
-            return;
-        }
-
-        throw new RuntimeException("Numeric operation supports only int or num.");
+        // Смешанные int/num или num/num — приводим к num.
+        _evaluationStack.Push(new Value(numOperation(left.AsNum(), right.AsNum())));
     }
 
     private void ExecuteDivide()
     {
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
-        if ((left.Type != Runtime.ValueType.Int && left.Type != Runtime.ValueType.Num) ||
-            (right.Type != Runtime.ValueType.Int && right.Type != Runtime.ValueType.Num))
-        {
-            throw new RuntimeException("Operator '/' supports only int or num.");
-        }
 
+        // Типы уже проверены на этапе семантики.
         double divisor = right.AsNum();
         if (Math.Abs(divisor) < double.Epsilon)
         {
@@ -297,11 +260,8 @@ public sealed class DeaVM
     {
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
-        if (left.Type != Runtime.ValueType.Int || right.Type != Runtime.ValueType.Int)
-        {
-            throw new RuntimeException("Operator '//' supports only int.");
-        }
 
+        // Типы уже проверены на этапе семантики.
         int divisor = right.AsInt();
         if (divisor == 0)
         {
@@ -315,11 +275,8 @@ public sealed class DeaVM
     {
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
-        if (left.Type != Runtime.ValueType.Int || right.Type != Runtime.ValueType.Int)
-        {
-            throw new RuntimeException("Operator '%' supports only int.");
-        }
 
+        // Типы уже проверены на этапе семантики.
         int divisor = right.AsInt();
         if (divisor == 0)
         {
@@ -333,48 +290,36 @@ public sealed class DeaVM
     {
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
+
+        // Типы уже проверены на этапе семантики.
         if (left.Type == Runtime.ValueType.Int && right.Type == Runtime.ValueType.Int)
         {
             _evaluationStack.Push(new Value((int)Math.Pow(left.AsInt(), right.AsInt())));
             return;
         }
 
-        if ((left.Type == Runtime.ValueType.Int || left.Type == Runtime.ValueType.Num) &&
-            (right.Type == Runtime.ValueType.Int || right.Type == Runtime.ValueType.Num))
-        {
-            _evaluationStack.Push(new Value(Math.Pow(left.AsNum(), right.AsNum())));
-            return;
-        }
-
-        throw new RuntimeException("Operator '^' supports only int or num.");
+        _evaluationStack.Push(new Value(Math.Pow(left.AsNum(), right.AsNum())));
     }
 
     private void ExecuteNegate()
     {
         Value value = _evaluationStack.Pop();
+
+        // Тип уже проверен на этапе семантики.
         if (value.Type == Runtime.ValueType.Int)
         {
             _evaluationStack.Push(new Value(-value.AsInt()));
             return;
         }
 
-        if (value.Type == Runtime.ValueType.Num)
-        {
-            _evaluationStack.Push(new Value(-value.AsNum()));
-            return;
-        }
-
-        throw new RuntimeException("Unary '-' supports only int or num.");
+        _evaluationStack.Push(new Value(-value.AsNum()));
     }
 
     private void ExecuteMinOrMax(bool isMin)
     {
         int count = _evaluationStack.Pop().AsInt();
-        if (count < 2)
-        {
-            throw new RuntimeException("min/max requires at least 2 arguments.");
-        }
 
+        // Количество аргументов и типы уже проверены на этапе семантики.
         List<Value> values = new(count);
         for (int i = 0; i < count; i++)
         {
@@ -382,18 +327,8 @@ public sealed class DeaVM
         }
 
         values.Reverse();
-        Runtime.ValueType expectedType = values[0].Type;
-        if (expectedType != Runtime.ValueType.Int && expectedType != Runtime.ValueType.Num)
-        {
-            throw new RuntimeException("min/max supports only int or num.");
-        }
 
-        if (values.Any(v => v.Type != expectedType))
-        {
-            throw new RuntimeException("min/max requires arguments of the same type.");
-        }
-
-        if (expectedType == Runtime.ValueType.Int)
+        if (values[0].Type == Runtime.ValueType.Int)
         {
             int result = values[0].AsInt();
             foreach (Value value in values.Skip(1))

@@ -161,14 +161,17 @@ public class EvaluationTest
     {
         return new TheoryData<InstructionCode, Value, Value>
         {
-            // Деление на ноль (int)
+            // Деление на ноль (int) — результат всегда num, делитель 0
             { InstructionCode.Divide, new Value(10), new Value(0) },
 
             // Деление на ноль (double)
             { InstructionCode.Divide, new Value(10.5), new Value(0.0) },
 
-            // Сложение несовместимых типов (число + строка)
-            { InstructionCode.Add, new Value(10), new Value("привет") },
+            // Целочисленное деление на ноль
+            { InstructionCode.IntegerDivide, new Value(10), new Value(0) },
+
+            // Остаток от деления на ноль
+            { InstructionCode.Modulo, new Value(10), new Value(0) },
         };
     }
 }

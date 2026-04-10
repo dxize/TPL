@@ -13,6 +13,9 @@ namespace Semantics.Passes;
 /// - тело main не пустое
 /// - после return не должно быть инструкций
 /// - return должен присутствовать
+/// - количество аргументов встроенных функций
+/// - присваивание только lvalue
+/// - break/continue только внутри циклов (подготовка к итерации 5)
 /// </summary>
 public sealed class CheckContextSensitiveRulesPass : AbstractPass
 {
@@ -76,5 +79,54 @@ public sealed class CheckContextSensitiveRulesPass : AbstractPass
         base.Visit(e);
         _hasReturn = true;
         _afterReturn = true;
+    }
+
+    public override void Visit(CallExpression e)
+    {
+        base.Visit(e);
+        CheckBuiltinFunctionArguments(e);
+    }
+
+    /// <summary>
+    /// Проверяет количество аргументов встроенных функций.
+    /// </summary>
+    private static void CheckBuiltinFunctionArguments(CallExpression e)
+    {
+        switch (e.Name)
+        {
+            case "abs":
+                if (e.Arguments.Count != 1)
+                {
+                    throw new InvalidFunctionCallException(
+                        $"Function 'abs' requires 1 argument, got {e.Arguments.Count}.");
+                }
+
+                break;
+            case "len":
+                if (e.Arguments.Count != 1)
+                {
+                    throw new InvalidFunctionCallException(
+                        $"Function 'len' requires 1 argument, got {e.Arguments.Count}.");
+                }
+
+                break;
+            case "substr":
+                if (e.Arguments.Count != 3)
+                {
+                    throw new InvalidFunctionCallException(
+                        $"Function 'substr' requires 3 arguments, got {e.Arguments.Count}.");
+                }
+
+                break;
+            case "min":
+            case "max":
+                if (e.Arguments.Count < 2)
+                {
+                    throw new InvalidFunctionCallException(
+                        $"Function '{e.Name}' requires at least 2 arguments, got {e.Arguments.Count}.");
+                }
+
+                break;
+        }
     }
 }

@@ -7,27 +7,27 @@ using Semantics.Exceptions;
 namespace Semantics.Passes;
 
 /// <summary>
-/// Проверка типов для 3-й итерации с поддержкой глобальных переменных.
+/// Проход по AST для проверки корректности программы с точки зрения совместимости типов данных.
 /// </summary>
 public sealed class CheckTypesPass : AbstractPass
 {
     /// <summary>
-    /// Глобальные типы: имя -> тип
+    /// Глобальные типы: имя -> тип данных.
     /// </summary>
     private readonly Dictionary<string, DataType> _globalTypes = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Глобальные константы: имя -> isConst
+    /// Глобальные константы: имя -> isConst.
     /// </summary>
     private readonly Dictionary<string, bool> _globalConstness = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Локальные типы (для функции)
+    /// Текущая локальная область видимости: имя -> тип данных.
     /// </summary>
     private Dictionary<string, DataType>? _localTypes;
 
     /// <summary>
-    /// Локальные константы
+    /// Текущая локальная область видимости: имя -> isConst.
     /// </summary>
     private Dictionary<string, bool>? _localConstness;
 
@@ -106,7 +106,7 @@ public sealed class CheckTypesPass : AbstractPass
 
         if (isConst)
         {
-            throw new TypeErrorException($"Cannot assign to constant '{e.Name}'.");
+            throw new InvalidAssignmentException($"Cannot assign to constant '{e.Name}'.");
         }
 
         DataType valueType = ResolveExpressionType(e.Value);
@@ -131,6 +131,7 @@ public sealed class CheckTypesPass : AbstractPass
     {
         foreach (Expression argument in e.Arguments)
         {
+            // print принимает любые типы — проверка не требуется
             ResolveExpressionType(argument);
         }
     }
@@ -142,6 +143,209 @@ public sealed class CheckTypesPass : AbstractPass
         {
             throw new TypeErrorException("Main function must return a value of type int.");
         }
+    }
+
+    public override void Visit(UnaryExpression e)
+    {
+        DataType operandType = ResolveExpressionType(e.Operand);
+        if (operandType is not (DataType.Int or DataType.Num))
+        {
+            throw new TypeErrorException(
+                $"Unary '{e.OperatorKind}' is only supported for int/num, got {operandType}.");
+        }
+    }
+
+    public override void Visit(BinaryExpression e)
+    {
+        DataType leftType = ResolveExpressionType(e.Left);
+        DataType rightType = ResolveExpressionType(e.Right);
+        ResolveBinaryType(e.OperatorKind, leftType, rightType);
+    }
+
+    public override void Visit(LiteralExpression e)
+    {
+        // Литералы всегда имеют корректный тип
+    }
+
+    public override void Visit(IdentifierExpression e)
+    {
+        // Тип идентификатора уже проверен в ResolveNamesPass
+    }
+
+    private DataType ResolveExpressionType(Expression e)
+    {
+        return e switch
+        {
+            LiteralExpression literal => literal.Type,
+            IdentifierExpression identifier => GetTypeForName(identifier.Name),
+            UnaryExpression unary => ResolveUnaryType(unary),
+            BinaryExpression binary => ResolveBinaryResultType(binary),
+            CallExpression call => ResolveCallType(call),
+            InputExpression => DataType.Int, // input всегда читает в объявленную переменную, тип проверен отдельно
+            _ => throw new TypeErrorException($"Unsupported expression: {e.GetType().Name}."),
+        };
+    }
+
+    private DataType ResolveUnaryType(UnaryExpression e)
+    {
+        DataType operandType = ResolveExpressionType(e.Operand);
+        if (operandType is DataType.Int or DataType.Num)
+        {
+            return operandType;
+        }
+
+        throw new TypeErrorException($"Unary '{e.OperatorKind}' is only supported for int/num, got {operandType}.");
+    }
+
+    private DataType ResolveBinaryResultType(BinaryExpression e)
+    {
+        return ResolveBinaryType(e.OperatorKind, ResolveExpressionType(e.Left), ResolveExpressionType(e.Right));
+    }
+
+    private static DataType ResolveBinaryType(OperatorKind op, DataType left, DataType right)
+    {
+        // Строковая конкатенация
+        if (op == OperatorKind.Plus && left == DataType.String && right == DataType.String)
+        {
+            return DataType.String;
+        }
+
+        // Числовые операции
+        if (left is not (DataType.Int or DataType.Num))
+        {
+            throw new TypeErrorException($"Operator '{op}' is not supported for type {left}.");
+        }
+
+        if (right is not (DataType.Int or DataType.Num))
+        {
+            throw new TypeErrorException($"Operator '{op}' is not supported for type {right}.");
+        }
+
+        // Целочисленные операторы: //, %
+        if (op is OperatorKind.IntegerDivide or OperatorKind.Modulo)
+        {
+            if (left != DataType.Int || right != DataType.Int)
+            {
+                throw new TypeErrorException($"Operator '{op}' is only supported for int.");
+            }
+
+            return DataType.Int;
+        }
+
+        // Деление: int/int -> num, num/num -> num, mixed -> num
+        if (op == OperatorKind.Divide)
+        {
+            return DataType.Num;
+        }
+
+        // Остальные арифметические: если оба int -> int, иначе -> num
+        if (left == DataType.Int && right == DataType.Int)
+        {
+            return DataType.Int;
+        }
+
+        return DataType.Num;
+    }
+
+    private DataType ResolveCallType(CallExpression call)
+    {
+        return call.Name switch
+        {
+            "len" => ResolveLenType(call),
+            "substr" => ResolveSubstrType(call),
+            "abs" => ResolveAbsType(call),
+            "min" => ResolveMinMaxType(call, "min"),
+            "max" => ResolveMinMaxType(call, "max"),
+            _ => throw new TypeErrorException($"Unknown function '{call.Name}'."),
+        };
+    }
+
+    private DataType ResolveLenType(CallExpression call)
+    {
+        if (call.Arguments.Count != 1)
+        {
+            throw new InvalidBuiltinCallException("'len' expects 1 argument.");
+        }
+
+        DataType argType = ResolveExpressionType(call.Arguments[0]);
+        if (argType != DataType.String)
+        {
+            throw new TypeErrorException($"'len' expects string, got {argType}.");
+        }
+
+        return DataType.Int;
+    }
+
+    private DataType ResolveSubstrType(CallExpression call)
+    {
+        if (call.Arguments.Count != 3)
+        {
+            throw new InvalidBuiltinCallException("'substr' expects 3 arguments.");
+        }
+
+        DataType sourceType = ResolveExpressionType(call.Arguments[0]);
+        DataType startType = ResolveExpressionType(call.Arguments[1]);
+        DataType lengthType = ResolveExpressionType(call.Arguments[2]);
+
+        if (sourceType != DataType.String)
+        {
+            throw new TypeErrorException($"'substr' first argument expects string, got {sourceType}.");
+        }
+
+        if (startType != DataType.Int)
+        {
+            throw new TypeErrorException($"'substr' second argument expects int, got {startType}.");
+        }
+
+        if (lengthType != DataType.Int)
+        {
+            throw new TypeErrorException($"'substr' third argument expects int, got {lengthType}.");
+        }
+
+        return DataType.String;
+    }
+
+    private DataType ResolveAbsType(CallExpression call)
+    {
+        if (call.Arguments.Count != 1)
+        {
+            throw new InvalidBuiltinCallException("'abs' expects 1 argument.");
+        }
+
+        DataType argType = ResolveExpressionType(call.Arguments[0]);
+        if (argType is not (DataType.Int or DataType.Num))
+        {
+            throw new TypeErrorException($"'abs' expects int/num, got {argType}.");
+        }
+
+        return argType;
+    }
+
+    private DataType ResolveMinMaxType(CallExpression call, string functionName)
+    {
+        if (call.Arguments.Count < 2)
+        {
+            throw new InvalidBuiltinCallException($"'{functionName}' expects at least 2 arguments.");
+        }
+
+        DataType firstType = ResolveExpressionType(call.Arguments[0]);
+        if (firstType is not (DataType.Int or DataType.Num))
+        {
+            throw new TypeErrorException($"'{functionName}' expects int/num arguments, got {firstType}.");
+        }
+
+        for (int i = 1; i < call.Arguments.Count; i++)
+        {
+            DataType argType = ResolveExpressionType(call.Arguments[i]);
+            if (argType != firstType)
+            {
+                throw new TypeErrorException(
+                    $"'{functionName}' requires all arguments to be of the same type, " +
+                    $"expected {firstType}, got {argType} at argument {i + 1}.");
+            }
+        }
+
+        return firstType;
     }
 
     private DataType GetTypeForName(string name)
@@ -184,159 +388,12 @@ public sealed class CheckTypesPass : AbstractPass
         return _globalTypes.ContainsKey(name);
     }
 
-    private DataType ResolveExpressionType(Expression e)
-    {
-        return e switch
-        {
-            LiteralExpression literal => literal.Type,
-            IdentifierExpression identifier => ResolveIdentifierType(identifier),
-            UnaryExpression unary => ResolveUnaryType(unary),
-            BinaryExpression binary => ResolveBinaryType(binary),
-            CallExpression call => ResolveCallType(call),
-            _ => throw new TypeErrorException($"Unsupported expression: {e.GetType().Name}."),
-        };
-    }
-
-    private DataType ResolveIdentifierType(IdentifierExpression e)
-    {
-        return GetTypeForName(e.Name);
-    }
-
-    private DataType ResolveUnaryType(UnaryExpression e)
-    {
-        DataType operandType = ResolveExpressionType(e.Operand);
-        if (operandType is DataType.Int or DataType.Num)
-        {
-            return operandType;
-        }
-
-        throw new TypeErrorException("Unary + and - are only supported for int/num.");
-    }
-
-    private DataType ResolveBinaryType(BinaryExpression e)
-    {
-        DataType left = ResolveExpressionType(e.Left);
-        DataType right = ResolveExpressionType(e.Right);
-
-        if (e.OperatorKind == OperatorKind.Plus && left == DataType.String && right == DataType.String)
-        {
-            return DataType.String;
-        }
-
-        if (left is DataType.Int or DataType.Num && right is DataType.Int or DataType.Num)
-        {
-            if (e.OperatorKind is OperatorKind.IntegerDivide or OperatorKind.Modulo)
-            {
-                if (left != DataType.Int || right != DataType.Int)
-                {
-                    throw new TypeErrorException("Operators // and % are only supported for int.");
-                }
-
-                return DataType.Int;
-            }
-
-            if (left == DataType.Int && right == DataType.Int && e.OperatorKind is not OperatorKind.Divide)
-            {
-                return DataType.Int;
-            }
-
-            return DataType.Num;
-        }
-
-        throw new TypeErrorException($"Operator {e.OperatorKind} is not supported for types {left} and {right}.");
-    }
-
-    private DataType ResolveCallType(CallExpression call)
-    {
-        return call.Name switch
-        {
-            "len" => ResolveLenType(call),
-            "substr" => ResolveSubstrType(call),
-            "abs" => ResolveAbsType(call),
-            "min" => ResolveMinMaxType(call, "min"),
-            "max" => ResolveMinMaxType(call, "max"),
-            _ => throw new TypeErrorException($"Unknown function '{call.Name}'."),
-        };
-    }
-
-    private DataType ResolveLenType(CallExpression call)
-    {
-        if (call.Arguments.Count != 1)
-        {
-            throw new InvalidBuiltinCallException("len expects 1 argument.");
-        }
-
-        if (ResolveExpressionType(call.Arguments[0]) != DataType.String)
-        {
-            throw new TypeErrorException("len only supports string.");
-        }
-
-        return DataType.Int;
-    }
-
-    private DataType ResolveSubstrType(CallExpression call)
-    {
-        if (call.Arguments.Count != 3)
-        {
-            throw new InvalidBuiltinCallException("substr expects 3 arguments.");
-        }
-
-        if (ResolveExpressionType(call.Arguments[0]) != DataType.String ||
-            ResolveExpressionType(call.Arguments[1]) != DataType.Int ||
-            ResolveExpressionType(call.Arguments[2]) != DataType.Int)
-        {
-            throw new TypeErrorException("substr expects (string, int, int).");
-        }
-
-        return DataType.String;
-    }
-
-    private DataType ResolveAbsType(CallExpression call)
-    {
-        if (call.Arguments.Count != 1)
-        {
-            throw new InvalidBuiltinCallException("abs expects 1 argument.");
-        }
-
-        DataType type = ResolveExpressionType(call.Arguments[0]);
-        if (type is not (DataType.Int or DataType.Num))
-        {
-            throw new TypeErrorException("abs only supports int/num.");
-        }
-
-        return type;
-    }
-
-    private DataType ResolveMinMaxType(CallExpression call, string functionName)
-    {
-        if (call.Arguments.Count < 2)
-        {
-            throw new InvalidBuiltinCallException($"{functionName} expects at least 2 arguments.");
-        }
-
-        DataType first = ResolveExpressionType(call.Arguments[0]);
-        if (first is not (DataType.Int or DataType.Num))
-        {
-            throw new TypeErrorException($"{functionName} only supports int/num.");
-        }
-
-        for (int i = 1; i < call.Arguments.Count; i++)
-        {
-            DataType type = ResolveExpressionType(call.Arguments[i]);
-            if (type != first)
-            {
-                throw new TypeErrorException($"{functionName} requires arguments of the same type.");
-            }
-        }
-
-        return first;
-    }
-
     private static void EnsureAssignable(DataType expectedType, DataType actualType, string variableName)
     {
         if (expectedType != actualType)
         {
-            throw new TypeErrorException($"Type mismatch for '{variableName}'.");
+            throw new TypeErrorException(
+                $"Cannot assign value of type {actualType} to variable '{variableName}' of type {expectedType}.");
         }
     }
 }
