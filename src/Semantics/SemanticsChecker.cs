@@ -17,7 +17,6 @@ public sealed class SemanticsChecker
         [
             new ResolveNamesPass(),
             new CheckContextSensitiveRulesPass(),
-            new ResolveTypesPass(),
             new CheckTypesPass(),
         ];
     }
