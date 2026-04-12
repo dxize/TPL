@@ -1,5 +1,7 @@
 using Runtime;
+
 using Semantics.Exceptions;
+
 using VirtualMachine.Builtins;
 using VirtualMachine.Instructions;
 
@@ -108,13 +110,13 @@ public sealed class DeaVM
                 _evaluationStack.Push(_builtins.Len(_evaluationStack.Pop()));
                 break;
             case BuiltinFunctionCode.Substr:
-            {
-                Value length = _evaluationStack.Pop();
-                Value start = _evaluationStack.Pop();
-                Value source = _evaluationStack.Pop();
-                _evaluationStack.Push(_builtins.Substr(source, start, length));
-                break;
-            }
+                {
+                    Value length = _evaluationStack.Pop();
+                    Value start = _evaluationStack.Pop();
+                    Value source = _evaluationStack.Pop();
+                    _evaluationStack.Push(_builtins.Substr(source, start, length));
+                    break;
+                }
 
             case BuiltinFunctionCode.Abs:
                 _evaluationStack.Push(_builtins.Abs(_evaluationStack.Pop()));
@@ -171,7 +173,11 @@ public sealed class DeaVM
         Value value = _evaluationStack.Pop();
         VariableEntry variable = GetVariable(name);
 
-        // Const и типы уже проверены на этапе семантики.
+        if (variable.IsConst)
+        {
+            throw new RuntimeException($"Cannot assign to constant '{name}'.");
+        }
+
         variable.SetValue(value);
     }
 
@@ -179,7 +185,11 @@ public sealed class DeaVM
     {
         VariableEntry variable = GetVariable(name);
 
-        // Const уже проверен на этапе семантики.
+        if (variable.IsConst)
+        {
+            throw new RuntimeException($"Cannot read input into constant '{name}'.");
+        }
+
         string text = _environment.ReadLine();
         Value value = variable.Type switch
         {

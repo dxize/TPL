@@ -326,15 +326,15 @@ public sealed class Parser
             case TokenType.StringLiteral:
                 return ParseStringLiteral();
             case TokenType.Identifier:
-            {
-                if (_tokens.Peek(1).Type == TokenType.OpenParenthesis)
                 {
-                    return ParseCallExpression();
-                }
+                    if (_tokens.Peek(1).Type == TokenType.OpenParenthesis)
+                    {
+                        return ParseCallExpression();
+                    }
 
-                string name = ParseIdentifier();
-                return new IdentifierExpression(name);
-            }
+                    string name = ParseIdentifier();
+                    return new IdentifierExpression(name);
+                }
 
             case TokenType.OpenParenthesis:
                 Match(TokenType.OpenParenthesis);

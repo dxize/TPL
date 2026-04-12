@@ -81,11 +81,6 @@ public sealed class DeaVmCodegen : IAstVisitor
 
     public void Visit(VariableDeclarationExpression e)
     {
-        if (_symbols.ContainsKey(e.Name))
-        {
-            throw new InvalidOperationException($"Identifier '{e.Name}' already declared.");
-        }
-
         if (e.Initializer is null)
         {
             _instructions.Add(new Instruction(InstructionCode.Push, Value.Void));
@@ -103,11 +98,6 @@ public sealed class DeaVmCodegen : IAstVisitor
 
     public void Visit(ConstantDeclarationExpression e)
     {
-        if (_symbols.ContainsKey(e.Name))
-        {
-            throw new InvalidOperationException($"Identifier '{e.Name}' already declared.");
-        }
-
         e.Initializer.Accept(this);
         _instructions.Add(new Instruction(InstructionCode.Push, new Value(1))); // const
         _instructions.Add(new Instruction(InstructionCode.Push, new Value(ToTypeTag(e.Type))));
@@ -117,11 +107,6 @@ public sealed class DeaVmCodegen : IAstVisitor
 
     public void Visit(AssignmentExpression e)
     {
-        if (_symbols.TryGetValue(e.Name, out SymbolEntry? symbol) && symbol.IsConst)
-        {
-            throw new InvalidOperationException($"Cannot assign to const '{e.Name}'.");
-        }
-
         e.Value.Accept(this);
         _instructions.Add(new Instruction(InstructionCode.StoreVar, new Value(e.Name)));
     }

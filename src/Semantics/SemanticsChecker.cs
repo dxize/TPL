@@ -1,6 +1,7 @@
 ﻿using Ast;
 
 using Semantics.Passes;
+using Semantics.Symbols;
 
 namespace Semantics;
 
@@ -13,10 +14,19 @@ public sealed class SemanticsChecker
 
     public SemanticsChecker()
     {
+        // Создаём глобальную таблицу символов и заполняем встроенными функциями
+        SymbolsTable globalSymbols = new(parent: null);
+        globalSymbols.DeclareBuiltin("abs", new BuiltinInfo("abs", 1, DataType.Int));
+        globalSymbols.DeclareBuiltin("min", new BuiltinInfo("min", null, DataType.Int));
+        globalSymbols.DeclareBuiltin("max", new BuiltinInfo("max", null, DataType.Int));
+        globalSymbols.DeclareBuiltin("len", new BuiltinInfo("len", 1, DataType.Int));
+        globalSymbols.DeclareBuiltin("substr", new BuiltinInfo("substr", 3, DataType.String));
+
         _passes =
         [
-            new ResolveNamesPass(),
+            new ResolveNamesPass(globalSymbols),
             new CheckContextSensitiveRulesPass(),
+            new ResolveTypesPass(),
             new CheckTypesPass(),
         ];
     }

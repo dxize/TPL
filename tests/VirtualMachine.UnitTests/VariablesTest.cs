@@ -85,6 +85,21 @@ public class VariablesTest
     {
         return new TheoryData<IReadOnlyList<Instruction>, string?>
         {
+            // Запрет присваивания в const
+            {
+                [
+                    new Instruction(InstructionCode.Push, new Value(10)),
+                    new Instruction(InstructionCode.Push, new Value(1)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.DefineVar, new Value("x")),
+                    new Instruction(InstructionCode.Push, new Value(11)),
+                    new Instruction(InstructionCode.StoreVar, new Value("x")),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Halt),
+                ],
+                null
+            },
+
             // Чтение неинициализированной переменной
             {
                 [

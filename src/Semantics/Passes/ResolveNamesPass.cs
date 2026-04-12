@@ -3,45 +3,36 @@ using Ast.Declarations;
 using Ast.Expressions;
 
 using Semantics.Exceptions;
+using Semantics.Symbols;
 
 namespace Semantics.Passes;
 
 /// <summary>
-/// Проход для разрешения имён с поддержкой иерархии областей видимости.
+/// Проход разрешения имён: записывает resolved-ссылки на узлы AST,
+/// управляет областями видимости через SymbolsTable.
+/// Все операции разрешения имён выполняются inline в Visit-методах,
 /// </summary>
 public sealed class ResolveNamesPass : AbstractPass
 {
     private static readonly HashSet<string> ReservedNames = new(StringComparer.OrdinalIgnoreCase)
     {
-        // Встроенные функции
-        "abs", "min", "max", "len", "substr",
-
-        // Типы данных
         "int", "num", "string", "bool",
     };
 
-    /// <summary>
-    /// Глобальная область видимости: имя -> isConst
-    /// </summary>
-    private readonly Dictionary<string, bool> _globalSymbols = new(StringComparer.Ordinal);
+    private SymbolsTable _symbols;
 
-    /// <summary>
-    /// Текущая область видимости (локальная для функции)
-    /// </summary>
-    private Dictionary<string, bool>? _currentScope;
+    public ResolveNamesPass(SymbolsTable globalSymbols)
+    {
+        _symbols = globalSymbols;
+    }
 
     public override void Visit(ProgramNode p)
     {
-        _globalSymbols.Clear();
-        _currentScope = null;
-
-        // Сначала обходим глобальные объявления
         foreach (Declaration decl in p.GlobalDeclarations)
         {
             decl.Accept(this);
         }
 
-        // Затем обходим main
         p.MainFunction.Accept(this);
     }
 
@@ -49,12 +40,10 @@ public sealed class ResolveNamesPass : AbstractPass
     {
         if (!string.Equals(d.Name, "main", StringComparison.Ordinal))
         {
-            throw new InvalidExpressionException(
-                "Only the entry point func int main() is supported.");
+            throw new InvalidExpressionException("Only the entry point func int main() is supported.");
         }
 
-        // Создаём локальную область видимости для функции
-        _currentScope = new Dictionary<string, bool>(StringComparer.Ordinal);
+        _symbols = new SymbolsTable(_symbols);
 
         try
         {
@@ -62,163 +51,102 @@ public sealed class ResolveNamesPass : AbstractPass
         }
         finally
         {
-            _currentScope = null;
+            _symbols = _symbols.Parent!;
         }
     }
 
     public override void Visit(VariableDeclarationExpression e)
     {
         EnsureNotReservedName(e.Name);
+        EnsureNotBuiltinName(e.Name);
 
-        if (_currentScope != null)
+        base.Visit(e);
+
+        if (_symbols.Parent is not null && _symbols.Parent.ContainsVariable(e.Name))
         {
-            if (_currentScope.ContainsKey(e.Name))
-            {
-                throw new DuplicateIdentifierException($"Duplicate identifier '{e.Name}' in current scope.");
-            }
-
-            if (_globalSymbols.ContainsKey(e.Name))
-            {
-                throw new DuplicateIdentifierException($"Identifier '{e.Name}' is already declared in global scope.");
-            }
-
-            if (e.Initializer is not null)
-            {
-                e.Initializer.Accept(this);
-            }
-
-            _currentScope[e.Name] = false;
+            throw new DuplicateIdentifierException($"Identifier '{e.Name}' is already declared in global scope.");
         }
-        else
-        {
-            if (_globalSymbols.ContainsKey(e.Name))
-            {
-                throw new DuplicateIdentifierException($"Duplicate identifier '{e.Name}'.");
-            }
 
-            if (e.Initializer is not null)
-            {
-                e.Initializer.Accept(this);
-            }
-
-            _globalSymbols[e.Name] = false;
-        }
+        _symbols.DeclareVariable(e.Name, e.Type, isConst: false);
     }
 
     public override void Visit(ConstantDeclarationExpression e)
     {
         EnsureNotReservedName(e.Name);
+        EnsureNotBuiltinName(e.Name);
 
-        if (_currentScope != null)
+        base.Visit(e);
+
+        if (_symbols.Parent is not null && _symbols.Parent.ContainsVariable(e.Name))
         {
-            if (_currentScope.ContainsKey(e.Name))
-            {
-                throw new DuplicateIdentifierException($"Duplicate identifier '{e.Name}' in current scope.");
-            }
-
-            if (_globalSymbols.ContainsKey(e.Name))
-            {
-                throw new DuplicateIdentifierException($"Identifier '{e.Name}' is already declared in global scope.");
-            }
-
-            e.Initializer.Accept(this);
-            _currentScope[e.Name] = true;
-        }
-        else
-        {
-            if (_globalSymbols.ContainsKey(e.Name))
-            {
-                throw new DuplicateIdentifierException($"Duplicate identifier '{e.Name}'.");
-            }
-
-            e.Initializer.Accept(this);
-            _globalSymbols[e.Name] = true;
-        }
-    }
-
-    public override void Visit(AssignmentExpression e)
-    {
-        bool found = false;
-        bool isConst = false;
-
-        if (_currentScope != null && _currentScope.TryGetValue(e.Name, out bool localIsConst))
-        {
-            found = true;
-            isConst = localIsConst;
-        }
-        else if (_globalSymbols.TryGetValue(e.Name, out bool globalIsConst))
-        {
-            found = true;
-            isConst = globalIsConst;
+            throw new DuplicateIdentifierException($"Identifier '{e.Name}' is already declared in global scope.");
         }
 
-        if (!found)
-        {
-            throw new UnknownIdentifierException($"Identifier '{e.Name}' is not declared.");
-        }
-
-        if (isConst)
-        {
-            throw new InvalidExpressionException($"Cannot assign to constant '{e.Name}'.");
-        }
-
-        e.Value.Accept(this);
+        _symbols.DeclareVariable(e.Name, e.Type, isConst: true);
     }
 
     public override void Visit(IdentifierExpression e)
     {
-        bool found = false;
+        base.Visit(e);
 
-        if (_currentScope != null && _currentScope.ContainsKey(e.Name))
-        {
-            found = true;
-        }
-        else if (_globalSymbols.ContainsKey(e.Name))
-        {
-            found = true;
-        }
+        SymbolInfo? symbol = _symbols.ResolveVariable(e.Name);
 
-        if (!found)
+        if (symbol is null)
         {
             throw new UnknownIdentifierException($"Identifier '{e.Name}' is not declared.");
         }
+
+        e.Symbol = symbol;
+    }
+
+    public override void Visit(AssignmentExpression e)
+    {
+        SymbolInfo? symbol = _symbols.ResolveVariable(e.Name);
+
+        if (symbol is null)
+        {
+            throw new UnknownIdentifierException($"Identifier '{e.Name}' is not declared.");
+        }
+
+        if (symbol.IsConst)
+        {
+            throw new InvalidAssignmentException($"Cannot assign to constant '{e.Name}'.");
+        }
+
+        e.Symbol = symbol;
+        base.Visit(e);
     }
 
     public override void Visit(InputExpression e)
     {
-        bool found = false;
-        bool isConst = false;
+        SymbolInfo? symbol = _symbols.ResolveVariable(e.VariableName);
 
-        if (_currentScope != null && _currentScope.TryGetValue(e.VariableName, out bool localIsConst))
+        if (symbol is null)
         {
-            found = true;
-            isConst = localIsConst;
-        }
-        else if (_globalSymbols.TryGetValue(e.VariableName, out bool globalIsConst))
-        {
-            found = true;
-            isConst = globalIsConst;
+            throw new UnknownIdentifierException($"Cannot read input into undeclared variable '{e.VariableName}'.");
         }
 
-        if (!found)
+        if (symbol.IsConst)
         {
-            throw new UnknownIdentifierException($"Identifier '{e.VariableName}' is not declared.");
+            throw new InvalidAssignmentException($"Cannot read input into constant '{e.VariableName}'.");
         }
 
-        if (isConst)
-        {
-            throw new InvalidExpressionException($"Cannot read input into constant '{e.VariableName}'.");
-        }
+        e.Symbol = symbol;
+        base.Visit(e);
     }
 
     public override void Visit(CallExpression e)
     {
-        if (e.Name is not ("abs" or "min" or "max" or "len" or "substr"))
+        base.Visit(e);
+
+        BuiltinInfo? builtin = _symbols.ResolveBuiltin(e.Name);
+
+        if (builtin is null)
         {
             throw new UnknownIdentifierException($"Unknown function '{e.Name}'.");
         }
 
-        base.Visit(e);
+        e.Builtin = builtin;
     }
 
     public override void Visit(PrintExpression e)
@@ -231,11 +159,23 @@ public sealed class ResolveNamesPass : AbstractPass
         base.Visit(e);
     }
 
+    public override void Visit(LiteralExpression e)
+    {
+    }
+
     private static void EnsureNotReservedName(string name)
     {
         if (ReservedNames.Contains(name))
         {
             throw new DuplicateIdentifierException($"Identifier '{name}' is a reserved name.");
+        }
+    }
+
+    private void EnsureNotBuiltinName(string name)
+    {
+        if (_symbols.ResolveBuiltin(name) is not null)
+        {
+            throw new DuplicateIdentifierException($"Identifier '{name}' is a reserved builtin name.");
         }
     }
 }

@@ -42,22 +42,21 @@ public class DeaVmCodegenTests
     }
 
     [Fact]
-    public void Throws_when_constant_is_redeclared_during_codegen()
+    public void Generates_code_for_valid_program()
     {
         string code = """
-                      func int main() {
-                          const int x = 10;
-                          const int x = 20;
-                          return x;
-                      }
-                      """;
+            func int main() {
+                const int x = 10;
+                print(x);
+                return x;
+            }
+            """;
 
         Ast.ProgramNode program = new DeaParser(code).ParseProgram();
-
         DeaVmCodegen codegen = new();
 
-        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => codegen.Generate(program));
+        IReadOnlyList<Instruction> instructions = codegen.Generate(program);
 
-        Assert.Contains("Identifier 'x' already declared", exception.Message);
+        Assert.NotEmpty(instructions);
     }
 }
