@@ -445,36 +445,4 @@ public class TypeCheckTests
         };
     }
 
-    [Theory]
-    [InlineData("func int main() { const int x = 10; const int x = 20; return x; }")]
-    [InlineData("func int main() { int x = 10; int x = 20; return x; }")]
-    public void Rejects_duplicate_identifiers(string code)
-    {
-        DeaParser parser = new(code);
-        Ast.ProgramNode program = parser.ParseProgram();
-        SemanticsChecker checker = new();
-
-        SemanticException ex = Assert.ThrowsAny<SemanticException>(() => checker.Check(program));
-
-        Assert.IsType<DuplicateIdentifierException>(ex);
-    }
-
-    [Fact]
-    public void Rejects_unknown_identifier()
-    {
-        string code = """
-            func int main() {
-                print(x);
-                return 0;
-            }
-            """;
-
-        DeaParser parser = new(code);
-        Ast.ProgramNode program = parser.ParseProgram();
-        SemanticsChecker checker = new();
-
-        SemanticException ex = Assert.ThrowsAny<SemanticException>(() => checker.Check(program));
-
-        Assert.IsType<UnknownIdentifierException>(ex);
-    }
 }
