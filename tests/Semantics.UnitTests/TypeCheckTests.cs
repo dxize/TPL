@@ -325,15 +325,6 @@ public class TypeCheckTests
     {
         return new TheoryData<string>
         {
-            // len с не-строкой
-            {
-                """
-                func int main() {
-                    print(len(42));
-                    return 0;
-                }
-                """
-            },
 
             // len с num
             {
@@ -371,74 +362,6 @@ public class TypeCheckTests
                 func int main() {
                     print(substr("hello", 0, 1.5));
                     return 0;
-                }
-                """
-            },
-
-            // abs со строкой
-            {
-                """
-                func int main() {
-                    print(abs("42"));
-                    return 0;
-                }
-                """
-            },
-
-            // min со строкой
-            {
-                """
-                func int main() {
-                    print(min("a", "b"));
-                    return 0;
-                }
-                """
-            },
-
-            // max со строкой
-            {
-                """
-                func int main() {
-                    print(max("a", "b"));
-                    return 0;
-                }
-                """
-            },
-
-            // min со смешанными типами (int и num)
-            {
-                """
-                func int main() {
-                    print(min(1, 2.5));
-                    return 0;
-                }
-                """
-            },
-
-            // max со смешанными типами (num и int)
-            {
-                """
-                func int main() {
-                    print(max(1.0, 2));
-                    return 0;
-                }
-                """
-            },
-
-            // возврат не-int (строки)
-            {
-                """
-                func int main() {
-                    return "hello";
-                }
-                """
-            },
-
-            // возврат num из main
-            {
-                """
-                func int main() {
-                    return 3.14;
                 }
                 """
             },

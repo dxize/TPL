@@ -82,6 +82,7 @@
 - [x] Нельзя использовать `//` для `num`: `print(7.5 // 2.0);` => SemanticException
 - [x] Нельзя использовать `%` для `num`: `print(7.5 % 2.0);` => SemanticException
 - [x] Нельзя конкатенировать строку с числом: `print("dea" + 1);` => SemanticException
+- [x] Нельзя возводить строку в степень: `print("2" ^ 3);` => SemanticException
 
 `BuiltInFunctions`
 
@@ -101,8 +102,10 @@
 - [x] `len` с лишним аргументом: `print(len("dea", "x"));` => SemanticException
 - [x] `len` от значения неверного типа: `print(len(10));` => SemanticException
 - [x] `substr` с недостаточным числом аргументов: `print(substr("dea"));` => SemanticException
-- [x] `substr` с аргументами неверных типов: `print(substr("dea", "x", 1));` => SemanticException
-- [x] `substr` с неверным типом третьего аргумента: `print(substr("dea", 0, "x"));` => SemanticException
+- [x] `substr` с аргументами неверных типов: 
+`print(substr(8, 0, 1));` => SemanticException
+`print(substr("dea", "x", 1));` => SemanticException
+`print(substr("dea", 1, "x"));` => SemanticException
 
 ### Built-in функции (числа)
 - [x] abs от целого числа: `print(abs(-5));`
@@ -117,6 +120,7 @@
 ### Негативные тесты (Built-in функции чисел, семантика)
 - [x] abs без аргументов: `print(abs());` => SemanticException
 - [x] abs с лишним аргументом: `print(abs(1, 2));` => SemanticException
+- [x] abs не с числами: `print(abs("42"));` => SemanticException
 - [x] min без аргументов: `print(min());` => SemanticException
 - [x] min с одним аргументом: `print(min(1));` => SemanticException
 - [x] max без аргументов: `print(max());` => SemanticException

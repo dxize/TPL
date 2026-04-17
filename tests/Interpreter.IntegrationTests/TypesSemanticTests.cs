@@ -90,6 +90,16 @@ public class TypesSemanticTests
                 }
                 """
             },
+
+            // Нельзя возводить строку в степень
+            {
+                """
+                func int main() {
+                    print("2" ^ 3);
+                    return 0;
+                }
+                """
+            },
         };
     }
 }

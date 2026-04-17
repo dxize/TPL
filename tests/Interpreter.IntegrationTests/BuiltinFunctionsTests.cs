@@ -211,6 +211,14 @@ public class BuiltinFunctionsTests
             {
                 """
                 func int main() {
+                    print(substr(8, 0, 1));
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
                     print(substr("dea", "x", 1));
                     return 0;
                 }
@@ -219,7 +227,7 @@ public class BuiltinFunctionsTests
             {
                 """
                 func int main() {
-                    print(substr("dea", 0, "x"));
+                    print(substr("dea", 1, "x"));
                     return 0;
                 }
                 """
@@ -238,6 +246,14 @@ public class BuiltinFunctionsTests
                 """
                 func int main() {
                     print(abs(1, 2));
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(abs("42")); 
                     return 0;
                 }
                 """
