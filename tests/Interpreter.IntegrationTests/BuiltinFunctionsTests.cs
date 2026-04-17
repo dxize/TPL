@@ -298,6 +298,22 @@ public class BuiltinFunctionsTests
                 }
                 """
             },
+            {
+                """
+                func int main() {
+                    print(min("dea", "deae"));
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    print(max("dea", "deae"));
+                    return 0;
+                }
+                """
+            },
         };
     }
 }

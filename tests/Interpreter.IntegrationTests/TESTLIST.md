@@ -124,6 +124,8 @@
 - [x] abs от строки: `print(abs("dea"));` => SemanticException
 - [x] min с аргументами разных типов: `print(min(1, 1.5));` => SemanticException
 - [x] max с аргументами разных типов: `print(max(1.5, 1));` => SemanticException
+- [x] min не с числами: `print(min("dea", "deae"));` => SemanticException
+- [x] max не с числами: `print(max("dea", "deae"));` => SemanticException
 
 `Variables`
 
