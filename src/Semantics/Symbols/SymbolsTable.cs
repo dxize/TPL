@@ -1,23 +1,26 @@
 using Ast;
+using Ast.Declarations;
 
 using Semantics.Exceptions;
 
 namespace Semantics.Symbols;
 
 /// <summary>
-/// Таблица символов с лексической областью видимости (parent-linked chain).
+/// Таблица символов с лексической областью видимости.
 /// </summary>
 public sealed class SymbolsTable
 {
     private readonly SymbolsTable? _parent;
     private readonly Dictionary<string, VariableSymbol> _variables;
     private readonly Dictionary<string, BuiltinSymbol> _builtins;
+    private readonly Dictionary<string, FunctionDeclaration> _functions;
 
     public SymbolsTable(SymbolsTable? parent)
     {
         _parent = parent;
         _variables = new Dictionary<string, VariableSymbol>(StringComparer.Ordinal);
         _builtins = new Dictionary<string, BuiltinSymbol>(StringComparer.Ordinal);
+        _functions = new Dictionary<string, FunctionDeclaration>(StringComparer.Ordinal);
     }
 
     public SymbolsTable? Parent => _parent;
@@ -44,8 +47,21 @@ public sealed class SymbolsTable
     }
 
     /// <summary>
-    /// Найти символ по имени (сначала переменные, потом builtins).
-    /// Поднимается по цепочке родительских scope'ов.
+    /// Объявить пользовательскую функцию или процедуру в текущей области.
+    /// </summary>
+    public void DeclareFunction(FunctionDeclaration function)
+    {
+        if (_functions.ContainsKey(function.Name))
+        {
+            throw new DuplicateIdentifierException($"Duplicate callable '{function.Name}'.");
+        }
+
+        _functions[function.Name] = function;
+    }
+
+    /// <summary>
+    /// Найти переменную или константу по имени.
+    /// Поднимается по цепочке родительских областей.
     /// </summary>
     public SymbolInfo? ResolveVariable(string name)
     {
@@ -59,6 +75,7 @@ public sealed class SymbolsTable
 
     /// <summary>
     /// Найти встроенную функцию по имени.
+    /// Поднимается по цепочке родительских областей.
     /// </summary>
     public BuiltinInfo? ResolveBuiltin(string name)
     {
@@ -71,7 +88,21 @@ public sealed class SymbolsTable
     }
 
     /// <summary>
-    /// Проверить, объявлено ли имя переменной в текущей или родительских областях.
+    /// Найти пользовательскую функцию или процедуру по имени.
+    /// Поднимается по цепочке родительских областей.
+    /// </summary>
+    public FunctionDeclaration? ResolveFunction(string name)
+    {
+        if (_functions.TryGetValue(name, out FunctionDeclaration? function))
+        {
+            return function;
+        }
+
+        return _parent?.ResolveFunction(name);
+    }
+
+    /// <summary>
+    /// Проверить, объявлена ли переменная в текущей или родительских областях.
     /// </summary>
     public bool ContainsVariable(string name)
     {

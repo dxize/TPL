@@ -7,22 +7,19 @@ using Semantics.Symbols;
 
 namespace Semantics.Passes;
 
-/// <summary>
-/// Проход разрешения имён: записывает resolved-ссылки на узлы AST,
-/// управляет областями видимости через SymbolsTable.
-/// Все операции разрешения имён выполняются inline в Visit-методах,
-/// </summary>
 public sealed class ResolveNamesPass : AbstractPass
 {
     private static readonly HashSet<string> ReservedNames = new(StringComparer.OrdinalIgnoreCase)
     {
-        "int", "num", "string", "bool",
+        "int", "num", "string", "bool", "func", "proc", "return", "if", "else",
     };
 
+    private readonly SymbolsTable _globalSymbols;
     private SymbolsTable _symbols;
 
     public ResolveNamesPass(SymbolsTable globalSymbols)
     {
+        _globalSymbols = globalSymbols;
         _symbols = globalSymbols;
     }
 
@@ -33,26 +30,12 @@ public sealed class ResolveNamesPass : AbstractPass
             decl.Accept(this);
         }
 
-        p.MainFunction.Accept(this);
-    }
-
-    public override void Visit(FunctionDeclaration d)
-    {
-        if (!string.Equals(d.Name, "main", StringComparison.Ordinal))
+        foreach (FunctionDeclaration function in p.UserFunctions)
         {
-            throw new InvalidExpressionException("Only the entry point func int main() is supported.");
+            VisitTopLevelFunction(function);
         }
 
-        _symbols = new SymbolsTable(_symbols);
-
-        try
-        {
-            base.Visit(d);
-        }
-        finally
-        {
-            _symbols = _symbols.Parent!;
-        }
+        VisitTopLevelFunction(p.MainFunction);
     }
 
     public override void Visit(VariableDeclarationExpression e)
@@ -87,10 +70,7 @@ public sealed class ResolveNamesPass : AbstractPass
 
     public override void Visit(IdentifierExpression e)
     {
-        base.Visit(e);
-
         SymbolInfo? symbol = _symbols.ResolveVariable(e.Name);
-
         if (symbol is null)
         {
             throw new UnknownIdentifierException($"Identifier '{e.Name}' is not declared.");
@@ -102,7 +82,6 @@ public sealed class ResolveNamesPass : AbstractPass
     public override void Visit(AssignmentExpression e)
     {
         SymbolInfo? symbol = _symbols.ResolveVariable(e.Name);
-
         if (symbol is null)
         {
             throw new UnknownIdentifierException($"Identifier '{e.Name}' is not declared.");
@@ -120,7 +99,6 @@ public sealed class ResolveNamesPass : AbstractPass
     public override void Visit(InputExpression e)
     {
         SymbolInfo? symbol = _symbols.ResolveVariable(e.VariableName);
-
         if (symbol is null)
         {
             throw new UnknownIdentifierException($"Cannot read input into undeclared variable '{e.VariableName}'.");
@@ -132,35 +110,76 @@ public sealed class ResolveNamesPass : AbstractPass
         }
 
         e.Symbol = symbol;
-        base.Visit(e);
     }
 
     public override void Visit(CallExpression e)
     {
         base.Visit(e);
 
-        BuiltinInfo? builtin = _symbols.ResolveBuiltin(e.Name);
+        if (_symbols.ResolveBuiltin(e.Name) is BuiltinInfo builtin)
+        {
+            e.Builtin = builtin;
+            return;
+        }
 
-        if (builtin is null)
+        FunctionDeclaration? function = _globalSymbols.ResolveFunction(e.Name);
+        if (function is null)
         {
             throw new UnknownIdentifierException($"Unknown function '{e.Name}'.");
         }
 
-        e.Builtin = builtin;
+        e.Function = function;
     }
 
-    public override void Visit(PrintExpression e)
+    public override void Visit(ProcedureCallStatement s)
     {
-        base.Visit(e);
+        base.Visit(s);
+
+        FunctionDeclaration? procedure = _globalSymbols.ResolveFunction(s.Name);
+        if (procedure is null)
+        {
+            throw new UnknownIdentifierException($"Unknown procedure '{s.Name}'.");
+        }
+
+        s.Procedure = procedure;
     }
 
-    public override void Visit(ReturnExpression e)
+    private void VisitTopLevelFunction(FunctionDeclaration function)
     {
-        base.Visit(e);
-    }
+        EnsureNotReservedName(function.Name);
+        EnsureNotBuiltinName(function.Name);
 
-    public override void Visit(LiteralExpression e)
-    {
+        if (function.Name != "main" && _globalSymbols.ResolveFunction(function.Name) is not null)
+        {
+            throw new DuplicateIdentifierException($"Identifier '{function.Name}' is already declared.");
+        }
+
+        SymbolsTable functionScope = new(_globalSymbols);
+        SymbolsTable previous = _symbols;
+        _symbols = functionScope;
+
+        try
+        {
+            foreach (ParameterDeclaration parameter in function.Parameters)
+            {
+                EnsureNotReservedName(parameter.Name);
+                functionScope.DeclareVariable(parameter.Name, parameter.Type, isConst: false);
+            }
+
+            foreach (AstNode node in function.Body)
+            {
+                node.Accept(this);
+            }
+        }
+        finally
+        {
+            _symbols = previous;
+        }
+
+        if (function.Name != "main")
+        {
+            _globalSymbols.DeclareFunction(function);
+        }
     }
 
     private static void EnsureNotReservedName(string name)
@@ -173,7 +192,7 @@ public sealed class ResolveNamesPass : AbstractPass
 
     private void EnsureNotBuiltinName(string name)
     {
-        if (_symbols.ResolveBuiltin(name) is not null)
+        if (_globalSymbols.ResolveBuiltin(name) is not null)
         {
             throw new DuplicateIdentifierException($"Identifier '{name}' is a reserved builtin name.");
         }

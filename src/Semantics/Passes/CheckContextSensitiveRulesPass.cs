@@ -19,65 +19,68 @@ namespace Semantics.Passes;
 /// </summary>
 public sealed class CheckContextSensitiveRulesPass : AbstractPass
 {
-    private bool _hasReturn;
-    private bool _afterReturn;
-
     public override void Visit(ProgramNode p)
     {
         if (p.MainFunction is null)
         {
-            throw new InvalidExpressionException(
-                "Program must contain the entry point func int main().");
+            throw new InvalidExpressionException("Program must contain the entry point func int main().");
         }
-
-        _hasReturn = false;
-        _afterReturn = false;
 
         base.Visit(p);
     }
 
     public override void Visit(FunctionDeclaration d)
     {
-        if (!string.Equals(d.Name, "main", StringComparison.Ordinal))
+        if (string.Equals(d.Name, "main", StringComparison.Ordinal) && d.ReturnType != DataType.Int)
         {
-            throw new InvalidExpressionException(
-                "Only the main function is supported in this iteration.");
-        }
-
-        if (d.ReturnType != Ast.DataType.Int)
-        {
-            throw new InvalidExpressionException(
-                "Main function must return int.");
+            throw new InvalidExpressionException("Main function must return int.");
         }
 
         if (d.Body.Count == 0)
         {
-            throw new InvalidExpressionException(
-                "Main function body must not be empty.");
+            throw new InvalidExpressionException($"Function '{d.Name}' body must not be empty.");
         }
 
-        foreach (AstNode node in d.Body)
+        for (int i = 0; i < d.Body.Count; i++)
         {
-            if (_afterReturn)
-            {
-                throw new InvalidExpressionException(
-                    "No statements allowed after return.");
-            }
-
+            AstNode node = d.Body[i];
             node.Accept(this);
+
+            if (node is ReturnExpression && i < d.Body.Count - 1)
+            {
+                throw new InvalidExpressionException("No statements allowed after top-level return.");
+            }
         }
 
-        if (!_hasReturn)
+        if (!d.IsProcedure && !ContainsReturn(d.Body))
         {
-            throw new InvalidExpressionException(
-                "Main function must contain a return statement with an int value.");
+            throw new InvalidExpressionException($"Function '{d.Name}' must contain a return statement.");
         }
     }
 
-    public override void Visit(ReturnExpression e)
+    private static bool ContainsReturn(IEnumerable<AstNode> body)
     {
-        base.Visit(e);
-        _hasReturn = true;
-        _afterReturn = true;
+        foreach (AstNode node in body)
+        {
+            if (node is ReturnExpression)
+            {
+                return true;
+            }
+
+            if (node is IfStatement ifStatement)
+            {
+                if (ContainsReturn(ifStatement.ThenBody))
+                {
+                    return true;
+                }
+
+                if (ifStatement.ElseBody is not null && ContainsReturn(ifStatement.ElseBody))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

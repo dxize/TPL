@@ -4,9 +4,6 @@ using Ast.Expressions;
 
 namespace Semantics.Passes;
 
-/// <summary>
-/// Базовый проход по AST. По умолчанию просто обходит дочерние узлы.
-/// </summary>
 public abstract class AbstractPass : IAstVisitor
 {
     public virtual void Visit(ProgramNode p)
@@ -14,6 +11,11 @@ public abstract class AbstractPass : IAstVisitor
         foreach (Declaration decl in p.GlobalDeclarations)
         {
             decl.Accept(this);
+        }
+
+        foreach (FunctionDeclaration function in p.UserFunctions)
+        {
+            function.Accept(this);
         }
 
         p.MainFunction.Accept(this);
@@ -64,6 +66,14 @@ public abstract class AbstractPass : IAstVisitor
         }
     }
 
+    public virtual void Visit(ProcedureCallStatement s)
+    {
+        foreach (Expression argument in s.Arguments)
+        {
+            argument.Accept(this);
+        }
+    }
+
     public virtual void Visit(AssignmentExpression e)
     {
         e.Value.Accept(this);
@@ -83,6 +93,26 @@ public abstract class AbstractPass : IAstVisitor
 
     public virtual void Visit(ReturnExpression e)
     {
-        e.Value.Accept(this);
+        e.Value?.Accept(this);
+    }
+
+    public virtual void Visit(IfStatement s)
+    {
+        s.Condition.Accept(this);
+
+        foreach (AstNode node in s.ThenBody)
+        {
+            node.Accept(this);
+        }
+
+        if (s.ElseBody is null)
+        {
+            return;
+        }
+
+        foreach (AstNode node in s.ElseBody)
+        {
+            node.Accept(this);
+        }
     }
 }
