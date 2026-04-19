@@ -6,6 +6,7 @@ public sealed class ValueType
     public static readonly ValueType Int = new("int");
     public static readonly ValueType Num = new("num");
     public static readonly ValueType String = new("string");
+    public static readonly ValueType Bool = new("bool");
 
     private readonly string _name;
 

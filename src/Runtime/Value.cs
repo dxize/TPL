@@ -26,6 +26,12 @@ public sealed class Value
         Type = ValueType.String;
     }
 
+    public Value(bool value)
+    {
+        _value = value;
+        Type = ValueType.Bool;
+    }
+
     private Value(VoidValue value)
     {
         _value = value;
@@ -51,6 +57,10 @@ public sealed class Value
         ? value
         : throw new InvalidOperationException($"Value '{this}' is not string.");
 
+    public bool AsBool() => _value is bool value
+        ? value
+        : throw new InvalidOperationException($"Value '{this}' is not bool.");
+
     public string ToDisplayString()
     {
         return _value switch
@@ -58,6 +68,7 @@ public sealed class Value
             int value => value.ToString(CultureInfo.InvariantCulture),
             double value => value.ToString(CultureInfo.InvariantCulture),
             string value => value,
+            bool value => value ? "true" : "false",
             VoidValue => string.Empty,
             _ => throw new InvalidOperationException($"Unsupported runtime value '{_value}'."),
         };
