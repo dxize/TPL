@@ -23,6 +23,8 @@ public interface IAstVisitor
 
     void Visit(CallExpression e);
 
+    void Visit(ProcedureCallStatement s);
+
     void Visit(AssignmentExpression e);
 
     void Visit(InputExpression e);
@@ -30,4 +32,6 @@ public interface IAstVisitor
     void Visit(PrintExpression e);
 
     void Visit(ReturnExpression e);
+
+    void Visit(IfStatement s);
 }

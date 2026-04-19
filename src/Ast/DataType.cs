@@ -1,7 +1,7 @@
 namespace Ast;
 
 /// <summary>
-/// Типы данных языка DEA.
+/// Типы данных языка DEA + E.
 /// </summary>
 public enum DataType
 {
@@ -19,4 +19,16 @@ public enum DataType
     /// Строка.
     /// </summary>
     String,
+
+    /// <summary>
+    /// Логический тип данных.
+    /// Используется для значений true и false.
+    /// </summary>
+    Bool,
+
+    /// <summary>
+    /// Отсутствие значения.
+    /// Используется для конструкций, которые не возвращают результат.
+    /// </summary>
+    Void,
 }
