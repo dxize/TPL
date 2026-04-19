@@ -1,5 +1,7 @@
 using Semantics;
+
 using VirtualMachine;
+
 using VirtualMachineCodegen;
 
 using DeaParser = global::Parser.Parser;
@@ -29,9 +31,9 @@ public sealed class Interpreter
         checker.Check(program);
 
         DeaVmCodegen codegen = new();
-        IReadOnlyList<VirtualMachine.Instructions.Instruction> instructions = codegen.Generate(program);
+        CompiledProgram compiledProgram = codegen.GenerateProgram(program);
 
-        DeaVM vm = new(_environment, instructions);
+        DeaVM vm = new(_environment, compiledProgram);
         return vm.RunProgram();
     }
 }
