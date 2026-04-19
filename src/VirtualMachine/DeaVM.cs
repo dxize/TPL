@@ -10,19 +10,35 @@ namespace VirtualMachine;
 public sealed class DeaVM
 {
     private readonly IReadOnlyList<Instruction> _instructions;
+    private readonly IReadOnlyDictionary<string, CompiledFunctionInfo> _functions;
     private readonly BuiltinFunctions _builtins;
     private readonly IEnvironment _environment;
     private readonly Stack<Value> _evaluationStack;
-    private readonly Dictionary<string, VariableEntry> _variables;
+    private readonly Dictionary<string, VariableEntry> _globals;
+    private readonly Stack<CallFrame> _callFrames;
     private int _instructionPointer;
 
+    /// <summary>
+    /// Старый конструктор для тестов.
+    /// </summary>
     public DeaVM(IEnvironment environment, IReadOnlyList<Instruction> instructions)
+        : this(
+            environment,
+            new CompiledProgram(
+                instructions,
+                new Dictionary<string, CompiledFunctionInfo>(StringComparer.Ordinal)))
+    {
+    }
+
+    public DeaVM(IEnvironment environment, CompiledProgram program)
     {
         _environment = environment;
-        _instructions = instructions;
+        _instructions = program.Instructions;
+        _functions = program.Functions;
         _builtins = new BuiltinFunctions(environment);
         _evaluationStack = [];
-        _variables = new Dictionary<string, VariableEntry>(StringComparer.Ordinal);
+        _globals = new Dictionary<string, VariableEntry>(StringComparer.Ordinal);
+        _callFrames = [];
         _instructionPointer = 0;
     }
 
@@ -31,6 +47,7 @@ public sealed class DeaVM
         while (true)
         {
             Instruction instruction = _instructions[_instructionPointer++];
+
             switch (instruction.Code)
             {
                 case InstructionCode.Push:
@@ -85,8 +102,60 @@ public sealed class DeaVM
                     ExecuteNegate();
                     break;
 
+                case InstructionCode.ToBool:
+                    _evaluationStack.Push(ConvertToBool(_evaluationStack.Pop()));
+                    break;
+
+                case InstructionCode.Not:
+                    _evaluationStack.Push(new Value(!_evaluationStack.Pop().AsBool()));
+                    break;
+
+                case InstructionCode.Equal:
+                    ExecuteEquality(isEqual: true);
+                    break;
+
+                case InstructionCode.NotEqual:
+                    ExecuteEquality(isEqual: false);
+                    break;
+
+                case InstructionCode.Less:
+                    ExecuteComparison((a, b) => a < b);
+                    break;
+
+                case InstructionCode.LessOrEqual:
+                    ExecuteComparison((a, b) => a <= b);
+                    break;
+
+                case InstructionCode.Greater:
+                    ExecuteComparison((a, b) => a > b);
+                    break;
+
+                case InstructionCode.GreaterOrEqual:
+                    ExecuteComparison((a, b) => a >= b);
+                    break;
+
                 case InstructionCode.CallBuiltin:
                     ExecuteBuiltin(instruction.Operand);
+                    break;
+
+                case InstructionCode.CallUser:
+                    CallUserFunction(instruction.Operand.AsString());
+                    break;
+
+                case InstructionCode.Return:
+                    ReturnFromFunction();
+                    break;
+
+                case InstructionCode.Jump:
+                    _instructionPointer = instruction.Operand.AsInt();
+                    break;
+
+                case InstructionCode.JumpIfFalse:
+                    if (!_evaluationStack.Pop().AsBool())
+                    {
+                        _instructionPointer = instruction.Operand.AsInt();
+                    }
+
                     break;
 
                 case InstructionCode.Halt:
@@ -101,14 +170,17 @@ public sealed class DeaVM
     private void ExecuteBuiltin(Value operand)
     {
         BuiltinFunctionCode builtin = (BuiltinFunctionCode)operand.AsInt();
+
         switch (builtin)
         {
             case BuiltinFunctionCode.Print:
                 _builtins.Print(_evaluationStack.Pop());
                 break;
+
             case BuiltinFunctionCode.Len:
                 _evaluationStack.Push(_builtins.Len(_evaluationStack.Pop()));
                 break;
+
             case BuiltinFunctionCode.Substr:
                 {
                     Value length = _evaluationStack.Pop();
@@ -121,9 +193,11 @@ public sealed class DeaVM
             case BuiltinFunctionCode.Abs:
                 _evaluationStack.Push(_builtins.Abs(_evaluationStack.Pop()));
                 break;
+
             case BuiltinFunctionCode.Min:
                 ExecuteMinOrMax(isMin: true);
                 break;
+
             case BuiltinFunctionCode.Max:
                 ExecuteMinOrMax(isMin: false);
                 break;
@@ -145,21 +219,28 @@ public sealed class DeaVM
             0 => Runtime.ValueType.Int,
             1 => Runtime.ValueType.Num,
             2 => Runtime.ValueType.String,
+            3 => Runtime.ValueType.Bool,
             _ => throw new RuntimeException("Unsupported variable type tag."),
         };
 
-        if (_variables.ContainsKey(name))
+        Dictionary<string, VariableEntry> target = GetCurrentVariables();
+
+        if (target.ContainsKey(name))
         {
             throw new RuntimeException($"Identifier '{name}' already declared.");
         }
 
-        // Тип уже проверен на этапе семантики — используем значение как есть.
-        _variables[name] = new VariableEntry(declaredType, isConstTag.AsInt() == 1, hasInitializer, hasInitializer ? value : Value.Void);
+        target[name] = new VariableEntry(
+            declaredType,
+            isConstTag.AsInt() == 1,
+            hasInitializer,
+            hasInitializer ? value : Value.Void);
     }
 
     private Value LoadVariable(string name)
     {
         VariableEntry variable = GetVariable(name);
+
         if (!variable.IsInitialized)
         {
             throw new RuntimeException($"Variable '{name}' is not initialized.");
@@ -191,29 +272,55 @@ public sealed class DeaVM
         }
 
         string text = _environment.ReadLine();
+
         Value value = variable.Type switch
         {
-            _ when variable.Type == Runtime.ValueType.Int => int.TryParse(text, out int intValue)
-                ? new Value(intValue)
-                : throw new RuntimeException($"Input value '{text}' is not int."),
-            _ when variable.Type == Runtime.ValueType.Num => double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double numValue)
-                ? new Value(numValue)
-                : throw new RuntimeException($"Input value '{text}' is not num."),
-            _ when variable.Type == Runtime.ValueType.String => new Value(text),
+            _ when variable.Type == Runtime.ValueType.Int =>
+                int.TryParse(text, out int intValue)
+                    ? new Value(intValue)
+                    : throw new RuntimeException($"Input value '{text}' is not int."),
+
+            _ when variable.Type == Runtime.ValueType.Num =>
+                double.TryParse(
+                    text,
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out double numValue)
+                    ? new Value(numValue)
+                    : throw new RuntimeException($"Input value '{text}' is not num."),
+
+            _ when variable.Type == Runtime.ValueType.String =>
+                new Value(text),
+
+            _ when variable.Type == Runtime.ValueType.Bool =>
+                bool.TryParse(text, out bool boolValue)
+                    ? new Value(boolValue)
+                    : throw new RuntimeException($"Input value '{text}' is not bool."),
+
             _ => throw new RuntimeException("Unsupported variable type for input."),
         };
 
         variable.SetValue(value);
     }
 
+    private Dictionary<string, VariableEntry> GetCurrentVariables()
+    {
+        return _callFrames.Count > 0 ? _callFrames.Peek().Variables : _globals;
+    }
+
     private VariableEntry GetVariable(string name)
     {
-        if (!_variables.TryGetValue(name, out VariableEntry? value))
+        if (_callFrames.Count > 0 && _callFrames.Peek().Variables.TryGetValue(name, out VariableEntry? localValue))
         {
-            throw new RuntimeException($"Identifier '{name}' is not declared.");
+            return localValue;
         }
 
-        return value;
+        if (_globals.TryGetValue(name, out VariableEntry? globalValue))
+        {
+            return globalValue;
+        }
+
+        throw new RuntimeException($"Identifier '{name}' is not declared.");
     }
 
     private void ExecuteAdd()
@@ -221,7 +328,6 @@ public sealed class DeaVM
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
 
-        // Типы уже проверены на этапе семантики.
         if (left.Type == Runtime.ValueType.String && right.Type == Runtime.ValueType.String)
         {
             _evaluationStack.Push(new Value(left.AsString() + right.AsString()));
@@ -240,14 +346,12 @@ public sealed class DeaVM
 
     private void ExecuteNumericBinaryCore(Value left, Value right, Func<int, int, int> intOperation, Func<double, double, double> numOperation)
     {
-        // Типы уже проверены на этапе семантики.
         if (left.Type == Runtime.ValueType.Int && right.Type == Runtime.ValueType.Int)
         {
             _evaluationStack.Push(new Value(intOperation(left.AsInt(), right.AsInt())));
             return;
         }
 
-        // Смешанные int/num или num/num — приводим к num.
         _evaluationStack.Push(new Value(numOperation(left.AsNum(), right.AsNum())));
     }
 
@@ -256,7 +360,6 @@ public sealed class DeaVM
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
 
-        // Типы уже проверены на этапе семантики.
         double divisor = right.AsNum();
         if (Math.Abs(divisor) < double.Epsilon)
         {
@@ -271,7 +374,6 @@ public sealed class DeaVM
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
 
-        // Типы уже проверены на этапе семантики.
         int divisor = right.AsInt();
         if (divisor == 0)
         {
@@ -286,7 +388,6 @@ public sealed class DeaVM
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
 
-        // Типы уже проверены на этапе семантики.
         int divisor = right.AsInt();
         if (divisor == 0)
         {
@@ -301,7 +402,6 @@ public sealed class DeaVM
         Value right = _evaluationStack.Pop();
         Value left = _evaluationStack.Pop();
 
-        // Типы уже проверены на этапе семантики.
         if (left.Type == Runtime.ValueType.Int && right.Type == Runtime.ValueType.Int)
         {
             _evaluationStack.Push(new Value((int)Math.Pow(left.AsInt(), right.AsInt())));
@@ -315,7 +415,6 @@ public sealed class DeaVM
     {
         Value value = _evaluationStack.Pop();
 
-        // Тип уже проверен на этапе семантики.
         if (value.Type == Runtime.ValueType.Int)
         {
             _evaluationStack.Push(new Value(-value.AsInt()));
@@ -325,11 +424,122 @@ public sealed class DeaVM
         _evaluationStack.Push(new Value(-value.AsNum()));
     }
 
+    private void ExecuteEquality(bool isEqual)
+    {
+        Value right = _evaluationStack.Pop();
+        Value left = _evaluationStack.Pop();
+
+        bool result;
+
+        if ((left.Type == Runtime.ValueType.Int || left.Type == Runtime.ValueType.Num) &&
+            (right.Type == Runtime.ValueType.Int || right.Type == Runtime.ValueType.Num))
+        {
+            result = Math.Abs(left.AsNum() - right.AsNum()) < double.Epsilon;
+        }
+        else if (left.Type == Runtime.ValueType.String && right.Type == Runtime.ValueType.String)
+        {
+            result = string.Equals(left.AsString(), right.AsString(), StringComparison.Ordinal);
+        }
+        else if (left.Type == Runtime.ValueType.Bool && right.Type == Runtime.ValueType.Bool)
+        {
+            result = left.AsBool() == right.AsBool();
+        }
+        else
+        {
+            throw new RuntimeException("Unsupported types for equality comparison.");
+        }
+
+        _evaluationStack.Push(new Value(isEqual ? result : !result));
+    }
+
+    private void ExecuteComparison(Func<double, double, bool> operation)
+    {
+        Value right = _evaluationStack.Pop();
+        Value left = _evaluationStack.Pop();
+        _evaluationStack.Push(new Value(operation(left.AsNum(), right.AsNum())));
+    }
+
+    private Value ConvertToBool(Value value)
+    {
+        if (value.Type == Runtime.ValueType.Bool)
+        {
+            return value;
+        }
+
+        if (value.Type == Runtime.ValueType.Int)
+        {
+            return new Value(value.AsInt() != 0);
+        }
+
+        if (value.Type == Runtime.ValueType.Num)
+        {
+            return new Value(Math.Abs(value.AsNum()) > double.Epsilon);
+        }
+
+        if (value.Type == Runtime.ValueType.String)
+        {
+            return new Value(value.AsString().Length > 0);
+        }
+
+        throw new RuntimeException("Unsupported conversion to bool.");
+    }
+
+    private void CallUserFunction(string name)
+    {
+        if (!_functions.TryGetValue(name, out CompiledFunctionInfo? function))
+        {
+            throw new RuntimeException($"Unknown function '{name}'.");
+        }
+
+        List<Value> arguments = new(function.ParameterNames.Count);
+        for (int i = 0; i < function.ParameterNames.Count; i++)
+        {
+            arguments.Add(_evaluationStack.Pop());
+        }
+
+        arguments.Reverse();
+
+        Dictionary<string, VariableEntry> locals = new(StringComparer.Ordinal);
+        for (int i = 0; i < function.ParameterNames.Count; i++)
+        {
+            locals[function.ParameterNames[i]] = new VariableEntry(
+                arguments[i].Type,
+                isConst: false,
+                isInitialized: true,
+                arguments[i]);
+        }
+
+        _callFrames.Push(new CallFrame(function, _instructionPointer, locals));
+        _instructionPointer = function.EntryPoint;
+    }
+
+    private void ReturnFromFunction()
+    {
+        if (_callFrames.Count == 0)
+        {
+            throw new RuntimeException("Return outside of function frame.");
+        }
+
+        CallFrame frame = _callFrames.Pop();
+
+        Value returnValue = Value.Void;
+        if (!frame.Function.IsProcedure)
+        {
+            returnValue = _evaluationStack.Pop();
+        }
+
+        _instructionPointer = frame.ReturnAddress;
+
+        if (!frame.Function.IsProcedure)
+        {
+            _evaluationStack.Push(returnValue);
+        }
+    }
+
     private void ExecuteMinOrMax(bool isMin)
     {
         int count = _evaluationStack.Pop().AsInt();
 
-        // Количество аргументов и типы уже проверены на этапе семантики.
         List<Value> values = new(count);
         for (int i = 0; i < count; i++)
         {
@@ -341,6 +551,7 @@ public sealed class DeaVM
         if (values[0].Type == Runtime.ValueType.Int)
         {
             int result = values[0].AsInt();
+
             foreach (Value value in values.Skip(1))
             {
                 result = isMin ? Math.Min(result, value.AsInt()) : Math.Max(result, value.AsInt());
@@ -351,11 +562,28 @@ public sealed class DeaVM
         }
 
         double numResult = values[0].AsNum();
+
         foreach (Value value in values.Skip(1))
         {
             numResult = isMin ? Math.Min(numResult, value.AsNum()) : Math.Max(numResult, value.AsNum());
         }
 
         _evaluationStack.Push(new Value(numResult));
+    }
+
+    private sealed class CallFrame
+    {
+        public CallFrame(CompiledFunctionInfo function, int returnAddress, Dictionary<string, VariableEntry> variables)
+        {
+            Function = function;
+            ReturnAddress = returnAddress;
+            Variables = variables;
+        }
+
+        public CompiledFunctionInfo Function { get; }
+
+        public int ReturnAddress { get; }
+
+        public Dictionary<string, VariableEntry> Variables { get; }
     }
 }
