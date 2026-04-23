@@ -216,7 +216,7 @@ public class ExpressionsTests
             {
                 """
                 func int main() {
-                    print(5.5 > 3);
+                    print(5.5 >= 3);
                     return 0;
                 }
                 """,
@@ -239,6 +239,15 @@ public class ExpressionsTests
                 }
                 """,
                 "true"
+            },
+            {
+                """
+                func int main() {
+                    print(2.5 < 2.5);
+                    return 0;
+                }
+                """,
+                "false"
             },
             {
                 """

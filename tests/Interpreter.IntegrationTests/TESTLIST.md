@@ -80,9 +80,10 @@
 ### Операторы сравнения
 - [x] Сравнение чисел (int/num): 
 - `print(5 > 3);`
-- `print(5.5 > 3);`
+- `print(5.5 >= 3);`
 - `print(5.0 == 5);`
 - `print(2.5 <= 2.5);`
+- `print(2.5 < 2.5);`
 - [x] Сравнение строк: `print("apple" == "apple");`
 - [x] Сравнение булевых значений: `print(true != false);`
 - [x] Логическое И (AND): 
@@ -223,3 +224,5 @@
 - [x] Переменная из if недоступна снаружи: `if (true) { int x=1; } print(x);` => SemanticException
 - [x] Ошибка синтаксиса (пропущены скобки): `if true { print(1); }` => UnexpectedLexemeException
 - [x] Ошибка синтаксиса (пропущены фигурные скобки): `if (true) print(1);` => UnexpectedLexemeException
+
+`FunctionsTests`
