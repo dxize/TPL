@@ -144,6 +144,18 @@ public sealed class ResolveNamesPass : AbstractPass
         s.Procedure = procedure;
     }
 
+    public override void Visit(IfStatement s)
+    {
+        s.Condition.Accept(this);
+
+        VisitNestedBlock(s.ThenBody);
+
+        if (s.ElseBody is not null)
+        {
+            VisitNestedBlock(s.ElseBody);
+        }
+    }
+
     private void VisitTopLevelFunction(FunctionDeclaration function)
     {
         EnsureNotReservedName(function.Name);
@@ -179,6 +191,24 @@ public sealed class ResolveNamesPass : AbstractPass
         if (function.Name != "main")
         {
             _globalSymbols.DeclareFunction(function);
+        }
+    }
+
+    private void VisitNestedBlock(List<AstNode> statements)
+    {
+        SymbolsTable previous = _symbols;
+        _symbols = new SymbolsTable(_symbols);
+
+        try
+        {
+            foreach (AstNode node in statements)
+            {
+                node.Accept(this);
+            }
+        }
+        finally
+        {
+            _symbols = previous;
         }
     }
 
