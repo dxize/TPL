@@ -75,6 +75,25 @@ public class FunctionsTests
                 "25"
             },
 
+            // Гарантированный return из всех веток if/else
+            {
+                """
+                func int checkAllPaths(int x) {
+                    if (x > 0) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+
+                func int main() {
+                    print(checkAllPaths(10));
+                    return 0;
+                }
+                """,
+                "1"
+            },
+
             // Области видимости
             {
                 """
