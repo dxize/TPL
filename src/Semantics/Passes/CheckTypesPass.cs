@@ -190,10 +190,18 @@ public sealed class CheckTypesPass : AbstractPass
     /// </summary>
     private static void EnsureAssignable(DataType expected, DataType actual, string context)
     {
-        if (expected != actual)
+        if (expected == actual)
         {
-            throw new TypeErrorException($"Cannot assign value of type {actual} to '{context}' of type {expected}.");
+            return;
         }
+
+        if (expected == DataType.Bool &&
+            actual is DataType.Int or DataType.Num or DataType.String)
+        {
+            return;
+        }
+
+        throw new TypeErrorException($"Cannot assign value of type {actual} to '{context}' of type {expected}.");
     }
 
     /// <summary>

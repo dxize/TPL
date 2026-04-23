@@ -230,11 +230,15 @@ public sealed class DeaVM
             throw new RuntimeException($"Identifier '{name}' already declared.");
         }
 
+        Value normalizedValue = hasInitializer
+            ? NormalizeValueForType(value, declaredType)
+            : Value.Void;
+
         target[name] = new VariableEntry(
             declaredType,
             isConstTag.AsInt() == 1,
             hasInitializer,
-            hasInitializer ? value : Value.Void);
+            normalizedValue);
     }
 
     private Value LoadVariable(string name)
@@ -259,7 +263,8 @@ public sealed class DeaVM
             throw new RuntimeException($"Cannot assign to constant '{name}'.");
         }
 
-        variable.SetValue(value);
+        Value normalizedValue = NormalizeValueForType(value, variable.Type);
+        variable.SetValue(normalizedValue);
     }
 
     private void InputVariable(string name)
@@ -484,6 +489,16 @@ public sealed class DeaVM
         throw new RuntimeException("Unsupported conversion to bool.");
     }
 
+    private Value NormalizeValueForType(Value value, Runtime.ValueType targetType)
+    {
+        if (targetType == Runtime.ValueType.Bool)
+        {
+            return ConvertToBool(value);
+        }
+
+        return value;
+    }
+
     private void CallUserFunction(string name)
     {
         if (!_functions.TryGetValue(name, out CompiledFunctionInfo? function))
@@ -502,11 +517,18 @@ public sealed class DeaVM
         Dictionary<string, VariableEntry> locals = new(StringComparer.Ordinal);
         for (int i = 0; i < function.ParameterNames.Count; i++)
         {
+            Runtime.ValueType parameterType =
+                function.ParameterTypes.Count > i
+                    ? function.ParameterTypes[i]
+                    : arguments[i].Type;
+
+            Value normalizedArgument = NormalizeValueForType(arguments[i], parameterType);
+
             locals[function.ParameterNames[i]] = new VariableEntry(
-                arguments[i].Type,
+                parameterType,
                 isConst: false,
                 isInitialized: true,
-                arguments[i]);
+                normalizedArgument);
         }
 
         _callFrames.Push(new CallFrame(function, _instructionPointer, locals));
@@ -525,7 +547,7 @@ public sealed class DeaVM
         Value returnValue = Value.Void;
         if (!frame.Function.IsProcedure)
         {
-            returnValue = _evaluationStack.Pop();
+            returnValue = NormalizeValueForType(_evaluationStack.Pop(), frame.Function.ReturnType);
         }
 
         _instructionPointer = frame.ReturnAddress;

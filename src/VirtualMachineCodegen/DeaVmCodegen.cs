@@ -73,6 +73,7 @@ public sealed class DeaVmCodegen : IAstVisitor
                 function.Name,
                 _instructions.Count,
                 function.Parameters.Select(x => x.Name).ToArray(),
+                function.Parameters.Select(x => ToRuntimeType(x.Type)).ToArray(),
                 ToRuntimeType(function.ReturnType));
 
             FunctionDeclaration? previousFunction = _currentFunction;
