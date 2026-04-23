@@ -6,6 +6,12 @@
 - [x] Пустая функция:` func int main() { return 0; } `
 - [x] Главная функция с телом из нескольких инструкций: `func int main() { print(1); return 0; }`
 - [x] Главная функция с объявлением переменной: `func int main() { int x = 10; return 0; }`
+- [x] В главной функции должен быть достижимый return:
+  `func int main() { 
+      if (false) {return 1; }
+      print("skipped");
+      return 0;
+  }`
 ### Негативные тесты (точка входа, синтаксис)
 - [x] Пропущен main: ` func int start() { return 0; }` => UnexpectedLexemeException
 - [x] Пропущен int: `  func string main() { return 0; }` => UnexpectedLexemeException
@@ -13,7 +19,7 @@
 ### Негативные тесты (точка входа, семантика)
 - [x] Отсутствует return: `func int main() { print(1); }` => SemanticException
 - [x] Возвращение не int: `func int main() { return "dea"; }` => SemanticException
-- [] Проверка на достижение return `func int main() {if (false) { return 0;} }`  => SemanticException
+- [x] Не достижимый return: `func int main() {if (false) { return 0;} }`  => SemanticException
 
 ## (далее все тесты будут описаны в сокращенном варианте явно не показывая: func int main() {return 0;})
 
@@ -111,8 +117,8 @@
 - [x] Нельзя возводить строку в степень: `print("2" ^ 3);` => SemanticException
 
 ### Негативные тесты (Логика и сравнения, семантика)
-- [] Нельзя сравнивать разные типы (int и string): `print(1 == "asd");` => SemanticException
-- [] Нельзя сравнивать строки операциями (<, >, <=, >=): `print("abc" < "def");` => SemanticException
+- [x] Нельзя сравнивать разные типы (int и string): `print(1 == "asd");` => SemanticException
+- [x] Нельзя сравнивать строки операциями (<, >, <=, >=): `print("abc" < "def");` => SemanticException
 
 `BuiltInFunctions`
 

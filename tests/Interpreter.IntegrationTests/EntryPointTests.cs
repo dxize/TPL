@@ -70,6 +70,18 @@ public class EntryPointTests
                 """,
                 ""
             },
+            {
+                """
+                func int main() {
+                    if (false) { 
+                        return 1; 
+                    }
+                    print("skipped");
+                    return 0;
+                }
+                """,
+                "skipped"
+            },
         };
     }
 
@@ -120,6 +132,15 @@ public class EntryPointTests
                 """
                 func int main() {
                     return "dea";
+                }
+                """
+            },
+
+            // Не достижимый return
+            {
+                """
+                func int main() {
+                    if (false) { return 0; } 
                 }
                 """
             },
