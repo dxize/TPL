@@ -8,14 +8,11 @@ namespace Semantics.Passes;
 
 /// <summary>
 /// Проверяет контекстно-зависимые правила:
-/// - должна быть только main
+/// - должна быть точка входа main
 /// - main должна возвращать int
-/// - тело main не пустое
-/// - после return не должно быть инструкций
-/// - return должен присутствовать
-/// - количество аргументов встроенных функций
-/// - присваивание только lvalue
-/// - break/continue только внутри циклов (подготовка к итерации 5)
+/// - тело функции не должно быть пустым
+/// - после top-level return не должно быть инструкций
+/// - функция должна возвращать значение на всех путях выполнения
 /// </summary>
 public sealed class CheckContextSensitiveRulesPass : AbstractPass
 {
@@ -52,13 +49,13 @@ public sealed class CheckContextSensitiveRulesPass : AbstractPass
             }
         }
 
-        if (!d.IsProcedure && !ContainsReturn(d.Body))
+        if (!d.IsProcedure && !AllPathsReturn(d.Body))
         {
-            throw new InvalidExpressionException($"Function '{d.Name}' must contain a return statement.");
+            throw new InvalidExpressionException($"Function '{d.Name}' must return a value on all execution paths.");
         }
     }
 
-    private static bool ContainsReturn(IEnumerable<AstNode> body)
+    private static bool AllPathsReturn(IEnumerable<AstNode> body)
     {
         foreach (AstNode node in body)
         {
@@ -69,12 +66,9 @@ public sealed class CheckContextSensitiveRulesPass : AbstractPass
 
             if (node is IfStatement ifStatement)
             {
-                if (ContainsReturn(ifStatement.ThenBody))
-                {
-                    return true;
-                }
-
-                if (ifStatement.ElseBody is not null && ContainsReturn(ifStatement.ElseBody))
+                if (ifStatement.ElseBody is not null
+                    && AllPathsReturn(ifStatement.ThenBody)
+                    && AllPathsReturn(ifStatement.ElseBody))
                 {
                     return true;
                 }
