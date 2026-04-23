@@ -13,6 +13,7 @@
 ### Негативные тесты (точка входа, семантика)
 - [x] Отсутствует return: `func int main() { print(1); }` => SemanticException
 - [x] Возвращение не int: `func int main() { return "dea"; }` => SemanticException
+- [] Проверка на достижение return `func int main() {if (false) { return 0;} }`  => SemanticException
 
 ## (далее все тесты будут описаны в сокращенном варианте явно не показывая: func int main() {return 0;})
 
@@ -203,13 +204,16 @@
 `IfElseTests`
 
 ### Ветвления (if..else)
-- [] Одиночный if: `if (true) { print(1); }`
-- [] Конструкция if..else: `if (5 > 10) { print(1); } else { print(2); }`
-- [] Вложенные if: `if (true) { if (false) { print(1); } else { print(2); } }`
-- [] Переменные внутри блоков (область видимости): `if (true) { int x = 5; print(x); }`
+- [x] Одиночный if: `if (true) { print(1); }`
+- [x] Конструкция if..else: `if (5 > 10) { print(1); } else { print(2); }`
+- [x] Вложенные if: `if (true) { if (false) { print(1); } else { print(2); } }`
+- [x] Переменные внутри блоков (область видимости): `if (true) { int x = 5; print(x); }`
+### Ветвления с неявным приведением
+- [x] Число в условии: `if (10) { print(1); }`
+- [x] Ноль в условии: `if (0) { print(1); } else { print(2); }`
+- [x] Строка в условии: `if ("abc") { print(1); }`
 
 ### Негативные тесты (if, семантика/синтаксис)
-- [] Условие не булево: `if (10) { print(1); }` => SemanticException
-- [] Переменная из if недоступна снаружи: `if (true) { int x=1; } print(x);` => SemanticException
-- [] Ошибка синтаксиса (пропущены скобки): `if true { print(1); }` => UnexpectedLexemeException
-- [] Ошибка синтаксиса (пропущены фигурные скобки): `if (true) print(1);` => UnexpectedLexemeException
+- [x] Переменная из if недоступна снаружи: `if (true) { int x=1; } print(x);` => SemanticException
+- [x] Ошибка синтаксиса (пропущены скобки): `if true { print(1); }` => UnexpectedLexemeException
+- [x] Ошибка синтаксиса (пропущены фигурные скобки): `if (true) print(1);` => UnexpectedLexemeException
