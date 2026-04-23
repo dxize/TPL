@@ -66,10 +66,35 @@
 - [x] Пропущена скобка: `print((1 + 2);` => UnexpectedLexemeException
 - [x] Пустые скобки в выражении: `print(());` => UnexpectedLexemeException
 
-## Операции над строками
-### Конкатенация
+### Конкатенация строк
 - [x] Конкатенация двух строк: `print("dea" + "lang");`
 - [x] Конкатенация строки и переменной: `string s = "dea"; print(s + "lang");`
+
+### Операторы сравнения
+- [x] Сравнение чисел (int/num): 
+- `print(5 > 3);`
+- `print(5.5 > 3);`
+- `print(5.0 == 5);`
+- `print(2.5 <= 2.5);`
+- [x] Сравнение строк: `print("apple" == "apple");`
+- [x] Сравнение булевых значений: `print(true != false);`
+- [x] Логическое И (AND): 
+  `print(true && false);`
+  `print(1 && 0);`
+  `print("abc" && "");`
+- [x] Логическое ИЛИ (OR): 
+  `print(true || false);`
+  `print(1 || 0);`
+  `print("abc" || "");`
+- [x] Отрицание:
+  `print(!true);`
+  `print(!!false);`
+  `print(!10);`
+  `print(!"");`
+
+### Short-circuit (вычисления по короткой схеме)
+- [x] AND не вычисляет правую часть, если левая false: `false && (1 / 0 == 0);`
+- [x] OR не вычисляет правую часть, если левая true: `true || (1 / 0 == 0);`
 
 `TypesSemantic`
 
@@ -83,6 +108,10 @@
 - [x] Нельзя использовать `%` для `num`: `print(7.5 % 2.0);` => SemanticException
 - [x] Нельзя конкатенировать строку с числом: `print("dea" + 1);` => SemanticException
 - [x] Нельзя возводить строку в степень: `print("2" ^ 3);` => SemanticException
+
+### Негативные тесты (Логика и сравнения, семантика)
+- [] Нельзя сравнивать разные типы (int и string): `print(1 == "asd");` => SemanticException
+- [] Нельзя сравнивать строки операциями (<, >, <=, >=): `print("abc" < "def");` => SemanticException
 
 `BuiltInFunctions`
 
@@ -137,6 +166,7 @@
 - [x] Объявление и инициализация переменной типа int: `int x = 10;`
 - [x] Объявление и инициализация переменной типа num: `num x = 3.14;`
 - [x] Объявление и инициализация переменной типа string: `string s = "dea";`
+- [x] Объявление и инициализация переменной типа bool: `bool b = true; print(b);`
 - [x] Объявление переменной без инициализации: `string name;`
 - [x] Присваивание переменной значения того же типа: `int x = 1; x = 2;`
 - [x] Использование переменной в выражении: `int x = 2; int y = 3; print(x + y);`
@@ -144,6 +174,7 @@
 - [x] Объявление и использование константы типа int: `const int x = 10; print(x);`
 - [x] Объявление и использование константы типа num: `const num pi = 3.14; print(pi);`
 - [x] Объявление и использование константы типа string: `const string name = "dea"; print(name);`
+- [x] Объявление и использование константы типа bool: `const bool flag = false; print(flag);`
 - [x] Использование константы в выражении: `const int x = 10; print(x + 5);`
 - [x] Использование глобальной переменной в main: `int x = 10; func int main() { print(x); return 0; }`
 - [x] Использование глобальной константы в main: `const int x = 10; func int main() { print(x); return 0; }`
@@ -156,6 +187,7 @@
 ### Негативные тесты (семантические ошибки, связанные с переменными)
 - [x] Нельзя использовать необъявленную переменную: `print(x);` => SemanticException
 - [x] Нельзя инициализировать переменную значением другого типа: `int x = "dea";` => SemanticException
+- [x] Нельзя инициализировать bool числом: `bool b = 1;` => SemanticException
 - [x] Нельзя присвоить переменной значение другого типа: `int x = 10; x = "dea";` => SemanticException
 - [x] Нельзя изменять константу: `const int x = 10; x = 20;` => SemanticException
 - [x] Нельзя повторно объявлять переменную с тем же именем в одной области видимости: `int x = 1; int x = 2;` => SemanticException
@@ -167,3 +199,17 @@
 
 ### Негативные тесты выполнения, связанные с переменными
 - [x] Нельзя читать значение неинициализированной переменной: `int x; print(x);` => RuntimeException
+
+`IfElseTests`
+
+### Ветвления (if..else)
+- [] Одиночный if: `if (true) { print(1); }`
+- [] Конструкция if..else: `if (5 > 10) { print(1); } else { print(2); }`
+- [] Вложенные if: `if (true) { if (false) { print(1); } else { print(2); } }`
+- [] Переменные внутри блоков (область видимости): `if (true) { int x = 5; print(x); }`
+
+### Негативные тесты (if, семантика/синтаксис)
+- [] Условие не булево: `if (10) { print(1); }` => SemanticException
+- [] Переменная из if недоступна снаружи: `if (true) { int x=1; } print(x);` => SemanticException
+- [] Ошибка синтаксиса (пропущены скобки): `if true { print(1); }` => UnexpectedLexemeException
+- [] Ошибка синтаксиса (пропущены фигурные скобки): `if (true) print(1);` => UnexpectedLexemeException

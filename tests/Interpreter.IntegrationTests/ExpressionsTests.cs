@@ -202,6 +202,165 @@ public class ExpressionsTests
                 """,
                 "dealang"
             },
+
+            // Операторы сравнения
+            {
+                """
+                func int main() {
+                    print(5 > 3);
+                    return 0;
+                }
+                """,
+                "true"
+            },
+            {
+                """
+                func int main() {
+                    print(5.5 > 3);
+                    return 0;
+                }
+                """,
+                "true"
+            },
+            {
+                """
+                func int main() {
+                    print(5.0 == 5);
+                    return 0;
+                }
+                """,
+                "true"
+            },
+            {
+                """
+                func int main() {
+                    print(2.5 <= 2.5);
+                    return 0;
+                }
+                """,
+                "true"
+            },
+            {
+                """
+                func int main() {
+                    print(true != false);
+                    return 0;
+                }
+                """,
+                "true"
+            },
+
+            // Логические операции и булевы литералы
+            {
+                """
+                func int main() {
+                    print(true && false);
+                    return 0;
+                }
+                """,
+                "false"
+            },
+            {
+                """
+                func int main() {
+                    print(1 && 0);
+                    return 0;
+                }
+                """,
+                "false"
+            },
+            {
+                """
+                func int main() {
+                    print("abc" && "");
+                    return 0;
+                }
+                """,
+                "false"
+            },
+            {
+                """
+                func int main() {
+                    print(true || false);
+                    return 0;
+                }
+                """,
+                "true"
+            },
+            {
+                """
+                func int main() {
+                    print(1 || 0);
+                    return 0;
+                }
+                """,
+                "true"
+            },
+            {
+                """
+                func int main() {
+                    print("abc" || "");
+                    return 0;
+                }
+                """,
+                "true"
+            },
+            {
+                """
+                func int main() {
+                    print(!true);
+                    return 0;
+                }
+                """,
+                "false"
+            },
+            {
+                """
+                func int main() {
+                    print(!!false);
+                    return 0;
+                }
+                """,
+                "false"
+            },
+            {
+                """
+                func int main() {
+                    print(!10);
+                    return 0;
+                }
+                """,
+                "false"
+            },
+            {
+                """
+                func int main() {
+                    print(!"");
+                    return 0;
+                }
+                """,
+                "true"
+            },
+
+            // short-circuit (вычисления по короткой схеме)
+            {
+                """
+                func int main() {
+                    print(false && (1 / 0 == 0));
+                    return 0;
+                }
+                """,
+                "false"
+            },
+            {
+                """
+                func int main() {
+                    print(true || (1 / 0 == 0));
+                    return 0;
+                }
+                """,
+                "true"
+            },
         };
     }
 

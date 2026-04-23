@@ -100,6 +100,26 @@ public class TypesSemanticTests
                 }
                 """
             },
+
+            // Нельзя сравнивать разные типы (int и string)
+            {
+                """
+                func int main() {
+                    print(1 == "asd");
+                    return 0;
+                }
+                """
+            },
+
+            // Нельзя сравнивать строки операциями (<, >, <=, >=)
+            {
+                """
+                func int main() {
+                    print("abc" < "def");
+                    return 0;
+                }
+                """
+            },
         };
     }
 }
