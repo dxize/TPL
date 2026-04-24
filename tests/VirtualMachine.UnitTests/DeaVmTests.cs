@@ -1,5 +1,7 @@
 using Runtime;
 
+using Semantics.Exceptions;
+
 using TestsLibrary;
 
 using VirtualMachine.Builtins;
@@ -26,5 +28,21 @@ public class DeaVmTests
 
         Assert.Equal(0, exitCode);
         Assert.Equal("DEA", environment.Output);
+    }
+
+    [Fact]
+    public void VM_Return_Throws_WhenStackIsEmpty()
+    {
+        FakeEnvironment environment = new();
+
+        // Просто одна инструкция Return без предварительного вызова функции
+        List<Instruction> program = [
+            new(InstructionCode.Return)
+        ];
+
+        DeaVM vm = new(environment, program);
+
+        RuntimeException ex = Assert.Throws<RuntimeException>(() => vm.RunProgram());
+        Assert.Equal("Return outside of function frame.", ex.Message);
     }
 }
