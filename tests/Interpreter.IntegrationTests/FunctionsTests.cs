@@ -1,3 +1,5 @@
+using Parser;
+
 using Semantics.Exceptions;
 using TestsLibrary;
 
@@ -50,11 +52,11 @@ public class FunctionsTests
             },
             {
                 """
+                func string repeatManual(string s, int n) { return s; } 
                 func string repeat(string s, int n) { 
                     if (n <= 1) { return s; }
                     return s + repeatManual(s, n - 1); 
                 }
-                func string repeatManual(string s, int n) { return s; } 
                 func int main() { print(repeat("a", 2)); return 0; }
                 """,
                 "aa"
@@ -98,7 +100,7 @@ public class FunctionsTests
             {
                 """
                 func int work() { int x = 10; return x; }
-                func int main() { int x = 5; work(); print(x); return 0; }
+                func int main() { int x = 5; int unused = work(); print(x); return 0; }
                 """,
                 "5"
             },
@@ -174,9 +176,6 @@ public class FunctionsTests
     {
         return new TheoryData<string>
         {
-            // Вызов до объявления
-            { "func int main() { f(); return 0; } func int f() { return 1; }" },
-
             // Прямая рекурсия
             { "func int f(int n) { return f(n); } func int main() { return 0; }" },
 
@@ -204,5 +203,16 @@ public class FunctionsTests
             // Доступ к локальной переменной функции из main
             { "func int f() { int secret = 42; return 0; } func int main() { f(); print(secret); return 0; }" },
         };
+    }
+
+    [Fact]
+    public void SyntaxException_WhenCallingFunctionBeforeDefinition()
+    {
+        FakeEnvironment environment = new();
+        DeaInterpreter interpreter = new(environment);
+
+        string code = "func int main() { f(); return 0; } func int f() { return 1; }";
+
+        Assert.Throws<UnexpectedLexemeException>(() => interpreter.Execute(code));
     }
 }
