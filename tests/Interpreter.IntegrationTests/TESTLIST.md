@@ -79,12 +79,15 @@
 
 ### Операторы сравнения
 - [x] Сравнение чисел (int/num): 
-- `print(5 > 3);`
-- `print(5.5 >= 3);`
-- `print(5.0 == 5);`
-- `print(2.5 <= 2.5);`
-- `print(2.5 < 2.5);`
-- [x] Сравнение строк: `print("apple" == "apple");`
+  `print(5 > 3);`
+  `print(5.5 >= 3);`
+  `print(5.0 == 5);`
+  `print(5 == 5.0);`
+  `print(2.5 <= 2.5);`
+  `print(2.5 < 2.5);`
+- [x] Сравнение строк:
+  `print("apple" == "apple");`
+  `print("apple" != "apple");`
 - [x] Сравнение булевых значений: `print(true != false);`
 - [x] Логическое И (AND): 
   `print(true && false);`

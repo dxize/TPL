@@ -144,6 +144,47 @@ public class VariablesTest
                 ],
                 null
             },
+
+            // Запрет ввода (InputVar) в константу
+            {
+                [
+                    new Instruction(InstructionCode.Push, Value.Void),
+                    new Instruction(InstructionCode.Push, new Value(1)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.DefineVar, new Value("constVar")),
+
+                    new Instruction(InstructionCode.InputVar, new Value("constVar")),
+                    new Instruction(InstructionCode.Halt),
+                ],
+                "123"
+            },
+
+            // Невалидный ввод для bool
+            {
+                [
+                    new Instruction(InstructionCode.Push, Value.Void),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Push, new Value(3)),
+                    new Instruction(InstructionCode.DefineVar, new Value("boolVar")),
+
+                    new Instruction(InstructionCode.InputVar, new Value("boolVar")),
+                    new Instruction(InstructionCode.Halt),
+                ],
+                "not_a_boolean_string"
+            },
+
+            // Неподдерживаемый тег типа при объявлении переменной
+            {
+                [
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Push, new Value(0)),
+                    new Instruction(InstructionCode.Push, new Value(99)),
+                    new Instruction(InstructionCode.DefineVar, new Value("badTypeVar")),
+
+                    new Instruction(InstructionCode.Halt),
+                ],
+                null
+            },
         };
     }
 }

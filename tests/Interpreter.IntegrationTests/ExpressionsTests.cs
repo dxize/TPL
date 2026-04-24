@@ -234,6 +234,15 @@ public class ExpressionsTests
             {
                 """
                 func int main() {
+                    print(5 == 5.0);
+                    return 0;
+                }
+                """,
+                "true"
+            },
+            {
+                """
+                func int main() {
                     print(2.5 <= 2.5);
                     return 0;
                 }
@@ -244,6 +253,24 @@ public class ExpressionsTests
                 """
                 func int main() {
                     print(2.5 < 2.5);
+                    return 0;
+                }
+                """,
+                "false"
+            },
+            {
+                """
+                func int main() {
+                    print("apple" == "apple");
+                    return 0;
+                }
+                """,
+                "true"
+            },
+            {
+                """
+                func int main() {
+                    print("apple" != "apple");
                     return 0;
                 }
                 """,
