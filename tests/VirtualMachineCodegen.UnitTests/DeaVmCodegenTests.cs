@@ -1,3 +1,7 @@
+using Ast;
+using Ast.Declarations;
+
+using VirtualMachine;
 using VirtualMachine.Builtins;
 using VirtualMachine.Instructions;
 
@@ -58,5 +62,30 @@ public class DeaVmCodegenTests
         IReadOnlyList<Instruction> instructions = codegen.Generate(program);
 
         Assert.NotEmpty(instructions);
+    }
+
+    [Fact]
+    public void Codegen_AddsPushVoid_ForFuncWithoutReturn()
+    {
+        DeaVmCodegen codegen = new();
+
+        // Func без return внутри тела (ошибка семантики, но валидно для AST)
+        FunctionDeclaration funcWithoutReturn = new(
+            DataType.Int,
+            "noReturnFunc",
+            new List<ParameterDeclaration>(),
+            new List<AstNode>()
+        );
+
+        ProgramNode program = new(
+            new List<Declaration>(),
+            new List<FunctionDeclaration> { funcWithoutReturn },
+            new FunctionDeclaration(DataType.Int, "main", new List<ParameterDeclaration>(), new List<AstNode>())
+        );
+
+        CompiledProgram compiled = codegen.GenerateProgram(program);
+
+        // Проверка что добавился Value.Void при отсутствии return
+        Assert.Contains(compiled.Instructions, i => i.Code == InstructionCode.Push && i.Operand.IsVoid());
     }
 }

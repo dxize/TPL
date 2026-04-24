@@ -206,6 +206,33 @@ public class VariablesTests
                 """,
                 "false"
             },
+            {
+                """
+                func int main() {
+                    bool b = 1;
+                    return 0;
+                }
+                """,
+                ""
+            },
+            {
+                """
+                func int main() {
+                    bool b = 1.5;
+                    return 0;
+                }
+                """,
+                ""
+            },
+            {
+                """
+                func int main() {
+                    bool b = "dea";
+                    return 0;
+                }
+                """,
+                ""
+            },
         };
     }
 
@@ -331,16 +358,6 @@ public class VariablesTests
                 """
                 func int main() {
                     const int len = 10;
-                    return 0;
-                }
-                """
-            },
-
-            // bool
-            {
-                """
-                func int main() {
-                    bool b = 1;
                     return 0;
                 }
                 """
