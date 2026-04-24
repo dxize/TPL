@@ -15,41 +15,11 @@ public sealed class DeaVmCodegen : IAstVisitor
     private readonly List<Instruction> _instructions = [];
     private readonly Dictionary<string, CompiledFunctionInfo> _functions = new(StringComparer.Ordinal);
     private FunctionDeclaration? _currentFunction;
-    private bool _legacyMode;
 
-    /// <summary>
-    /// Старый API для unit-тестов.
-    /// Генерирует линейный код main с Halt на return.
-    /// </summary>
-    public IReadOnlyList<Instruction> Generate(ProgramNode program)
-    {
-        _instructions.Clear();
-        _functions.Clear();
-        _legacyMode = true;
-
-        foreach (Declaration decl in program.GlobalDeclarations)
-        {
-            decl.Accept(this);
-        }
-
-        foreach (AstNode node in program.MainFunction.Body)
-        {
-            node.Accept(this);
-        }
-
-        _legacyMode = false;
-        return _instructions.ToArray();
-    }
-
-    /// <summary>
-    /// Новый API для интерпретатора 4-й итерации.
-    /// Генерирует инструкции и таблицу функций.
-    /// </summary>
     public CompiledProgram GenerateProgram(ProgramNode program)
     {
         _instructions.Clear();
         _functions.Clear();
-        _legacyMode = false;
 
         program.Accept(this);
 
@@ -136,13 +106,13 @@ public sealed class DeaVmCodegen : IAstVisitor
 
     public void Visit(BinaryExpression e)
     {
-        if (!_legacyMode && e.OperatorKind == OperatorKind.And)
+        if (e.OperatorKind == OperatorKind.And )
         {
             EmitLogicalAnd(e);
             return;
         }
 
-        if (!_legacyMode && e.OperatorKind == OperatorKind.Or)
+        if (e.OperatorKind == OperatorKind.Or)
         {
             EmitLogicalOr(e);
             return;
@@ -236,12 +206,6 @@ public sealed class DeaVmCodegen : IAstVisitor
             e.Value.Accept(this);
         }
 
-        if (_legacyMode)
-        {
-            _instructions.Add(new Instruction(InstructionCode.Halt));
-            return;
-        }
-
         _instructions.Add(new Instruction(InstructionCode.Return));
     }
 
@@ -315,7 +279,7 @@ public sealed class DeaVmCodegen : IAstVisitor
 
     private void EmitConvertToBoolIfNeeded(Expression expression)
     {
-        if (!_legacyMode && expression.ResultType != DataType.Bool)
+        if (expression.ResultType != DataType.Bool)
         {
             _instructions.Add(new Instruction(InstructionCode.ToBool));
         }
