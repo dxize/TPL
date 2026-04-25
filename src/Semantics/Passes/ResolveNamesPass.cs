@@ -156,6 +156,34 @@ public sealed class ResolveNamesPass : AbstractPass
         }
     }
 
+    public override void Visit(ForStatement s)
+    {
+        SymbolInfo? symbol = _symbols.ResolveVariable(s.VariableName);
+        if (symbol is null)
+        {
+            throw new UnknownIdentifierException($"Loop variable '{s.VariableName}' is not declared.");
+        }
+
+        if (symbol.Type != DataType.Int)
+        {
+            throw new InvalidAssignmentException($"Loop variable '{s.VariableName}' must be of type int.");
+        }
+
+        s.VariableSymbol = symbol;
+
+        s.Start.Accept(this);
+        s.End.Accept(this);
+
+        VisitNestedBlock(s.Body);
+    }
+
+    public override void Visit(WhileStatement s)
+    {
+        s.Condition.Accept(this);
+
+        VisitNestedBlock(s.Body);
+    }
+
     private void VisitTopLevelFunction(FunctionDeclaration function)
     {
         EnsureNotReservedName(function.Name);

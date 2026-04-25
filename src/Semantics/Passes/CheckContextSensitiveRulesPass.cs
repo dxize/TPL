@@ -13,9 +13,12 @@ namespace Semantics.Passes;
 /// - тело функции не должно быть пустым
 /// - после top-level return не должно быть инструкций
 /// - функция должна возвращать значение на всех путях выполнения
+/// - break/continue только внутри циклов
 /// </summary>
 public sealed class CheckContextSensitiveRulesPass : AbstractPass
 {
+    private readonly Stack<bool> _loopStack = [];
+
     public override void Visit(ProgramNode p)
     {
         if (p.MainFunction is null)
@@ -53,6 +56,52 @@ public sealed class CheckContextSensitiveRulesPass : AbstractPass
         {
             throw new InvalidExpressionException($"Function '{d.Name}' must return a value on all execution paths.");
         }
+    }
+
+    public override void Visit(WhileStatement s)
+    {
+        _loopStack.Push(true);
+        try
+        {
+            base.Visit(s);
+        }
+        finally
+        {
+            _loopStack.Pop();
+        }
+    }
+
+    public override void Visit(ForStatement s)
+    {
+        _loopStack.Push(true);
+        try
+        {
+            base.Visit(s);
+        }
+        finally
+        {
+            _loopStack.Pop();
+        }
+    }
+
+    public override void Visit(BreakStatement s)
+    {
+        if (_loopStack.Count == 0)
+        {
+            throw new InvalidExpressionException("'break' is allowed only inside a loop.");
+        }
+
+        base.Visit(s);
+    }
+
+    public override void Visit(ContinueStatement s)
+    {
+        if (_loopStack.Count == 0)
+        {
+            throw new InvalidExpressionException("'continue' is allowed only inside a loop.");
+        }
+
+        base.Visit(s);
     }
 
     private static bool AllPathsReturn(IEnumerable<AstNode> body)
