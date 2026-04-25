@@ -267,6 +267,38 @@ public sealed class Parser
             return ParseIfStatement();
         }
 
+        if (token.Type == TokenType.While)
+        {
+            return ParseWhileStatement();
+        }
+
+        if (token.Type == TokenType.For)
+        {
+            return ParseForStatement();
+        }
+
+        if (token.Type == TokenType.Break)
+        {
+            Match(TokenType.Break);
+            if (_tokens.Peek().Type == TokenType.Semicolon)
+            {
+                _tokens.Advance();
+            }
+
+            return new BreakStatement();
+        }
+
+        if (token.Type == TokenType.Continue)
+        {
+            Match(TokenType.Continue);
+            if (_tokens.Peek().Type == TokenType.Semicolon)
+            {
+                _tokens.Advance();
+            }
+
+            return new ContinueStatement();
+        }
+
         throw new UnexpectedLexemeException("statement", token);
     }
 
@@ -335,6 +367,69 @@ public sealed class Parser
         }
 
         return new IfStatement(condition, thenBody, elseBody);
+    }
+
+    /// <summary>
+    /// while_statement = "while", "(", expression, ")", block ;
+    /// </summary>
+    private AstNode ParseWhileStatement()
+    {
+        Match(TokenType.While);
+        Match(TokenType.OpenParenthesis);
+        Expression condition = ParseExpression();
+        Match(TokenType.CloseParenthesis);
+        List<AstNode> body = ParseBlock();
+        return new WhileStatement(condition, body);
+    }
+
+    /// <summary>
+    /// for_statement = "for", "(", identifier, "=", expression, ("to" | "downto"), expression, ")", block ;
+    /// </summary>
+    private AstNode ParseForStatement()
+    {
+        Match(TokenType.For);
+        Match(TokenType.OpenParenthesis);
+        string variableName = ParseIdentifier();
+        Match(TokenType.Assign);
+        Expression start = ParseExpression();
+        bool descending = false;
+
+        if (_tokens.Peek().Type == TokenType.To)
+        {
+            _tokens.Advance();
+        }
+        else if (_tokens.Peek().Type == TokenType.Downto)
+        {
+            _tokens.Advance();
+            descending = true;
+        }
+        else
+        {
+            throw new UnexpectedLexemeException("'to' or 'downto'", _tokens.Peek());
+        }
+
+        Expression end = ParseExpression();
+        Match(TokenType.CloseParenthesis);
+        List<AstNode> body = ParseBlock();
+        return new ForStatement(variableName, start, end, body, descending);
+    }
+
+    /// <summary>
+    /// break_statement = "break" ;
+    /// </summary>
+    private AstNode ParseBreakStatement()
+    {
+        Match(TokenType.Break);
+        return new BreakStatement();
+    }
+
+    /// <summary>
+    /// continue_statement = "continue" ;
+    /// </summary>
+    private AstNode ParseContinueStatement()
+    {
+        Match(TokenType.Continue);
+        return new ContinueStatement();
     }
 
     /// <summary>
