@@ -263,3 +263,39 @@
 - [x] Отсутствие return в func: => SemanticException
 - [x] Повторное объявление функции: => SemanticException
 - [x] Доступ к локальной переменной функции из main. => SemanticException
+
+`LoopsTests`
+
+### Цикл while
+- [x] while не выполняется если условие изначально ложно: `while (i > 10) { ... }`
+- [x] while выполняется пока условие истинно: `while (i <= 3) { print(i); i = i + 1; }`
+- [x] while с декрементом: `while (i > 0) { print(i); i = i - 1; }`
+- [x] while с неявным приведением int к bool (ненулевое): `while (i) { ... }`
+- [x] while с неявным приведением int к bool (нуль): `while (0) { ... }`
+- [x] while с неявным приведением string к bool: `while (s) { ... }`
+
+### Цикл for
+- [x] for to базовый: `for (i = 1 to 3) { print(i); }` => "123"
+- [x] for downto базовый: `for (i = 3 downto 1) { print(i); }` => "321"
+- [x] for с одной итерацией: `for (i = 5 to 5) { print(i); }` => "5"
+- [x] for to без итераций (start > end): `for (i = 5 to 3) { ... }`
+- [x] for downto без итераций (start < end): `for (i = 1 downto 3) { ... }`
+
+### break и continue
+- [x] break в while: `while (...) { if (i == 3) { break; } ... }`
+- [x] break в for: `for (...) { if (i == 5) { break; } ... }`
+- [x] continue в while: `while (...) { if (i == 3) { continue; } ... }`
+
+### Вложенные конструкции
+- [x] if внутри while: `while (...) { if (...) { ... } else { ... } }`
+- [x] while внутри if: `if (...) { while (...) { ... } }`
+- [x] вложенные if-else: `if (...) { if (...) { ... } else { ... } } else { ... }`
+
+### Негативные тесты (циклы, синтаксис)
+- [x] пропущены скобки в while: `while i < 3 { ... }` => UnexpectedLexemeException
+- [x] пропущены скобки в for: `for i = 1 to 3 { ... }` => UnexpectedLexemeException
+
+### Негативные тесты (циклы, семантика)
+- [x] break вне цикла: `break;` => SemanticException
+- [x] continue вне цикла: `continue;` => SemanticException
+- [x] переменная цикла for не объявлена: `for (i = 1 to 3) { ... }` => SemanticException
