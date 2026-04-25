@@ -30,7 +30,7 @@
 - [x] Ветвления if..else
 
 ### Итерация №5. Циклы
-- [ ] Цикл while
-- [ ] Цикл for (to/downto)
-- [ ] break и continue
-- [ ] Вложенные условия и циклы
+- [x] Цикл while
+- [x] Цикл for (to/downto)
+- [x] break и continue
+- [x] Вложенные условия и циклы
