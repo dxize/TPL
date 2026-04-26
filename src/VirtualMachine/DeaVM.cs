@@ -158,6 +158,22 @@ public sealed class DeaVM
 
                     break;
 
+                case InstructionCode.EnterScope:
+                    if (_callFrames.Count > 0)
+                    {
+                        _callFrames.Peek().PushScope();
+                    }
+
+                    break;
+
+                case InstructionCode.LeaveScope:
+                    if (_callFrames.Count > 0)
+                    {
+                        _callFrames.Peek().PopScope();
+                    }
+
+                    break;
+
                 case InstructionCode.Halt:
                     return _evaluationStack.Pop().AsInt();
 
@@ -310,14 +326,18 @@ public sealed class DeaVM
 
     private Dictionary<string, VariableEntry> GetCurrentVariables()
     {
-        return _callFrames.Count > 0 ? _callFrames.Peek().Variables : _globals;
+        return _callFrames.Count > 0 ? _callFrames.Peek().CurrentScope : _globals;
     }
 
     private VariableEntry GetVariable(string name)
     {
-        if (_callFrames.Count > 0 && _callFrames.Peek().Variables.TryGetValue(name, out VariableEntry? localValue))
+        if (_callFrames.Count > 0)
         {
-            return localValue;
+            VariableEntry? found = _callFrames.Peek().ResolveVariable(name);
+            if (found is not null)
+            {
+                return found;
+            }
         }
 
         if (_globals.TryGetValue(name, out VariableEntry? globalValue))
@@ -595,17 +615,42 @@ public sealed class DeaVM
 
     private sealed class CallFrame
     {
-        public CallFrame(CompiledFunctionInfo function, int returnAddress, Dictionary<string, VariableEntry> variables)
+        private readonly Stack<Dictionary<string, VariableEntry>> _scopes = [];
+
+        public CallFrame(CompiledFunctionInfo function, int returnAddress, Dictionary<string, VariableEntry> parameters)
         {
             Function = function;
             ReturnAddress = returnAddress;
-            Variables = variables;
+            _scopes.Push(parameters);
         }
 
         public CompiledFunctionInfo Function { get; }
 
         public int ReturnAddress { get; }
 
-        public Dictionary<string, VariableEntry> Variables { get; }
+        public Dictionary<string, VariableEntry> CurrentScope => _scopes.Peek();
+
+        public void PushScope() => _scopes.Push(new Dictionary<string, VariableEntry>(StringComparer.Ordinal));
+
+        public void PopScope()
+        {
+            if (_scopes.Count > 1)
+            {
+                _scopes.Pop();
+            }
+        }
+
+        public VariableEntry? ResolveVariable(string name)
+        {
+            foreach (Dictionary<string, VariableEntry> scope in _scopes)
+            {
+                if (scope.TryGetValue(name, out VariableEntry? entry))
+                {
+                    return entry;
+                }
+            }
+
+            return null;
+        }
     }
 }

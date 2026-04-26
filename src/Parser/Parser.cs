@@ -192,6 +192,16 @@ public sealed class Parser
 
         while (_tokens.Peek().Type != TokenType.CloseBrace)
         {
+            while (_tokens.Peek().Type == TokenType.Semicolon)
+            {
+                _tokens.Advance();
+            }
+
+            if (_tokens.Peek().Type == TokenType.CloseBrace)
+            {
+                break;
+            }
+
             statements.Add(ParseStatement());
         }
 
