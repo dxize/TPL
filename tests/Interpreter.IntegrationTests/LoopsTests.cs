@@ -45,6 +45,18 @@ public class LoopsTests
     }
 
     [Theory]
+    [MemberData(nameof(GetSemicolonBreakContinueData))]
+    public void Can_evaluate_break_continue_with_semicolon(string code, string expectedOutput)
+    {
+        FakeEnvironment environment = new();
+        DeaInterpreter interpreter = new(environment);
+
+        interpreter.Execute(code);
+
+        Assert.Equal(expectedOutput, environment.Output);
+    }
+
+    [Theory]
     [MemberData(nameof(GetNestedLoopsData))]
     public void Can_evaluate_nested_loops(string code, string expectedOutput)
     {
@@ -237,6 +249,44 @@ public class LoopsTests
                 """,
                 "123"
             },
+            {
+                """
+                func int main() {
+                    int i;
+                    for (i = 0 to 5) {
+                        print(i + 1);
+                    }
+                    return 0;
+                }
+                """,
+                "123456"
+            },
+            {
+                """
+                func int main() {
+                    int sum = 0;
+                    int i;
+                    for (i = 1 to 5) {
+                        sum = sum + i;
+                    }
+                    print(sum);
+                    return 0;
+                }
+                """,
+                "15"
+            },
+            {
+                """
+                func int main() {
+                    int i;
+                    for (i = 10 to 1) {
+                        print(i);
+                    }
+                    return 0;
+                }
+                """,
+                ""
+            },
         };
     }
 
@@ -284,6 +334,59 @@ public class LoopsTests
                         if (i == 3) {
                             continue;
                         }
+                        print(i);
+                    }
+                    return 0;
+                }
+                """,
+                "1245"
+            },
+            {
+                """
+                func int main() {
+                    int i;
+                    for (i = 1 to 5) {
+                        if (i == 3) {
+                            continue;
+                        }
+                        print(i);
+                    }
+                    return 0;
+                }
+                """,
+                "1245"
+            },
+        };
+    }
+
+    public static TheoryData<string, string> GetSemicolonBreakContinueData()
+    {
+        return new TheoryData<string, string>
+        {
+            {
+                """
+                func int main() {
+                    int i = 0;
+                    while (i < 10) {
+                        i = i + 1;
+                        if (i == 3) {
+                            break;
+                        };
+                        print(i);
+                    }
+                    return 0;
+                }
+                """,
+                "12"
+            },
+            {
+                """
+                func int main() {
+                    int i;
+                    for (i = 1 to 5) {
+                        if (i == 3) {
+                            continue;
+                        };
                         print(i);
                     }
                     return 0;
@@ -350,6 +453,86 @@ public class LoopsTests
                 """,
                 "2"
             },
+            {
+                """
+                func int main() {
+                    int i;
+                    for (i = 1 to 3) {
+                        int j;
+                        for (j = 1 to 2) {
+                            print(i * 10 + j);
+                        }
+                    }
+                    return 0;
+                }
+                """,
+                "111221223132"
+            },
+            {
+                """
+                func int main() {
+                    int i;
+                    for (i = 1 to 3) {
+                        int k = 0;
+                        while (k < 2) {
+                            k = k + 1;
+                            print(i * 10 + k);
+                        }
+                    }
+                    return 0;
+                }
+                """,
+                "111221223132"
+            },
+            {
+                """
+                func int main() {
+                    int i = 1;
+                    while (i <= 2) {
+                        int j;
+                        for (j = 1 to 2) {
+                            print(i * 10 + j);
+                        }
+                        i = i + 1;
+                    }
+                    return 0;
+                }
+                """,
+                "11122122"
+            },
+            {
+                """
+                func int main() {
+                    int i;
+                    for (i = 1 to 5) {
+                        if (i == 3) {
+                            break;
+                        }
+                        print(i);
+                    }
+                    return 0;
+                }
+                """,
+                "12"
+            },
+            {
+                """
+                func int main() {
+                    int i;
+                    for (i = 1 to 10) {
+                        if (i == 5) {
+                            break;
+                        }
+                        if (i < 3) {
+                            continue;
+                        }
+                        print(i);
+                    }
+                    return 0;
+                }
+                """,
+                "34"
+            },
         };
     }
 
@@ -407,6 +590,49 @@ public class LoopsTests
                 func int main() {
                     for (i = 1 to 3) {
                         print(i);
+                    }
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    num i;
+                    for (i = 1 to 3) {
+                        print(i);
+                    }
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    string i;
+                    for (i = 1 to 3) {
+                        print(i);
+                    }
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    bool i;
+                    for (i = 1 to 3) {
+                        print(i);
+                    }
+                    return 0;
+                }
+                """
+            },
+            {
+                """
+                func int main() {
+                    if (true) {
+                        break;
                     }
                     return 0;
                 }
