@@ -289,24 +289,12 @@ public sealed class Parser
 
         if (token.Type == TokenType.Break)
         {
-            Match(TokenType.Break);
-            if (_tokens.Peek().Type == TokenType.Semicolon)
-            {
-                _tokens.Advance();
-            }
-
-            return new BreakStatement();
+            return ParseBreakStatement();
         }
 
         if (token.Type == TokenType.Continue)
         {
-            Match(TokenType.Continue);
-            if (_tokens.Peek().Type == TokenType.Semicolon)
-            {
-                _tokens.Advance();
-            }
-
-            return new ContinueStatement();
+            return ParseContinueStatement();
         }
 
         throw new UnexpectedLexemeException("statement", token);
@@ -430,6 +418,11 @@ public sealed class Parser
     private AstNode ParseBreakStatement()
     {
         Match(TokenType.Break);
+        if (_tokens.Peek().Type == TokenType.Semicolon)
+        {
+            _tokens.Advance();
+        }
+
         return new BreakStatement();
     }
 
@@ -439,6 +432,11 @@ public sealed class Parser
     private AstNode ParseContinueStatement()
     {
         Match(TokenType.Continue);
+        if (_tokens.Peek().Type == TokenType.Semicolon)
+        {
+            _tokens.Advance();
+        }
+
         return new ContinueStatement();
     }
 
