@@ -270,9 +270,6 @@
 - [x] while не выполняется если условие изначально ложно: `while (i > 10) { ... }`
 - [x] while выполняется пока условие истинно: `while (i <= 3) { print(i); i = i + 1; }`
 - [x] while с декрементом: `while (i > 0) { print(i); i = i - 1; }`
-- [x] while с неявным приведением int к bool (ненулевое): `while (i) { ... }`
-- [x] while с неявным приведением int к bool (нуль): `while (0) { ... }`
-- [x] while с неявным приведением string к bool: `while (s) { ... }`
 
 ### Цикл for
 - [x] for to базовый: `for (i = 1 to 3) { print(i); }` => "123"
@@ -283,15 +280,12 @@
 - [x] for с выражением в качестве end: `num end = 3.0; for (i = 1 to end) { ... }`
 - [x] for с арифметикой в теле: `for (i = 0 to 5) { print(i + 1); }` => "123456"
 - [x] for с аккумулятором: `int sum = 0; for (i = 1 to 5) { sum = sum + i; }`
-- [x] for to где start > end не выполняется: `for (i = 10 to 1) { ... }`
 
 ### break и continue
 - [x] break в while: `while (...) { if (i == 3) { break; } ... }`
 - [x] break в for: `for (...) { if (i == 5) { break; } ... }`
 - [x] continue в while: `while (...) { if (i == 3) { continue; } ... }`
 - [x] continue в for: `for (...) { if (i == 3) { continue; } ... }`
-- [x] break с точкой с запятой: `break;`
-- [x] continue с точкой с запятой: `continue;`
 - [x] break в for с точкой с запятой
 
 ### Вложенные конструкции
@@ -313,8 +307,6 @@
 - [x] continue вне цикла: `continue;` => SemanticException
 - [x] переменная цикла for не объявлена: `for (i = 1 to 3) { ... }` => SemanticException
 - [x] переменная цикла for не int (num): `num i; for (i = 1 to 3) { ... }` => SemanticException
-- [x] переменная цикла for не int (string): `string i; for (i = 1 to 3) { ... }` => SemanticException
-- [x] переменная цикла for не int (bool): `bool i; for (i = 1 to 3) { ... }` => SemanticException
 - [x] break внутри if но вне цикла: `if (true) { break; }` => SemanticException
 
 `ScopeTests`
