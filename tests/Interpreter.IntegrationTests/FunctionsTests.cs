@@ -202,6 +202,18 @@ public class FunctionsTests
 
             // Доступ к локальной переменной функции из main
             { "func int f() { int secret = 42; return 0; } func int main() { f(); print(secret); return 0; }" },
+
+            // Функция не может использовать return без значения
+            { "func int main() { return; }" },
+
+            // Процедура не может использовать return со значением
+            { "proc p() { return 42; } func int main() { return 0; }" },
+
+            // Вызов с недостаточным количеством параметров
+            { "func int add(int a, int b) { return a + b; } func int main() { add(5); return 0; }" },
+
+            // Вызов с избыточным количеством параметров
+            { "func int add(int a, int b) { return a + b; } func int main() { add(1, 2, 3); return 0; }" },
         };
     }
 
