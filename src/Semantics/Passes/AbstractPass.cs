@@ -115,4 +115,33 @@ public abstract class AbstractPass : IAstVisitor
             node.Accept(this);
         }
     }
+
+    public virtual void Visit(WhileStatement s)
+    {
+        s.Condition.Accept(this);
+
+        foreach (AstNode node in s.Body)
+        {
+            node.Accept(this);
+        }
+    }
+
+    public virtual void Visit(ForStatement s)
+    {
+        s.Start.Accept(this);
+        s.End.Accept(this);
+
+        foreach (AstNode node in s.Body)
+        {
+            node.Accept(this);
+        }
+    }
+
+    public virtual void Visit(BreakStatement s)
+    {
+    }
+
+    public virtual void Visit(ContinueStatement s)
+    {
+    }
 }

@@ -34,4 +34,12 @@ public interface IAstVisitor
     void Visit(ReturnExpression e);
 
     void Visit(IfStatement s);
+
+    void Visit(WhileStatement s);
+
+    void Visit(ForStatement s);
+
+    void Visit(BreakStatement s);
+
+    void Visit(ContinueStatement s);
 }

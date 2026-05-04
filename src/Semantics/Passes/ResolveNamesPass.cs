@@ -9,11 +9,6 @@ namespace Semantics.Passes;
 
 public sealed class ResolveNamesPass : AbstractPass
 {
-    private static readonly HashSet<string> ReservedNames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "int", "num", "string", "bool", "func", "proc", "return", "if", "else",
-    };
-
     private readonly SymbolsTable _globalSymbols;
     private SymbolsTable _symbols;
 
@@ -40,7 +35,6 @@ public sealed class ResolveNamesPass : AbstractPass
 
     public override void Visit(VariableDeclarationExpression e)
     {
-        EnsureNotReservedName(e.Name);
         EnsureNotBuiltinName(e.Name);
 
         base.Visit(e);
@@ -55,7 +49,6 @@ public sealed class ResolveNamesPass : AbstractPass
 
     public override void Visit(ConstantDeclarationExpression e)
     {
-        EnsureNotReservedName(e.Name);
         EnsureNotBuiltinName(e.Name);
 
         base.Visit(e);
@@ -156,9 +149,36 @@ public sealed class ResolveNamesPass : AbstractPass
         }
     }
 
+    public override void Visit(ForStatement s)
+    {
+        SymbolInfo? symbol = _symbols.ResolveVariable(s.VariableName);
+        if (symbol is null)
+        {
+            throw new UnknownIdentifierException($"Loop variable '{s.VariableName}' is not declared.");
+        }
+
+        if (symbol.Type != DataType.Int)
+        {
+            throw new InvalidAssignmentException($"Loop variable '{s.VariableName}' must be of type int.");
+        }
+
+        s.VariableSymbol = symbol;
+
+        s.Start.Accept(this);
+        s.End.Accept(this);
+
+        VisitNestedBlock(s.Body);
+    }
+
+    public override void Visit(WhileStatement s)
+    {
+        s.Condition.Accept(this);
+
+        VisitNestedBlock(s.Body);
+    }
+
     private void VisitTopLevelFunction(FunctionDeclaration function)
     {
-        EnsureNotReservedName(function.Name);
         EnsureNotBuiltinName(function.Name);
 
         if (function.Name != "main" && _globalSymbols.ResolveFunction(function.Name) is not null)
@@ -174,7 +194,6 @@ public sealed class ResolveNamesPass : AbstractPass
         {
             foreach (ParameterDeclaration parameter in function.Parameters)
             {
-                EnsureNotReservedName(parameter.Name);
                 functionScope.DeclareVariable(parameter.Name, parameter.Type, isConst: false);
             }
 
@@ -209,14 +228,6 @@ public sealed class ResolveNamesPass : AbstractPass
         finally
         {
             _symbols = previous;
-        }
-    }
-
-    private static void EnsureNotReservedName(string name)
-    {
-        if (ReservedNames.Contains(name))
-        {
-            throw new DuplicateIdentifierException($"Identifier '{name}' is a reserved name.");
         }
     }
 

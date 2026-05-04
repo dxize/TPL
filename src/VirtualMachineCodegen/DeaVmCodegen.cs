@@ -15,6 +15,12 @@ public sealed class DeaVmCodegen : IAstVisitor
     private readonly List<Instruction> _instructions = [];
     private readonly Dictionary<string, CompiledFunctionInfo> _functions = new(StringComparer.Ordinal);
     private FunctionDeclaration? _currentFunction;
+    private readonly Stack<int> _breakStack = [];
+    private readonly Stack<int> _continueStack = [];
+    private int _currentBreakTarget = -1;
+    private int _currentContinueTarget = -1;
+    private int _activeScopeDepth = 0;
+    private readonly Stack<int> _loopScopeBaseStack = [];
 
     public CompiledProgram GenerateProgram(ProgramNode program)
     {
@@ -48,6 +54,8 @@ public sealed class DeaVmCodegen : IAstVisitor
 
             FunctionDeclaration? previousFunction = _currentFunction;
             _currentFunction = function;
+            _activeScopeDepth = 0;
+            _loopScopeBaseStack.Clear();
 
             foreach (AstNode node in function.Body)
             {
@@ -216,10 +224,15 @@ public sealed class DeaVmCodegen : IAstVisitor
 
         int jumpToElseIndex = Emit(InstructionCode.JumpIfFalse, new Value(-1));
 
+        _instructions.Add(new Instruction(InstructionCode.EnterScope));
+        _activeScopeDepth++;
         foreach (AstNode node in s.ThenBody)
         {
             node.Accept(this);
         }
+
+        _activeScopeDepth--;
+        _instructions.Add(new Instruction(InstructionCode.LeaveScope));
 
         if (s.ElseBody is null)
         {
@@ -230,12 +243,143 @@ public sealed class DeaVmCodegen : IAstVisitor
         int jumpToEndIndex = Emit(InstructionCode.Jump, new Value(-1));
         Patch(jumpToElseIndex, InstructionCode.JumpIfFalse, _instructions.Count);
 
+        _instructions.Add(new Instruction(InstructionCode.EnterScope));
+        _activeScopeDepth++;
         foreach (AstNode node in s.ElseBody)
         {
             node.Accept(this);
         }
 
+        _activeScopeDepth--;
+        _instructions.Add(new Instruction(InstructionCode.LeaveScope));
+
         Patch(jumpToEndIndex, InstructionCode.Jump, _instructions.Count);
+    }
+
+    public void Visit(WhileStatement s)
+    {
+        int loopStartIndex = _instructions.Count;
+
+        int previousBreakTarget = _currentBreakTarget;
+        int previousContinueTarget = _currentContinueTarget;
+        _currentBreakTarget = -1;
+        _currentContinueTarget = loopStartIndex;
+
+        s.Condition.Accept(this);
+        EmitConvertToBoolIfNeeded(s.Condition);
+
+        int jumpToEndIndex = Emit(InstructionCode.JumpIfFalse, new Value(-1));
+
+        _instructions.Add(new Instruction(InstructionCode.EnterScope));
+        _activeScopeDepth++;
+        _loopScopeBaseStack.Push(_activeScopeDepth);
+        foreach (AstNode node in s.Body)
+        {
+            node.Accept(this);
+        }
+
+        _loopScopeBaseStack.Pop();
+        _activeScopeDepth--;
+        _instructions.Add(new Instruction(InstructionCode.LeaveScope));
+
+        while (_continueStack.Count > 0)
+        {
+            int continuePos = _continueStack.Pop();
+            Patch(continuePos, InstructionCode.Jump, _instructions.Count);
+        }
+
+        Emit(InstructionCode.Jump, new Value(loopStartIndex));
+        Patch(jumpToEndIndex, InstructionCode.JumpIfFalse, _instructions.Count);
+
+        while (_breakStack.Count > 0)
+        {
+            int breakPos = _breakStack.Pop();
+            Patch(breakPos, InstructionCode.Jump, _instructions.Count);
+        }
+
+        _currentBreakTarget = previousBreakTarget;
+        _currentContinueTarget = previousContinueTarget;
+    }
+
+    public void Visit(ForStatement s)
+    {
+        s.Start.Accept(this);
+        _instructions.Add(new Instruction(InstructionCode.StoreVar, new Value(s.VariableName)));
+
+        int loopStartIndex = _instructions.Count;
+
+        int previousBreakTarget = _currentBreakTarget;
+        int previousContinueTarget = _currentContinueTarget;
+        _currentBreakTarget = -1;
+        _currentContinueTarget = loopStartIndex;
+
+        _instructions.Add(new Instruction(InstructionCode.LoadVar, new Value(s.VariableName)));
+        s.End.Accept(this);
+
+        _instructions.Add(new Instruction(s.Descending ? InstructionCode.GreaterOrEqual : InstructionCode.LessOrEqual));
+
+        int jumpToEndIndex = Emit(InstructionCode.JumpIfFalse, new Value(-1));
+
+        _instructions.Add(new Instruction(InstructionCode.EnterScope));
+        _activeScopeDepth++;
+        _loopScopeBaseStack.Push(_activeScopeDepth);
+        foreach (AstNode node in s.Body)
+        {
+            node.Accept(this);
+        }
+
+        _loopScopeBaseStack.Pop();
+        _activeScopeDepth--;
+        _instructions.Add(new Instruction(InstructionCode.LeaveScope));
+
+        while (_continueStack.Count > 0)
+        {
+            int continuePos = _continueStack.Pop();
+            Patch(continuePos, InstructionCode.Jump, _instructions.Count);
+        }
+
+        _instructions.Add(new Instruction(InstructionCode.LoadVar, new Value(s.VariableName)));
+        _instructions.Add(new Instruction(InstructionCode.Push, new Value(s.Descending ? -1 : 1)));
+        _instructions.Add(new Instruction(InstructionCode.Add));
+        _instructions.Add(new Instruction(InstructionCode.StoreVar, new Value(s.VariableName)));
+
+        Emit(InstructionCode.Jump, new Value(loopStartIndex));
+        Patch(jumpToEndIndex, InstructionCode.JumpIfFalse, _instructions.Count);
+
+        while (_breakStack.Count > 0)
+        {
+            int breakPos = _breakStack.Pop();
+            Patch(breakPos, InstructionCode.Jump, _instructions.Count);
+        }
+
+        _currentBreakTarget = previousBreakTarget;
+        _currentContinueTarget = previousContinueTarget;
+    }
+
+    public void Visit(BreakStatement s)
+    {
+        int loopBase = _loopScopeBaseStack.Count > 0 ? _loopScopeBaseStack.Peek() : 0;
+        int scopesToUnwind = _activeScopeDepth - loopBase + 1;
+        for (int i = 0; i < scopesToUnwind; i++)
+        {
+            _instructions.Add(new Instruction(InstructionCode.LeaveScope));
+        }
+
+        int breakIndex = Emit(InstructionCode.Jump, new Value(-1));
+        _breakStack.Push(breakIndex);
+    }
+
+    public void Visit(ContinueStatement s)
+    {
+        int loopBase = _loopScopeBaseStack.Count > 0 ? _loopScopeBaseStack.Peek() : 0;
+        int scopesToUnwind = _activeScopeDepth - loopBase + 1;
+        for (int i = 0; i < scopesToUnwind; i++)
+        {
+            _instructions.Add(new Instruction(InstructionCode.LeaveScope));
+        }
+
+        int continueIndex = Emit(InstructionCode.Jump, new Value(-1));
+        _continueStack.Push(continueIndex);
     }
 
     private void EmitLogicalAnd(BinaryExpression e)
